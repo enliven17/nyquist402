@@ -17,7 +17,6 @@ Work in progress. Not audited.
 ```
 contracts/auth-capture-escrow/   Soroban contract
 web/                             Landing page and testnet demo
-docs/                            SCF application draft
 ```
 
 ## Contract
