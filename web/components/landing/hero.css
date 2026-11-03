@@ -1,0 +1,30 @@
+/* Hero figure: anatomy kit tones mapped onto the brand. Coins are the only coloured part. */
+.hero-iso[data-theme="light"] {
+  --anatomy-paper: #f6f6f2; --anatomy-face: #ffffff; --anatomy-top: #fbfbf8;
+  --anatomy-shade-0: #d9d9d3; --anatomy-shade-1: #e3e3dd; --anatomy-shade-2: #ebebe6; --anatomy-shade-3: #f2f2ee;
+  --anatomy-hi: #1b1c20; --anatomy-mid: #85868c; --anatomy-lo: #b3b3b0; --anatomy-faint: #d2d2cd; --anatomy-lit: #0e0f12;
+  --anatomy-halo: #7c7c70; --anatomy-blue: #2440ff;
+  --anatomy-mono: var(--font-mono), ui-monospace, monospace;
+}
+.hero-iso svg { width: 100%; height: auto; display: block; overflow: visible; }
+.hero-iso .coin .iso-top { fill: #e4e8ff; }
+.hero-iso .coin .iso-shade[data-shade="0"] { fill: #3550ff; }
+.hero-iso .coin .iso-shade[data-shade="1"] { fill: #4a63ff; }
+.hero-iso .coin .iso-shade[data-shade="2"] { fill: #6b80ff; }
+.hero-iso .coin .iso-shade[data-shade="3"] { fill: #8f9fff; }
+.hero-iso .coin .iso-edge, .hero-iso .coin .iso-crease { stroke: #1a2fd6; }
+.hero-iso .coin .iso-line { stroke: #9aa8ff; }
+.hero-iso .ceil .iso-top { fill: #2440ff; }
+.hero-iso .ceil .iso-shade { fill: #1a2fd6; }
+.hero-iso .ceil .iso-edge { stroke: #0f1fb0; }
+
+.hero-fig { position: relative; border: 1px solid var(--line); background: var(--surface); padding: 44px 20px 48px; }
+.hero-corners { position: absolute; left: 16px; right: 16px; top: 14px; display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono), monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.hero-corners-foot { top: auto; bottom: 14px; }
+.hero-steps span { transition: color 0.3s; }
+.hero-steps span.on { color: var(--accent); }
+.hero-corners [data-readout] { color: var(--ink); text-transform: none; font-variant-numeric: tabular-nums; }
+@media (max-width: 720px) {
+  .hero-fig { padding: 40px 6px 64px; }
+  .hero-corners-foot { flex-direction: column; gap: 4px; }
+}

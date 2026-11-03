@@ -17,7 +17,7 @@
 .lead { font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.5; color: var(--muted); max-width: 34rem; margin-top: 32px; }
 .lead code { color: var(--ink); }
 
-.eyebrow, .t-cap, .meta-row dt, .rail a, .topbar-links a {
+.eyebrow, .t-cap, .meta-row dt, .topbar-links a {
   font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -55,13 +55,16 @@
 .topbar-links a { color: var(--muted); transition: color 0.2s; }
 .topbar-links a:hover { color: var(--ink); }
 
-/* Side rail */
-.rail { position: fixed; left: 20px; top: 50%; transform: translateY(-50%); z-index: 40; display: none; flex-direction: column; gap: 10px; }
-.rail a { display: flex; gap: 10px; color: #a3a5ab; transition: color 0.3s; }
-.rail a span { width: 18px; }
-.rail a.on { color: var(--ink); }
-.rail a.on span { color: var(--accent); }
-@media (min-width: 1500px) { .rail { display: flex; } }
+/* Left sidebar on wide screens; a top bar below 1100px */
+.topbar-sep { display: none; }
+@media (min-width: 1100px) {
+  .topbar { position: fixed; inset: 0 auto 0 0; width: 216px; border-bottom: 0; border-right: 1px solid var(--line); background: var(--paper); backdrop-filter: none; }
+  .topbar-inner { flex-direction: column; align-items: flex-start; gap: 48px; height: 100%; max-width: none; padding: 28px 24px; }
+  .topbar-links { flex-direction: column; gap: 14px; margin-left: 0; }
+  .topbar-sep { display: block; width: 24px; height: 1px; background: var(--line); margin: 6px 0; }
+  .topbar .pill { margin-top: auto; }
+  .landing main, .landing .foot { margin-left: 216px; }
+}
 
 /* Hero */
 .hero { padding-top: 28px !important; position: relative; }
@@ -72,22 +75,9 @@
 .live { width: 7px; height: 7px; border-radius: 50%; background: #18c26b; box-shadow: 0 0 0 4px #18c26b22; animation: pulse 2s infinite; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 7px #18c26b00; } }
 
-.hero-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: end; padding: clamp(48px, 9vw, 120px) 0 clamp(48px, 7vw, 96px); }
-.signal { position: relative; margin: 0; border: 1px solid var(--line); background: var(--surface); padding: 20px; }
-.signal svg { width: 100%; height: auto; display: block; overflow: visible; }
-.signal .grid-v { stroke: var(--line); stroke-width: 1; }
-.signal .axis { stroke: var(--ink); stroke-width: 1; }
-.signal .ceiling, .ledger .ceiling { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 5; fill: none; }
-.signal .wave { fill: none; stroke: var(--ink); stroke-width: 1; opacity: 0.35; }
-.signal .hold { fill: none; stroke: var(--accent); stroke-width: 2; }
-.signal .stem path { stroke: var(--ink); stroke-width: 1.5; }
-.signal .stem circle { fill: var(--paper); stroke: var(--ink); stroke-width: 1.5; }
+.hero-title { font-size: clamp(3rem, 5.6vw, 5.75rem); line-height: 0.95; letter-spacing: -0.045em; }
+.hero-grid { display: grid; grid-template-columns: 0.82fr 1.18fr; gap: 48px; align-items: center; padding: clamp(36px, 5vw, 72px) 0 clamp(48px, 6vw, 88px); }
 .t-sub { font-family: var(--font-mono), monospace; font-size: 11px; fill: var(--muted); letter-spacing: 0.04em; }
-.crosshair { position: absolute; width: 14px; height: 14px; }
-.crosshair::before, .crosshair::after { content: ""; position: absolute; background: var(--accent); }
-.crosshair::before { left: 6px; top: 0; width: 2px; height: 14px; }
-.crosshair::after { top: 6px; left: 0; height: 2px; width: 14px; }
-.c1 { top: -8px; left: -8px; } .c2 { bottom: -8px; right: -8px; }
 
 .ticker { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); overflow: hidden; padding: 18px 0; }
 .ticker-track { display: flex; width: max-content; animation: marquee 40s linear infinite; }
@@ -130,6 +120,7 @@
 .ledger .node-escrow { stroke: var(--accent); stroke-width: 1.5; }
 .ledger .wire { stroke: var(--ink); stroke-width: 1; fill: none; }
 .ledger .wire.dashed { stroke-dasharray: 4 5; stroke: var(--muted); }
+.ledger .ceiling { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 5; fill: none; }
 .ledger .gauge { stroke: var(--line); }
 .ledger .gauge-fill { fill: var(--accent); }
 .ledger .dot { fill: var(--accent); stroke: var(--surface); stroke-width: 3; }
