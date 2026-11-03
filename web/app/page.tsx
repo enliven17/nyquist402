@@ -1,4 +1,6 @@
-const REPO_URL = "#"; // TODO: set once the public repo exists
+const REPO_URL = "https://github.com/enliven17/nyquist402";
+const ESCROW_TESTNET = "CAZUU5HON2LQBRLWNTQX2NFWB7AYMCZRZT6C6N7KUPP6AOAXNFCF6FK2";
+const ISSUE_URL = "https://github.com/x402-foundation/x402/issues/4122";
 const SPEC_URL =
   "https://github.com/x402-foundation/x402/blob/main/specs/schemes/auth-capture/scheme_auth_capture.md";
 
@@ -45,7 +47,7 @@ export default function Home() {
       </nav>
 
       <section>
-        <span className="badge">In development · Stellar testnet soon</span>
+        <span className="badge">Live on Stellar testnet · Not audited</span>
         <h1>Refundable x402 payments on Stellar</h1>
         <p className="lead">
           The <code>auth-capture</code> scheme for Stellar. Agents and users authorize a maximum, servers
@@ -112,6 +114,32 @@ export default function Home() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section>
+        <h2>Status</h2>
+        <table>
+          <tbody>
+            <tr>
+              <td className="muted">Escrow (testnet)</td>
+              <td>
+                <a href={`https://lab.stellar.org/r/testnet/contract/${ESCROW_TESTNET}`}>
+                  <code>{ESCROW_TESTNET.slice(0, 8)}…{ESCROW_TESTNET.slice(-8)}</code>
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td className="muted">Spec</td>
+              <td>
+                <a href={ISSUE_URL}>x402-foundation/x402#4122</a>
+              </td>
+            </tr>
+            <tr>
+              <td className="muted">Mainnet</td>
+              <td>After audit</td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
       <footer>Open source · MIT · Not audited</footer>
