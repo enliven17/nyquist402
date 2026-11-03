@@ -27,7 +27,8 @@ use soroban_sdk::{
 };
 
 const MAX_FEE_BPS: i128 = 10_000;
-/// Conservative ledger close time used to convert a deadline into a TTL.
+/// Ledger close time used to convert a deadline into a TTL. If ledgers close faster, the
+/// entry may be archived before `refund_expiry` and must be restored before the next call.
 const LEDGER_SECONDS: u64 = 5;
 /// Extra TTL kept beyond the refund deadline (about one day).
 const TTL_BUFFER_LEDGERS: u64 = 17_280;
@@ -190,7 +191,10 @@ impl AuthCaptureEscrow {
     ) -> Result<(), Error> {
         payment_info.operator.require_auth();
         let consent = require_consent(&payment_info);
-        if funder != consent && funder != payment_info.operator {
+        if funder == payment_info.operator || funder == env.current_contract_address() {
+            return Err(Error::InvalidFunder);
+        }
+        if funder != consent {
             funder.require_auth();
         }
         validate_amount(amount, i128::MAX)?;
@@ -229,22 +233,34 @@ fn require_payer_auth(env: &Env, info: &PaymentInfo) {
         .require_auth_for_args(vec![env, info.clone().into_val(env)]);
 }
 
-/// Requires the consent address for the current call and returns it. Skipped when it is
-/// also the operator, whose authorization was already required in the same frame.
-fn require_consent(info: &PaymentInfo) -> Address {
-    let consent = info
-        .receiver_authorizer
+fn consent_address(info: &PaymentInfo) -> Address {
+    info.receiver_authorizer
         .clone()
-        .unwrap_or_else(|| info.receiver.clone());
-    if consent != info.operator {
-        consent.require_auth();
-    }
+        .unwrap_or_else(|| info.receiver.clone())
+}
+
+/// Requires the consent address for the current call and returns it.
+fn require_consent(info: &PaymentInfo) -> Address {
+    let consent = consent_address(info);
+    consent.require_auth();
     consent
 }
 
 fn validate_payment(env: &Env, info: &PaymentInfo) -> Result<(), Error> {
     if info.max_amount <= 0 {
         return Err(Error::ZeroAmount);
+    }
+    // The operator must not be able to consent on the receiver's behalf.
+    if consent_address(info) == info.operator {
+        return Err(Error::InvalidConsentAddress);
+    }
+    // Funds sent to the escrow itself would be stranded.
+    let escrow = env.current_contract_address();
+    if info.receiver == escrow
+        || info.payer == escrow
+        || info.fee_receiver.as_ref() == Some(&escrow)
+    {
+        return Err(Error::InvalidParty);
     }
     if env.ledger().timestamp() >= info.pre_approval_expiry {
         return Err(Error::AfterPreApprovalExpiry);

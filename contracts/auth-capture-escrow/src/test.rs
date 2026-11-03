@@ -539,14 +539,51 @@ fn receiver_as_funder_uses_one_entry() {
 }
 
 #[test]
-fn operator_as_consent_address() {
+fn operator_cannot_be_consent_address() {
     let s = Setup::new();
+    s.env.mock_all_auths();
     let mut info = s.info();
     info.receiver_authorizer = Some(s.operator.clone());
+    assert_eq!(
+        s.escrow.try_authorize(&info),
+        Err(Ok(Error::InvalidConsentAddress))
+    );
+    let mut info = s.info();
+    info.receiver_authorizer = None;
+    info.receiver = s.operator.clone();
+    assert_eq!(
+        s.escrow.try_authorize(&info),
+        Err(Ok(Error::InvalidConsentAddress))
+    );
+}
+
+#[test]
+fn escrow_cannot_be_a_party() {
+    let s = Setup::new();
+    s.env.mock_all_auths();
+    let mut info = s.info();
+    info.receiver = s.escrow.address.clone();
+    assert_eq!(s.escrow.try_authorize(&info), Err(Ok(Error::InvalidParty)));
+    let mut info = s.info();
+    info.fee_receiver = Some(s.escrow.address.clone());
+    assert_eq!(s.escrow.try_authorize(&info), Err(Ok(Error::InvalidParty)));
+}
+
+#[test]
+fn refund_rejects_operator_or_escrow_as_funder() {
+    let s = Setup::new();
+    let info = s.info();
     s.authorize(&info);
     s.escrow
         .capture(&info, &500, &5, &Some(s.fee_receiver.clone()), &true);
-    assert_eq!(s.balance(&s.receiver), 495);
+    assert_eq!(
+        s.escrow.try_refund(&info, &100, &s.operator),
+        Err(Ok(Error::InvalidFunder))
+    );
+    assert_eq!(
+        s.escrow.try_refund(&info, &100, &s.escrow.address),
+        Err(Ok(Error::InvalidFunder))
+    );
 }
 
 #[test]

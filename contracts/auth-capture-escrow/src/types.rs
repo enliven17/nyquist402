@@ -10,7 +10,7 @@ pub struct PaymentInfo {
     pub payer: Address,
     /// Receives captured funds minus fees.
     pub receiver: Address,
-    /// Consents to server-side operations (charge, capture, void, refund). None disables them.
+    /// Consents to server-side operations (charge, capture, void, refund). When None, `receiver` consents.
     pub receiver_authorizer: Option<Address>,
     /// SEP-41 token contract.
     pub token: Address,
@@ -61,4 +61,7 @@ pub enum Error {
     AfterRefundExpiry = 15,
     RefundExceedsCapture = 16,
     TokenCollectionFailed = 17,
+    InvalidConsentAddress = 18,
+    InvalidFunder = 19,
+    InvalidParty = 20,
 }
