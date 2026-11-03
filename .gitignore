@@ -1,0 +1,11 @@
+/target
+test_snapshots/
+.env
+.env.local
+
+# web
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
