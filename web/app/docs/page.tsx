@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Logo } from "@/components/Logo";
 
 export const metadata: Metadata = { title: "Docs · Nyquist402" };
 
@@ -75,7 +76,7 @@ export default function Docs() {
   return (
     <main>
       <nav className="nav">
-        <a className="logo" href="/" style={{ textDecoration: "none" }}>Nyquist402</a>
+        <a href="/" style={{ textDecoration: "none" }}><Logo size={24} /></a>
         <div className="nav-links">
           <a href="/demo">Demo</a>
           <a href={SPEC_URL}>Spec</a>

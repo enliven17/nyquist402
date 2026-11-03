@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Logo } from "@/components/Logo";
 
 const TX_URL = "https://stellar.expert/explorer/testnet/tx/";
 const UNIT = 10_000_000;
@@ -57,7 +58,7 @@ export default function Demo() {
   return (
     <main>
       <nav className="nav">
-        <a className="logo" href="/" style={{ textDecoration: "none" }}>Nyquist402</a>
+        <a href="/" style={{ textDecoration: "none" }}><Logo size={24} /></a>
         <span className="badge" style={{ margin: 0 }}>Stellar testnet</span>
       </nav>
 

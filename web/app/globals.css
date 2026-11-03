@@ -1,15 +1,17 @@
-/* Brand tokens. Placeholder values until the brand kit is ready. */
+/* Brand tokens */
 :root {
-  --bg: #0b0d12;
-  --surface: #141821;
-  --border: #252b38;
-  --text: #e8ebf2;
-  --muted: #8b93a7;
-  --accent: #7c9cff;
-  --accent-text: #0b0d12;
-  --radius: 10px;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --paper: #f3f3ef;
+  --ink: #0e0f12;
+  --night: #0b0c10;
+  --accent: #2440ff;
+  --line: #d6d6d0;
+  --bg: var(--paper);
+  --surface: #fbfbf9;
+  --border: var(--line);
+  --text: var(--ink);
+  --muted: #6a6d75;
+  --accent-text: #fff;
+  --radius: 2px;
 }
 
 * { box-sizing: border-box; margin: 0; }
@@ -17,7 +19,8 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
   line-height: 1.6;
 }
 
@@ -34,7 +37,7 @@ h3 { font-size: 1rem; margin-bottom: 6px; }
 
 .lead { color: var(--muted); font-size: 1.125rem; max-width: 620px; margin-top: 20px; }
 .muted { color: var(--muted); }
-code { font-family: var(--font-mono); font-size: 0.9em; }
+code { font-family: var(--font-mono), ui-monospace, monospace; font-size: 0.9em; }
 
 .nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
 .logo { font-weight: 700; }
@@ -92,3 +95,8 @@ pre {
   line-height: 1.5;
 }
 .table-scroll { overflow-x: auto; }
+
+/* Brand */
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); }
+.brand-word { font-size: 19px; font-weight: 500; letter-spacing: -0.04em; }
+.brand-num { font-family: var(--font-mono), monospace; font-size: 0.72em; font-weight: 500; letter-spacing: 0; color: var(--accent); margin-left: 2px; vertical-align: 0.35em; }
