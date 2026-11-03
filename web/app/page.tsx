@@ -42,6 +42,7 @@ export default function Home() {
         <div className="nav-links">
           <a href="#how">How it works</a>
           <a href="/demo">Demo</a>
+          <a href="/docs">Docs</a>
           <a href={SPEC_URL}>Spec</a>
           <a href={REPO_URL}>GitHub</a>
         </div>
