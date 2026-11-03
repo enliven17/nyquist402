@@ -28,3 +28,25 @@
   .hero-fig { padding: 40px 6px 64px; }
   .hero-corners-foot { flex-direction: column; gap: 4px; }
 }
+
+/* Lifecycle flow bench */
+.hero-iso .win-frame { fill: var(--anatomy-shade-1); stroke: var(--anatomy-mid); stroke-width: 0.6; }
+.hero-iso .win-glass { fill: #fdfdfb; stroke: var(--anatomy-lo); stroke-width: 0.4; }
+.hero-iso .win-fill { fill: #2440ff; }
+.hero-iso .win-tick { stroke: var(--anatomy-lo); stroke-width: 0.5; }
+.hero-iso .win-tick.major { stroke: var(--anatomy-mid); }
+.hero-iso .win-ceiling { stroke: #2440ff; stroke-width: 0.9; stroke-dasharray: 1.6 1.2; }
+.hero-iso .plate { fill: var(--anatomy-shade-3); stroke: var(--anatomy-mid); stroke-width: 0.5; }
+.hero-iso .plate-text { font-family: var(--font-mono), monospace; font-size: 4.6px; fill: var(--anatomy-hi); font-variant-numeric: tabular-nums; }
+.hero-iso .flow { fill: none; stroke: #2440ff; stroke-width: 1.6; stroke-dasharray: 3 4; stroke-linecap: round; opacity: 0; transition: opacity 0.3s; animation: flow 0.6s linear infinite; }
+.hero-iso .flow.on { opacity: 1; }
+@keyframes flow { to { stroke-dashoffset: -7; } }
+.hero-iso .wheel .iso-top, .hero-iso .wheel .iso-shade { transition: fill 0.3s; }
+.hero-iso .wheel.on .iso-top { fill: #2440ff; }
+.hero-iso .wheel.on .iso-shade { fill: #1a2fd6; }
+.hero-iso .wheel.on .iso-line { stroke: #c9d0ff; }
+@media (prefers-reduced-motion: reduce) { .hero-iso .flow { animation: none; } }
+.life-fig { padding: 36px 12px 64px; }
+.life-fig .hero-corners-foot { flex-direction: column; gap: 4px; }
+.life-call { color: var(--accent); text-transform: none; }
+.lifecycle .h-lg { font-size: clamp(2.25rem, 4.2vw, 4rem); }
