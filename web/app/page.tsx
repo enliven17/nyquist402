@@ -1,5 +1,6 @@
 import "./landing.css";
 import { Logo, Mark } from "@/components/Logo";
+import HeroFigure from "@/components/landing/HeroFigure";
 import Lifecycle from "@/components/landing/Lifecycle";
 import Motion from "@/components/landing/Motion";
 
@@ -9,18 +10,7 @@ const ISSUE_URL = "https://github.com/x402-foundation/x402/issues/4122";
 const ESCROW = "CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI";
 const ESCROW_URL = `https://stellar.expert/explorer/testnet/contract/${ESCROW}`;
 
-const rail = ["Overview", "The gap", "Lifecycle", "Use cases", "Status", "Start", "FAQ"];
 const ticker = ["x402 v2", "auth-capture", "Soroban", "Stellar Asset Contract", "HTTP 402", "CAP-71 auth", "stellar:testnet"];
-
-// Hero signal: a sampled wave under the authorized ceiling, the same idea as the mark.
-const W = 640;
-const samples = Array.from({ length: 17 }, (_, i) => {
-  const x = 20 + i * 37.5;
-  const y = 200 - Math.sin(i * 0.55) * 70 - Math.sin(i * 1.3) * 28;
-  return { x, y: Math.min(Math.max(y, 80), 250) };
-});
-const wave = samples.map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join("");
-const hold = samples.map((p, i) => `${i ? `H${p.x.toFixed(1)}V` : `M${p.x.toFixed(1)} `}${p.y.toFixed(1)}`).join("");
 
 const features = [
   {
@@ -72,7 +62,11 @@ export default function Home() {
         <div className="wrap topbar-inner">
           <a href="/" className="topbar-logo"><Logo size={26} /></a>
           <nav className="topbar-links">
-            <a href="#lifecycle">How it works</a>
+            <a href="#s3">How it works</a>
+            <a href="#s4">Use cases</a>
+            <a href="#s6">Get started</a>
+            <a href="#s7">FAQ</a>
+            <span className="topbar-sep" />
             <a href="/docs">Docs</a>
             <a href={SPEC_PR}>Spec</a>
             <a href={REPO_URL}>GitHub</a>
@@ -81,11 +75,6 @@ export default function Home() {
         </div>
       </header>
 
-      <nav className="rail" data-rail aria-label="Sections">
-        {rail.map((r, i) => (
-          <a key={r} href={`#s${i + 1}`}><span>{String(i + 1).padStart(2, "0")}</span>{r}</a>
-        ))}
-      </nav>
 
       <main>
         {/* 01 Hero */}
@@ -100,7 +89,7 @@ export default function Home() {
 
             <div className="hero-grid">
               <div>
-                <h1 className="h-xl" data-split="now">Charge what<br />the work cost.</h1>
+                <h1 className="hero-title" data-split="now">Charge what<br />the work cost.</h1>
                 <p className="lead" data-reveal>
                   Nyquist402 brings the x402 <code>auth-capture</code> scheme to Stellar. Agents authorize a maximum,
                   sellers capture the real price, and every payment can be voided or refunded onchain.
@@ -111,26 +100,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <figure className="signal" aria-hidden>
-                <svg viewBox={`0 0 ${W} 300`}>
-                  {Array.from({ length: 9 }, (_, i) => (
-                    <path key={i} d={`M${20 + i * 75} 40V272`} className="grid-v" />
-                  ))}
-                  <path d="M10 272H630" className="axis" />
-                  <path d="M10 66H630" className="ceiling" data-draw />
-                  <text x="14" y="56" className="t-sub">max_amount · 1.00</text>
-                  <path d={hold} className="hold" data-draw />
-                  <path d={wave} className="wave" data-draw />
-                  {samples.map((p) => (
-                    <g key={p.x} className="stem" data-stem>
-                      <path d={`M${p.x} 272V${p.y}`} />
-                      <circle cx={p.x} cy={p.y} r="4" />
-                    </g>
-                  ))}
-                  <text x="14" y="292" className="t-sub">authorize → capture → void → refund</text>
-                </svg>
-                <span className="crosshair c1" /><span className="crosshair c2" />
-              </figure>
+              <HeroFigure />
             </div>
           </div>
 

@@ -13,7 +13,6 @@ gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 //   data-split   headline lines rise from a mask     data-reveal  fade up on enter
 //   data-line    rule draws left to right            data-count   number counts up
 //   data-fill    words light up while scrolling      data-parallax="-20"  yPercent scrub
-//   data-section index for the side rail
 export default function Motion() {
   useGSAP((_, contextSafe) => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -26,16 +25,6 @@ export default function Motion() {
       gsap.ticker.add(tick);
       gsap.ticker.lagSmoothing(0);
     }
-
-    const rail = document.querySelectorAll<HTMLElement>("[data-rail] a");
-    document.querySelectorAll<HTMLElement>("[data-section]").forEach((section, i) => {
-      ScrollTrigger.create({
-        trigger: section,
-        start: "top 55%",
-        end: "bottom 55%",
-        onToggle: (self) => self.isActive && rail.forEach((a, j) => a.classList.toggle("on", i === j)),
-      });
-    });
 
     if (reduced) {
       gsap.set("[data-split],[data-reveal],[data-line]", { clearProps: "all", opacity: 1 });
@@ -97,13 +86,6 @@ export default function Motion() {
         },
       });
     });
-
-    // Hero signal draws itself, then the samples drop in.
-    gsap.utils.toArray<SVGPathElement>("[data-draw]").forEach((path, i) => {
-      const len = path.getTotalLength();
-      gsap.fromTo(path, { strokeDasharray: len, strokeDashoffset: len }, { strokeDashoffset: 0, duration: 1.8, delay: 0.3 + i * 0.25, ease: "power2.inOut" });
-    });
-    gsap.from("[data-stem]", { opacity: 0, y: 24, duration: 0.6, stagger: 0.05, delay: 1, ease: "back.out(2)" });
 
     gsap.utils.toArray<HTMLElement>("[data-parallax]").forEach((el) => {
       gsap.to(el, {
