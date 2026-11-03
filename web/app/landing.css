@@ -103,7 +103,7 @@
 
 /* Lifecycle (pinned) */
 .lifecycle { min-height: 100vh; display: flex; align-items: center; background: var(--surface); border-top: 1px solid var(--line) !important; border-bottom: 1px solid var(--line) !important; }
-.lifecycle-inner { width: 100%; display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 56px; align-items: center; padding-top: 88px; padding-bottom: 40px; }
+.lifecycle-inner { width: 100%; display: grid; grid-template-columns: 0.72fr 1.28fr; gap: 56px; align-items: center; padding-top: 88px; padding-bottom: 40px; }
 .steps { list-style: none; padding: 0; margin: 40px 0 0; border-top: 1px solid var(--line); }
 .steps li { display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); opacity: 0.35; transition: opacity 0.4s; position: relative; }
 .steps li::before { content: ""; position: absolute; left: 0; top: -1px; height: 2px; width: 0; background: var(--accent); transition: width 0.6s cubic-bezier(.2,.8,.2,1); }
@@ -114,21 +114,6 @@
 .step-title code { color: var(--muted); font-size: 12px; margin-left: 6px; }
 .step-text { color: var(--muted); font-size: 14px; margin-top: 2px; }
 
-.ledger { margin: 0; }
-.ledger svg { width: 100%; height: auto; display: block; }
-.ledger .node { fill: var(--paper); stroke: var(--ink); stroke-width: 1; }
-.ledger .node-escrow { stroke: var(--accent); stroke-width: 1.5; }
-.ledger .wire { stroke: var(--ink); stroke-width: 1; fill: none; }
-.ledger .wire.dashed { stroke-dasharray: 4 5; stroke: var(--muted); }
-.ledger .ceiling { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 5; fill: none; }
-.ledger .gauge { stroke: var(--line); }
-.ledger .gauge-fill { fill: var(--accent); }
-.ledger .dot { fill: var(--accent); stroke: var(--surface); stroke-width: 3; }
-.t-label { font-family: var(--font-mono), monospace; font-size: 11px; letter-spacing: 0.1em; fill: var(--muted); }
-.t-bal { font-family: var(--font-sans), sans-serif; font-size: 40px; font-weight: 300; letter-spacing: -0.04em; fill: var(--ink); font-variant-numeric: tabular-nums; }
-.t-bal-sm { font-size: 22px; }
-.t-call { font-family: var(--font-mono), monospace; font-size: 15px; fill: var(--accent); }
-.ledger .t-cap { display: block; margin-top: 8px; }
 
 /* Features */
 .features { padding: clamp(96px, 12vw, 160px) 0 !important; }
@@ -244,11 +229,6 @@
   .use-text { grid-column: 1; }
   .use-arrow { grid-row: 1; grid-column: 2; }
   .lifecycle .h-lg { font-size: 2rem; }
-  .ledger .t-label { font-size: 20px; }
-  .ledger .t-sub { display: none; }
-  .ledger .t-call { font-size: 21px; }
-  .ledger .t-bal { font-size: 50px; }
-  .ledger .t-bal-sm { font-size: 30px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ticker-track { animation: none; }
