@@ -10,7 +10,7 @@ Work in progress. Not audited.
 
 | Network | `AuthCaptureEscrow` |
 | --- | --- |
-| Testnet | `CAZUU5HON2LQBRLWNTQX2NFWB7AYMCZRZT6C6N7KUPP6AOAXNFCF6FK2` |
+| Testnet | `CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI` |
 
 ## Layout
 

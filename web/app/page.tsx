@@ -1,5 +1,5 @@
 const REPO_URL = "https://github.com/enliven17/nyquist402";
-const ESCROW_TESTNET = "CAZUU5HON2LQBRLWNTQX2NFWB7AYMCZRZT6C6N7KUPP6AOAXNFCF6FK2";
+const ESCROW_TESTNET = "CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI";
 const ISSUE_URL = "https://github.com/x402-foundation/x402/issues/4122";
 const SPEC_URL =
   "https://github.com/x402-foundation/x402/blob/main/specs/schemes/auth-capture/scheme_auth_capture.md";
