@@ -16,7 +16,8 @@ Work in progress. Not audited.
 
 ```
 contracts/auth-capture-escrow/   Soroban contract
-web/                             Landing page
+web/                             Landing page and testnet demo
+docs/                            SCF application draft
 ```
 
 ## Contract
@@ -39,6 +40,17 @@ Requires Rust with the `wasm32v1-none` target and stellar-cli 25.2 or later.
 ```bash
 make build
 make test
+```
+
+## Demo
+
+`web/` includes a testnet demo at `/demo`: an agent pays a metered API with `auth-capture`, and the server captures, voids, or refunds. The demo uses the `@x402/stellar` auth-capture mechanism from the x402 fork, packed into `web/vendor/`.
+
+```bash
+cd web
+pnpm install
+pnpm setup-demo   # funds testnet accounts, issues DEMOUSD, writes .env.local
+pnpm dev          # http://localhost:3000/demo
 ```
 
 ## License

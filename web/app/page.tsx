@@ -41,6 +41,7 @@ export default function Home() {
         <span className="logo">Nyquist402</span>
         <div className="nav-links">
           <a href="#how">How it works</a>
+          <a href="/demo">Demo</a>
           <a href={SPEC_URL}>Spec</a>
           <a href={REPO_URL}>GitHub</a>
         </div>
@@ -54,7 +55,7 @@ export default function Home() {
           capture what the work cost, and every payment can be voided or refunded.
         </p>
         <div className="actions">
-          <a className="btn btn-primary" href="#how">How it works</a>
+          <a className="btn btn-primary" href="/demo">Try the testnet demo</a>
           <a className="btn" href={REPO_URL}>View on GitHub</a>
         </div>
       </section>

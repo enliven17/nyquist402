@@ -49,7 +49,9 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
   text-decoration: none;
   font-weight: 600;
 }
-.btn-primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+button.btn { font: inherit; cursor: pointer; background: var(--surface); color: var(--text); }
+button.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+button.btn-primary, .btn-primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
 
 .badge {
   display: inline-block;
