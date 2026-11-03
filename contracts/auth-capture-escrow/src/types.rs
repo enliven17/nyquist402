@@ -60,5 +60,5 @@ pub enum Error {
     BeforeAuthorizationExpiry = 14,
     AfterRefundExpiry = 15,
     RefundExceedsCapture = 16,
-    MissingReceiverAuthorizer = 17,
+    TokenCollectionFailed = 17,
 }
