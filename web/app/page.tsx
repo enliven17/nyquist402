@@ -3,6 +3,7 @@ import { Logo, Mark } from "@/components/Logo";
 import HeroFigure from "@/components/landing/HeroFigure";
 import Lifecycle from "@/components/landing/Lifecycle";
 import Motion from "@/components/landing/Motion";
+import Sidebar from "@/components/landing/Sidebar";
 
 const REPO_URL = "https://github.com/enliven17/nyquist402";
 const SPEC_PR = "https://github.com/x402-foundation/x402/pull/4124";
@@ -58,22 +59,7 @@ export default function Home() {
     <div className="landing">
       <Motion />
 
-      <header className="topbar">
-        <div className="wrap topbar-inner">
-          <a href="/" className="topbar-logo"><Logo size={26} /></a>
-          <nav className="topbar-links">
-            <a href="#s3">How it works</a>
-            <a href="#s4">Use cases</a>
-            <a href="#s6">Get started</a>
-            <a href="#s7">FAQ</a>
-            <span className="topbar-sep" />
-            <a href="/docs">Docs</a>
-            <a href={SPEC_PR}>Spec</a>
-            <a href={REPO_URL}>GitHub</a>
-          </nav>
-          <a href="/demo" className="pill pill-accent">Run the demo <span aria-hidden>↗</span></a>
-        </div>
-      </header>
+      <Sidebar />
 
 
       <main>
