@@ -198,9 +198,7 @@
 .band { background: var(--accent); color: #fff; overflow: hidden; position: relative; }
 .band::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(90deg, #ffffff1f 1px, transparent 1px); background-size: 64px 100%; }
 .band-inner { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 32px; padding-top: clamp(80px, 10vw, 140px); padding-bottom: clamp(80px, 10vw, 140px); }
-.band-mark rect { fill: #fff; }
-.band-mark path { stroke: var(--accent); }
-.band-mark circle { fill: var(--accent); }
+.band-mark { color: #fff; }
 
 /* Resources */
 
