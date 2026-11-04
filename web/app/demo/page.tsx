@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as wallet from "@/lib/wallet";
+import { Toast } from "@/components/Toast";
 import "./demo.css";
 
 const TX_URL = "https://stellar.expert/explorer/testnet/tx/";
@@ -182,6 +183,7 @@ export default function Demo() {
 
   return (
     <div className="demo">
+      <Toast message={error} onClose={() => setError(undefined)} />
       <main>
         <section className="d-head">
           <div>
@@ -312,7 +314,6 @@ export default function Demo() {
               </Row>
             )}
 
-            {error && <p className="note err" role="alert">{error}</p>}
           </section>
 
           <aside className="d-side" aria-label="Ledger">
