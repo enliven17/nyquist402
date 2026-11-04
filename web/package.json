@@ -8,10 +8,12 @@
     "setup-demo": "node scripts/setup-demo.mjs"
   },
   "dependencies": {
+    "@creit.tech/stellar-wallets-kit": "2.7.1",
     "@gsap/react": "2.1.2",
     "@stellar/stellar-sdk": "^16.4.1",
     "@x402/core": "file:vendor/x402-core-2.29.0.tgz",
     "@x402/stellar": "file:vendor/x402-stellar-2.29.0.tgz",
+    "buffer": "6.0.3",
     "gsap": "3.14.2",
     "lenis": "1.3.26",
     "next": "16.4.4",
