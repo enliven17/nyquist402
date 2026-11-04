@@ -114,74 +114,107 @@ export default function ProtectedDemo() {
     work(`${name} rules · claim ${claimId}`, () => post({ operation: "arbitrate", paymentId, claimId, sellerAmount }) as Promise<{ tx: string }>);
   const deadline = (time: number) => `${new Date(time * 1000).toLocaleTimeString()} · ${Math.max(0, time - now)}s left`;
   const disabled = !!busy || !config || !address;
+  const p = config?.preset;
+  const chosen = preferred || config?.defaultArbiter;
+  const getTokens = () => work("Get DEMOUSD", async () => {
+    const step = await fetch("/api/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "faucet", address }) }).then(r => r.json());
+    if (!step.ok) throw new Error(step.error);
+    if (!step.xdr) return step;
+    const result = await fetch("/api/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "submit", xdr: await wallet.signTransaction(step.xdr, address!) }) }).then(r => r.json());
+    if (!result.ok) throw new Error(result.error); return result;
+  });
+  const buckets = snapshot ? ([
+    ["available", "Unused", "pb-available"],
+    ["reserved", "Reserved", "pb-reserved"],
+    ["paid_to_seller", "Paid to seller", "pb-paid"],
+    ["returned_to_buyer", "Returned", "pb-returned"],
+  ] as const).map(([field, label, cls]) => ({ label, cls, value: BigInt(snapshot.state[field]) })) : [];
+  const total = buckets.reduce((sum, b) => sum + b.value, 0n) || 1n;
   return <div className="demo protected-demo">
       <Toast message={error} onClose={() => setError(undefined)} /><main>
 
-    <section className="d-head"><div><h1>Review the work.<br />Keep the budget protected.</h1><p>Each delivery gets its own reserved claim. Either party can dispute. After the session ends, the buyer can reclaim unused funds while reserved claims stay in escrow.</p></div>
-      <button className="pill-btn accent" disabled={!!busy} onClick={() => void work("Connect wallet", async () => { setAddress(await wallet.connect()); })}>{address ? `Switch wallet · ${address.slice(0, 6)}…` : "Connect testnet wallet"}</button>
+    <section className="d-head"><div><h1>Review the work.<br />Keep the budget protected.</h1><p>Every delivery is a claim the buyer reviews. Disputes go to the arbiter you choose.</p></div>
+      <button className="pill-btn accent" disabled={!!busy} onClick={() => void work("Connect wallet", async () => { setAddress(await wallet.connect()); })}>{address ? `Connected · ${address.slice(0, 4)}…${address.slice(-4)}` : "Connect testnet wallet"}</button>
     </section>
-    <p className="protected-notice">Testnet demonstration. You pay network fees in test XLM. Arbiters work for free. Seller controls and the listed arbiters are operated by this demo, so you can play every role.</p>
-    {busy && <p role="status" className="note"><span className="spin" aria-hidden /> {busy} — waiting for wallet or network confirmation.</p>}
+    {busy && <p role="status" className="busy-bar"><span className="spin" aria-hidden /> {busy}…</p>}
     <div className="d-grid"><section>
-      <div className="step-row"><span className="step-num">01</span><div><h2>Agree and fund</h2><p>Authorize 10.00 DEMOUSD. Review closes 120s after each claim; disputes allow at least 60s for evidence, then 90s per arbiter stage. The session lasts six minutes.</p>
+
+      <div className="step-row" data-state={snapshot ? "done" : "active"}><span className="step-num">{snapshot ? "✓" : "01"}</span><div>
+        <h2>Agree and fund</h2>
+        {p && <ul className="chips" aria-label="Session presets">
+          <li><b>{formatAmount(p.budget)}</b> budget</li><li><b>{p.review}s</b> review</li><li><b>{p.response}s</b> evidence</li><li><b>{p.custom}s</b> per arbiter</li><li><b>{Math.round(p.session / 60)} min</b> session</li>
+        </ul>}
+
+        <fieldset className="arbiter-pick"><legend>Arbiter <span className="free">free on testnet</span></legend>
+          <div className="arbiter-cards">{(config?.arbiters ?? []).map(a => <label key={a.address} className={chosen === a.address ? "on" : undefined}>
+            <input type="radio" name="arbiter" checked={chosen === a.address} onChange={() => { setPreferred(a.isDefault ? "" : a.address); setOffer(undefined); }} />
+            <strong>{a.name}</strong><code>{a.address.slice(0, 4)}…{a.address.slice(-4)}</code>{a.isDefault && <em>backup for every case</em>}
+          </label>)}</div>
+        </fieldset>
+
         <div className="protected-form">
-          <label>Service agreement<textarea value={agreement} maxLength={10000} onChange={e => { setAgreement(e.target.value); setOffer(undefined); }} /></label>
-          <fieldset className="arbiter-pick"><legend>Choose an arbiter <span className="d-cap">free during testnet</span></legend>
-            {(config?.arbiters ?? []).map(a => <label key={a.address} className={(preferred || config?.defaultArbiter) === a.address ? "on" : undefined}>
-              <input type="radio" name="arbiter" checked={(preferred || config?.defaultArbiter) === a.address} onChange={() => { setPreferred(a.isDefault ? "" : a.address); setOffer(undefined); }} />
-              <span><strong>{a.name}</strong><code>{a.address.slice(0, 6)}…{a.address.slice(-4)}</code></span><em>0 DEMOUSD fee</em>
-            </label>)}
-            <p className="muted">The seller agrees to your pick. If your arbiter misses its window, the Nyquist default takes over.</p>
-          </fieldset>
-          <label>Seller share if both arbiters time out (%)<input type="number" min="0" max="100" step="0.01" value={fallback} onChange={e => { setFallback(e.target.value); setOffer(undefined); }} /></label>
-          <p className="muted">50% is an editable example, not a production policy. If no arbiter rules, this signed split applies to the disputed claim. Neither party can change it after funding.</p>
-          <div className="acts">
-            <button className="pill-btn" disabled={disabled} onClick={() => void work("Get DEMOUSD", async () => {
-              const step = await fetch("/api/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "faucet", address }) }).then(r => r.json());
-              if (!step.ok) throw new Error(step.error);
-              if (!step.xdr) return step;
-              const result = await fetch("/api/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "submit", xdr: await wallet.signTransaction(step.xdr, address!) }) }).then(r => r.json());
-              if (!result.ok) throw new Error(result.error); return result;
-            })}>Get 10 DEMOUSD</button>
-            <button className="pill-btn accent" disabled={disabled || !agreement.trim()} onClick={() => void work("Review terms", quote)}>Review terms</button>
-          </div>
-          {offer && <div className="protected-offer"><h3>Before you sign</h3><dl className="protected-details">
-            <div><dt>Budget</dt><dd>{formatAmount(offer.terms.max_amount)} DEMOUSD</dd></div>
-            <div><dt>Chosen arbiter</dt><dd>{config?.arbiters.find(a => a.address === selectedArbiter(offer.terms))?.name ?? <code>{selectedArbiter(offer.terms)}</code>} · free</dd></div>
-            <div><dt>Project default</dt><dd><code>{offer.terms.default_arbiter}</code></dd></div>
-            <div><dt>Funding closes</dt><dd>{deadline(offer.terms.fund_by)}</dd></div>
-            <div><dt>Session closes</dt><dd>{deadline(offer.terms.delivery_deadline)}</dd></div>
-            <div><dt>Timeout split</dt><dd>Seller {offer.terms.fallback_seller_bps / 100}%; buyer {100 - offer.terms.fallback_seller_bps / 100}%</dd></div>
-          </dl><details><summary>Full signed terms</summary><pre>{JSON.stringify(offer.terms, null, 2)}</pre></details><button className="pill-btn accent" disabled={disabled || now >= offer.terms.fund_by} onClick={() => void work("Fund protected payment", fund)}>Sign and fund 10.00</button></div>}
+          <label className="split">Seller share if no arbiter rules <output>{fallback}%</output>
+            <input type="range" min="0" max="100" step="5" value={fallback} onChange={e => { setFallback(e.target.value); setOffer(undefined); }} />
+          </label>
+          <details><summary>Service agreement</summary><textarea aria-label="Service agreement" value={agreement} maxLength={10000} onChange={e => { setAgreement(e.target.value); setOffer(undefined); }} /></details>
         </div>
+
+        <div className="acts">
+          <button className="pill-btn" disabled={disabled} onClick={() => void getTokens()}>Get 10 DEMOUSD</button>
+          <button className="pill-btn accent" disabled={disabled || !agreement.trim()} onClick={() => void work("Review terms", quote)}>Review terms</button>
+        </div>
+
+        {offer && <div className="protected-offer"><h3>Before you sign</h3><dl className="protected-details">
+          <div><dt>Budget</dt><dd>{formatAmount(offer.terms.max_amount)} DEMOUSD</dd></div>
+          <div><dt>Arbiter</dt><dd>{config?.arbiters.find(a => a.address === selectedArbiter(offer.terms))?.name ?? <code>{selectedArbiter(offer.terms)}</code>} · free</dd></div>
+          <div><dt>Funding closes</dt><dd>{deadline(offer.terms.fund_by)}</dd></div>
+          <div><dt>Session closes</dt><dd>{deadline(offer.terms.delivery_deadline)}</dd></div>
+          <div><dt>Timeout split</dt><dd>Seller {offer.terms.fallback_seller_bps / 100}% · buyer {100 - offer.terms.fallback_seller_bps / 100}%</dd></div>
+        </dl><details><summary>Full signed terms</summary><pre>{JSON.stringify(offer.terms, null, 2)}</pre></details>
+          <button className="pill-btn accent" disabled={disabled || now >= offer.terms.fund_by} onClick={() => void work("Fund protected payment", fund)}>Sign and fund {formatAmount(offer.terms.max_amount)}</button></div>}
       </div></div>
-      <div className="step-row"><span className="step-num">02</span><div><h2>Open or recover a payment</h2><p>The contract holds the authoritative state. Local history retains IDs and agreements; importing an ID grants no signing authority.</p><div className="protected-form">
-        <label>Saved payments<select value={paymentId} onChange={e => setPaymentId(e.target.value)}><option value="">Choose a payment</option>{records.map(r => <option key={r.paymentId} value={r.paymentId}>{r.paymentId}</option>)}</select></label>
-        <label>Payment ID<input value={importId} onChange={e => setImportId(e.target.value)} placeholder="64 lowercase hex characters" /></label>
-        <button className="pill-btn" disabled={!!busy || !config || !importId} onClick={() => void work("Recover payment", async () => { assertHash(importId); setPaymentId(importId); const record = records.find(r => r.paymentId === importId); if (!record) remember({ paymentId: importId, agreement: "Imported payment; obtain the original agreement from the parties." }); })}>Read from contract</button>
-      </div></div></div>
-      {snapshot && <>
-        <div className="step-row"><span className="step-num">03</span><div><h2>Record a delivery claim</h2><p>The seller reserves the stated cost. It stays in escrow until acceptance, review expiry, a ruling, or the agreed fallback.</p><div className="protected-form">
-          <label>Claim amount (DEMOUSD)<input inputMode="decimal" value={claimAmount} onChange={e => setClaimAmount(e.target.value)} /></label>
-          <label>Delivery description<textarea value={delivery} maxLength={10000} onChange={e => setDelivery(e.target.value)} placeholder="Describe the delivered result; save it for review." /></label>
-          <button className="pill-btn" disabled={disabled || !sellerControl || !delivery.trim() || now >= snapshot.terms.delivery_deadline || BigInt(snapshot.state.available) === 0n} onClick={() => void work("Record claim", async () => transact({ type: "claim", paymentId, amount: parseAmount(claimAmount), delivery: await hashText(delivery) }))}>Seller records claim</button>
-        </div></div></div>
-        <div className="protected-claims"><h2>Claims and disputes</h2>{snapshot.claims.length === 0 && <p>No claims recorded.</p>}{snapshot.claims.map(item => <ClaimPanel key={`${paymentId}:${item.id}`} {...item} terms={snapshot.terms} paymentId={paymentId} address={address} sellerControl={sellerControl} now={now} busy={!!busy} run={run} arbiters={config?.arbiters ?? []} arbitrate={arbitrate} />)}
-          <div className="acts"><button className="pill-btn sm" disabled={offset === 0} onClick={() => setOffset(n => Math.max(0, n - 20))}>Previous claims</button><button className="pill-btn sm" disabled={snapshot.nextOffset === null} onClick={() => setOffset(snapshot.nextOffset ?? offset)}>Next claims</button></div>
+
+      <div className="step-row" data-state={snapshot ? (snapshot.claims.length ? "done" : "active") : "locked"}><span className="step-num">02</span><div>
+        <h2>Record a delivery</h2><p>The seller reserves what the delivery cost. It stays in escrow until the buyer accepts or a case ends.</p>
+        {snapshot && <div className="protected-form">
+          <div className="row2">
+            <label>Amount<input inputMode="decimal" value={claimAmount} onChange={e => setClaimAmount(e.target.value)} /></label>
+            <label>Delivery<input value={delivery} maxLength={10000} onChange={e => setDelivery(e.target.value)} placeholder="What was delivered" /></label>
+          </div>
+          <div className="acts"><button className="pill-btn" disabled={disabled || !sellerControl || !delivery.trim() || now >= snapshot.terms.delivery_deadline || BigInt(snapshot.state.available) === 0n} onClick={() => void work("Record claim", async () => transact({ type: "claim", paymentId, amount: parseAmount(claimAmount), delivery: await hashText(delivery) }))}>Seller records claim</button></div>
+        </div>}
+      </div></div>
+
+      {snapshot && <div className="protected-claims"><h2>Claims</h2>{snapshot.claims.length === 0 && <p className="muted">No claims yet.</p>}{snapshot.claims.map(item => <ClaimPanel key={`${paymentId}:${item.id}`} {...item} terms={snapshot.terms} paymentId={paymentId} address={address} sellerControl={sellerControl} now={now} busy={!!busy} run={run} arbiters={config?.arbiters ?? []} arbitrate={arbitrate} />)}
+        {(offset > 0 || snapshot.nextOffset !== null) && <div className="acts"><button className="pill-btn sm" disabled={offset === 0} onClick={() => setOffset(n => Math.max(0, n - 20))}>Previous</button><button className="pill-btn sm" disabled={snapshot.nextOffset === null} onClick={() => setOffset(snapshot.nextOffset ?? offset)}>Next</button></div>}
+      </div>}
+    </section>
+
+    <aside className="d-side" aria-label="Protected ledger">
+      <div className="pstate"><span className="d-cap">This payment</span>{snapshot ? <>
+        <div className="pbar" role="img" aria-label={buckets.map(b => `${b.label} ${formatAmount(b.value.toString())}`).join(", ")}>
+          {buckets.map(b => <i key={b.cls} className={b.cls} style={{ width: `${Number((b.value * 1000n) / total) / 10}%` }} />)}
         </div>
-      </>}
-    </section><aside className="d-side" aria-label="Protected ledger"><div className="pstate"><span className="d-cap">This payment · DEMOUSD</span>{snapshot ? <>
-      <dl className="protected-details">{([["available", "Unused"], ["reserved", "Reserved in claims"], ["paid_to_seller", "Paid to seller"], ["returned_to_buyer", "Returned to buyer"]] as const).map(([field, label]) => <div key={field}><dt>{label}</dt><dd>{formatAmount(snapshot.state[field])}</dd></div>)}
-        <div><dt>Session ends</dt><dd>{deadline(snapshot.terms.delivery_deadline)}</dd></div>
-        <div><dt>Buyer</dt><dd><code>{snapshot.terms.payer}</code></dd></div><div><dt>Seller</dt><dd><code>{snapshot.terms.seller}</code></dd></div>
-        <div><dt>Agreement hash</dt><dd><code>{snapshot.terms.agreement}</code></dd></div>
-      </dl><div className="acts"><button className="pill-btn" disabled={disabled || !buyer || now < snapshot.terms.delivery_deadline || BigInt(snapshot.state.available) === 0n} onClick={() => void run("Reclaim unused funds", { type: "reclaim", paymentId })}>Reclaim unused funds</button>
-      <button className="pill-btn" disabled={disabled || !sellerControl || BigInt(snapshot.state.available) === 0n} onClick={() => void run("Seller returns unused funds", { type: "void_unclaimed", paymentId })}>Seller returns unused funds</button></div>
-      <p className="muted">Reserved claims remain locked when unused funds are returned.</p>
-      {current?.agreement && <details><summary>Saved agreement</summary><p>{current.agreement}</p></details>}
-    </> : <p className="muted">Fund a payment or import its ID. A saved ID is not proof that funding succeeded.</p>}</div>
-      <div className="log"><span className="d-cap">Activity</span><ol>{log.length === 0 && <li className="muted">Confirmed transactions appear here.</li>}{log.map((entry, index) => <li key={index}><span>{entry.label}</span>{entry.tx ? <a href={`https://stellar.expert/explorer/testnet/tx/${entry.tx}`} target="_blank" rel="noreferrer">{entry.tx.slice(0, 10)}… ↗</a> : <span className={entry.error ? "bad" : "muted"}>{entry.error ?? "Ready"}</span>}</li>)}</ol></div>
-      <p className="d-foot">Connected wallet <code>{address ?? "None"}</code><br />Protected escrow <code>{config?.contractId ?? "Not configured"}</code>{paymentId && <><br />Payment <code>{paymentId}</code></>}</p>
+        <ul className="plegend">{buckets.map(b => <li key={b.cls}><i className={b.cls} />{b.label}<span>{formatAmount(b.value.toString())}</span></li>)}</ul>
+        <div className="kv"><span>Session ends</span><span>{Math.max(0, snapshot.terms.delivery_deadline - now)}s</span></div>
+        <div className="acts">
+          <button className="pill-btn sm" disabled={disabled || !buyer || now < snapshot.terms.delivery_deadline || BigInt(snapshot.state.available) === 0n} onClick={() => void run("Reclaim unused funds", { type: "reclaim", paymentId })}>Reclaim unused</button>
+          <button className="pill-btn sm" disabled={disabled || !sellerControl || BigInt(snapshot.state.available) === 0n} onClick={() => void run("Seller returns unused funds", { type: "void_unclaimed", paymentId })}>Seller returns unused</button>
+        </div>
+        <details><summary>Payment details</summary><dl className="protected-details">
+          <div><dt>Buyer</dt><dd><code>{snapshot.terms.payer}</code></dd></div><div><dt>Seller</dt><dd><code>{snapshot.terms.seller}</code></dd></div>
+          <div><dt>Payment ID</dt><dd><code>{paymentId}</code></dd></div><div><dt>Agreement</dt><dd><code>{snapshot.terms.agreement}</code></dd></div>
+        </dl></details>
+      </> : <p className="muted" style={{ marginTop: 8 }}>Fund a payment to see its balances.</p>}</div>
+
+      <details className="recover"><summary>Recover a payment</summary><div className="protected-form">
+        {records.length > 0 && <label>Saved<select value={paymentId} onChange={e => setPaymentId(e.target.value)}><option value="">Choose a payment</option>{records.map(r => <option key={r.paymentId} value={r.paymentId}>{r.paymentId.slice(0, 12)}…</option>)}</select></label>}
+        <label>Payment ID<input value={importId} onChange={e => setImportId(e.target.value)} placeholder="64 hex characters" /></label>
+        <button className="pill-btn sm" disabled={!!busy || !config || !importId} onClick={() => void work("Recover payment", async () => { assertHash(importId); setPaymentId(importId); const record = records.find(r => r.paymentId === importId); if (!record) remember({ paymentId: importId, agreement: "Imported payment; obtain the original agreement from the parties." }); })}>Read from contract</button>
+      </div></details>
+
+      <div className="log"><span className="d-cap">Activity</span><ol>{log.length === 0 && <li className="muted">Transactions appear here.</li>}{log.map((entry, index) => <li key={index}><span>{entry.label}</span>{entry.tx ? <a href={`https://stellar.expert/explorer/testnet/tx/${entry.tx}`} target="_blank" rel="noreferrer">{entry.tx.slice(0, 10)}… ↗</a> : <span className={entry.error ? "bad" : "muted"}>{entry.error ? "failed" : "done"}</span>}</li>)}</ol></div>
+      <p className="d-foot">Testnet only. Seller and arbiters are operated by this demo so you can play every role.</p>
     </aside></div>
   </main></div>;
 }

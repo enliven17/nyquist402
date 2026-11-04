@@ -17,6 +17,14 @@ export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sell
   const buyer = address === terms.payer;
   const canRule = address === arbiter && allowed.rule;
   const desk = arbiters.find(a => a.address === arbiter);
+  // The window the claim is waiting on right now, for the countdown bar.
+  const window = claim.status === "Review" && now < claim.review_until
+    ? { label: "Review closes", end: claim.review_until, span: terms.review_seconds }
+    : claim.status === "Disputed" && now < claim.response_until
+      ? { label: "Evidence closes", end: claim.response_until, span: Math.max(1, claim.response_until - claim.review_until + terms.review_seconds) }
+      : claim.status === "Disputed" && now < claim.fallback_at
+        ? { label: "Ruling window", end: claim.fallback_at, span: Math.max(1, claim.fallback_at - claim.response_until) }
+        : undefined;
   const disabled = busy || !address;
   const deadline = (value: number) => `${new Date(value * 1000).toLocaleTimeString()} (${Math.max(0, value - now)}s left)`;
   async function evidenceAction(party: string, type: "dispute" | "submit_evidence") {
@@ -26,7 +34,11 @@ export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sell
     });
   }
   return <article className="protected-claim">
-    <header><h3>Claim {id} <span className="d-cap">{claim.status}</span></h3><strong>{formatAmount(claim.amount)} DEMOUSD</strong></header>
+    <header><h3>Claim {id} <span className={`status status-${claim.status.toLowerCase()}`}>{claim.status}</span></h3><strong>{formatAmount(claim.amount)} DEMOUSD</strong></header>
+    {window && <div className="countdown" aria-label={`${window.label}: ${Math.max(0, window.end - now)} seconds left`}>
+      <div className="kv"><span>{window.label}</span><span>{Math.max(0, window.end - now)}s</span></div>
+      <div className="bar time"><i style={{ width: `${Math.min(100, Math.max(0, ((window.end - now) / window.span) * 100))}%` }} /></div>
+    </div>}
     <dl className="protected-details">
       <div><dt>Review closes</dt><dd>{deadline(claim.review_until)}</dd></div>
       <div><dt>Delivery commitment</dt><dd><code>{claim.delivery}</code></dd></div>
@@ -55,7 +67,7 @@ export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sell
       </div>
     </div>}
     {desk && claim.status === "Disputed" && <div className="protected-form arbiter-desk">
-      <p><strong>{desk.name}</strong> <span className="d-cap">free · operated by this demo</span></p>
+      <p><strong>{desk.name}</strong> <span className="free">free</span></p>
       {allowed.rule ? <>
         <p className="muted">Decide the split after reading both sides. The remainder returns to the buyer.</p>
         <div className="acts">

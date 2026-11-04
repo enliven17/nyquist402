@@ -107,3 +107,14 @@ pre {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink) 22%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--ink) 40%, transparent); }
+
+/* Page transitions: native cross-document view transitions. The site navigation stays put. */
+@view-transition { navigation: auto; }
+.topbar { view-transition-name: site-nav; }
+::view-transition-old(root) { animation: page-out 0.18s ease-in both; }
+::view-transition-new(root) { animation: page-in 0.32s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes page-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes page-in { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+}
