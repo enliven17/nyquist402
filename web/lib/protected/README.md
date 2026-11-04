@@ -10,14 +10,14 @@ pnpm install --frozen-lockfile
 pnpm setup-demo # once; refuses to overwrite existing funded credentials
 ```
 
-For an existing `.env.local`, keep its keys/token. Add `DEMO_PROTECTED_ESCROW` (the deployed protected testnet contract ID) and `DEMO_SESSION_SECRET` (a stable random secret of at least 32 characters; use the generator in `.env.example`). Optionally add `DEMO_SELLER_ARBITER` for the seller's custom preference. Restart the server after configuration changes.
+For an existing `.env.local`, keep its keys/token. Set `DEMO_PROTECTED_ESCROW=CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW` (the testnet deployment recorded in the repository README) and `DEMO_SESSION_SECRET` (a stable random secret of at least 32 characters; use the generator in `.env.example`). Optionally add `DEMO_SELLER_ARBITER` for the seller's custom preference. Restart the server after configuration changes.
 
 ```sh
 pnpm dev
 # http://localhost:3000/demo/protected
 ```
 
-The app reads the deployment's default arbiter and verifies its `payment_hash` against the SDK before quoting. Missing, archived or incompatible deployments fail visibly; the app never falls back to the basic contract. No protected contract ID is assumed or published by this integration.
+The app reads the deployment's default arbiter and verifies its `payment_hash` against the SDK before quoting. Missing, archived or incompatible deployments fail visibly; the app never falls back to the basic contract. The repository records the protected testnet address and default arbiter in the root README. The integration still requires explicit deployment configuration.
 
 Connect a testnet wallet and acquire 10 DEMOUSD. Request a quote, review the exact agreement/policy and sign the funding transaction. The wallet pays network fees in test XLM. This demo has zero protocol/arbitration fees.
 

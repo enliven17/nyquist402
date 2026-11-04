@@ -16,42 +16,40 @@ const ticker = ["x402 v2", "auth-capture", "Soroban", "Stellar Asset Contract", 
 const features = [
   {
     title: "Consent, enforced onchain",
-    text: "Capture, void and refund need the seller's own authorization entry over the exact arguments. The contract checks it, not the facilitator.",
+    text: "The contract checks the seller's signature on every capture, void and refund.",
     icon: "M8 32h32M14 32V18h20v14M20 18v-5a4 4 0 0 1 8 0v5",
   },
   {
     title: "Replay protection from the protocol",
-    text: "Every Soroban authorization carries a nonce and an expiry ledger. Each consent is single-use without extra contract state.",
+    text: "Soroban nonces make every consent single-use.",
     icon: "M10 24a14 14 0 1 0 4-10M10 8v6h6M24 16v9l6 4",
   },
   {
     title: "One signature, no XLM for payers",
-    text: "The agent signs once. The token transfer is a sub-invocation of that same entry, and the facilitator pays network fees.",
+    text: "The agent signs once. The facilitator pays the fees.",
     icon: "M8 36c6-2 8-14 14-14s6 8 12 8 6-6 6-6M8 12h14",
   },
   {
     title: "Refunds anyone can fund",
-    text: "The refund funder signs an entry rooted at the escrow call, so a seller, a treasury or an insurer can cover it.",
+    text: "A seller, treasury or insurer can cover a refund.",
     icon: "M24 8v32M12 20l12-12 12 12M10 40h28",
   },
 ];
 
 const uses = [
-  ["AI agents", "Give an agent a ceiling, not a blank check. It authorizes the maximum per task and pays what the task used."],
-  ["Inference APIs", "Bill by tokens generated. Hold the budget, capture the metered amount, release the rest."],
-  ["Long-running jobs", "Rendering, training, crawling. Capture in parts as work completes, void if it fails."],
-  ["Data marketplaces", "Pay for a query before the row count is known. Refund rows that fail validation."],
-  ["Commerce", "Authorize at checkout, capture on shipment, refund within the window. Card semantics, settled on Stellar."],
-  ["MCP tools", "Paid tool calls whose price depends on the result, with a clear path to make the buyer whole."],
+  ["AI agents", "A spending ceiling per task, not a blank check."],
+  ["Inference APIs", "Bill by tokens generated."],
+  ["Long-running jobs", "Capture in parts, void on failure."],
+  ["Data marketplaces", "Pay before the row count is known."],
+  ["Commerce", "Authorize at checkout, capture on shipment."],
+  ["MCP tools", "Tool calls priced by their result."],
 ];
 
 const faq = [
-  ["How is this different from the exact scheme?", "exact moves a fixed amount the moment the client signs, and it is final. auth-capture holds up to a signed maximum in escrow. The seller then captures any amount up to it, releases the rest, and can refund later."],
-  ["Who holds the funds during a hold?", "The escrow contract. Funds leave it only through capture, void, refund or reclaim. If the seller never acts, the payer reclaims the whole hold after the capture deadline."],
-  ["Can the facilitator move funds on its own?", "No. It submits transactions and pays fees. Every capture, void and refund needs the seller's consent entry, and the contract rejects the facilitator as consent address or refund funder."],
-  ["Does the payer need XLM?", "No. The payer signs an authorization entry and holds only the payment token. The facilitator is the transaction source."],
-  ["Is it compatible with auth-capture on EVM?", "It is the same scheme and lifecycle in x402 v2. The Stellar binding is a separate spec that maps each step to Soroban authorization instead of ERC-3009 or Permit2."],
-  ["Is it audited?", "Not yet. The escrow is live on testnet. An audit comes before any mainnet deployment."],
+  ["How is this different from the exact scheme?", "exact moves a fixed, final amount. auth-capture holds a maximum in escrow; the seller captures part of it and can refund later."],
+  ["Who holds the funds during a hold?", "The escrow contract. If the seller never acts, the payer reclaims the hold after the deadline."],
+  ["Can the facilitator move funds on its own?", "No. Every capture, void and refund needs the seller's signature."],
+  ["Is it audited?", "Not yet. An audit comes before mainnet."],
 ];
 
 export default function Home() {
@@ -77,8 +75,7 @@ export default function Home() {
               <div>
                 <h1 className="hero-title" data-split="now">Charge what<br />the work cost.</h1>
                 <p className="lead" data-reveal>
-                  Nyquist402 brings the x402 <code>auth-capture</code> scheme to Stellar. Agents authorize a maximum,
-                  sellers capture the real price, and every payment can be voided or refunded onchain.
+                  x402 <code>auth-capture</code> on Stellar. Authorize a maximum, capture the real price, refund onchain.
                 </p>
                 <div className="cta-row" data-reveal>
                   <a href="/demo" className="pill pill-accent pill-lg">Run the testnet demo <span aria-hidden>↗</span></a>
@@ -115,16 +112,12 @@ export default function Home() {
                 <div className="panel-label"><code>auth-capture</code><span>Nyquist402</span></div>
                 <div className="bar"><div className="bar-fill bar-ac" data-line /><b>hold → capture → void → refund · amount fixed after the work</b></div>
               </div>
-              <div className="panel-foot">
-                <span>6 escrow operations</span><span>partial capture</span><span>refund window</span><span>payer reclaim</span>
-              </div>
             </div>
 
             <div className="why-copy">
               <p className="t-cap">Problem</p>
               <p className="fill-text" data-fill>
-                Every x402 payment on Stellar settles once, for a price known in advance. Metered inference,
-                long-running jobs and buyer protection need a payment that can change after it starts.
+                x402 on Stellar settles once, at a price fixed in advance.
               </p>
             </div>
           </div>
@@ -176,14 +169,13 @@ export default function Home() {
             <p className="eyebrow"><span className="tick" />05 · Status</p>
             <div className="proof-grid">
               <blockquote className="proof-quote" data-fill>
-                The escrow is deployed on testnet, the mechanism ships inside the official <em>@x402/stellar</em> SDK,
-                and the Stellar binding is <em>under review at the x402 Foundation</em>.
+                Live on testnet. Spec <em>under review at the x402 Foundation</em>.
               </blockquote>
               <dl className="stats">
-                <div><dt><span data-count="24">24</span></dt><dd>contract tests, incl. a randomized invariant run</dd></div>
-                <div><dt><span data-count="317">317</span></dt><dd>SDK unit tests across client, server, facilitator</dd></div>
-                <div><dt><span data-count="1">1</span></dt><dd>signature from the payer per payment</dd></div>
-                <div><dt><span data-count="0">0</span></dt><dd>XLM the payer needs to hold</dd></div>
+                <div><dt><span data-count="24">24</span></dt><dd>contract tests</dd></div>
+                <div><dt><span data-count="317">317</span></dt><dd>SDK tests</dd></div>
+                <div><dt><span data-count="1">1</span></dt><dd>payer signature</dd></div>
+                <div><dt><span data-count="0">0</span></dt><dd>XLM for the payer</dd></div>
               </dl>
             </div>
             <a href={ESCROW_URL} className="contract-chip" data-reveal>
@@ -199,13 +191,12 @@ export default function Home() {
             <h2 className="h-lg" data-split>Three roles.<br />One package.</h2>
             <div className="start-grid">
               {[
-                ["Seller", "Price the route and sign consent for capture, void and refund.", `new AuthCaptureStellarScheme({\n  consentSigner: receiver,\n})`],
-                ["Agent", "Sign one authorization per payment. Hold only the token.", `new x402Client().register(\n  "stellar:testnet",\n  new AuthCaptureStellarScheme(agent),\n)`],
-                ["Facilitator", "Operate the escrow, submit calls, pay fees. Never move its own funds.", `new AuthCaptureStellarScheme(\n  [operator],\n  { feeTerms: { maxFeeBps: 0 } },\n)`],
-              ].map(([role, text, code]) => (
+                ["Seller", `new AuthCaptureStellarScheme({\n  consentSigner: receiver,\n})`],
+                ["Agent", `new x402Client().register(\n  "stellar:testnet",\n  new AuthCaptureStellarScheme(agent),\n)`],
+                ["Facilitator", `new AuthCaptureStellarScheme(\n  [operator],\n  { feeTerms: { maxFeeBps: 0 } },\n)`],
+              ].map(([role, code]) => (
                 <article className="start-card" key={role} data-reveal>
                   <div className="start-head"><h3>{role}</h3><span className="t-cap">@x402/stellar/auth-capture</span></div>
-                  <p>{text}</p>
                   <pre><code>{code}</code></pre>
                 </article>
               ))}
@@ -244,32 +235,12 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Resources */}
-        <section className="resources">
-          <div className="wrap">
-            <p className="eyebrow"><span className="tick" />Resources</p>
-            <div className="res-grid">
-              {[
-                ["Spec", "Stellar binding for auth-capture", "x402-foundation/x402 #4124", SPEC_PR],
-                ["Proposal", "Scheme proposal and discussion", "x402-foundation/x402 #4122", ISSUE_URL],
-                ["Docs", "Seller, agent and facilitator setup", "nyquist402 / docs", "/docs"],
-                ["Demo", "Full lifecycle with real transactions", "stellar:testnet", "/demo"],
-              ].map(([kind, title, sub, href]) => (
-                <a className="res" key={kind} href={href} data-reveal>
-                  <span className="t-cap">{kind}</span>
-                  <span className="res-title">{title}</span>
-                  <span className="res-sub">{sub}<span aria-hidden>↗</span></span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
       </main>
 
       <footer className="foot">
         <div className="wrap">
           <div className="foot-cols">
-            <div><Logo size={22} /><p className="t-cap" style={{ marginTop: 14 }}>Refundable x402 payments on Stellar.</p></div>
+            <div><Logo size={22} /></div>
             <div><p className="t-cap">Product</p><a href="/demo">Demo</a><a href="/docs">Docs</a><a href="#lifecycle">How it works</a></div>
             <div><p className="t-cap">Protocol</p><a href={SPEC_PR}>Spec PR</a><a href={ISSUE_URL}>Proposal</a><a href={ESCROW_URL}>Escrow</a></div>
             <div><p className="t-cap">Source</p><a href={REPO_URL}>GitHub</a><span>MIT license</span><span>Not audited</span></div>

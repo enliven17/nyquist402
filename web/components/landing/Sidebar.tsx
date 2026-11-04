@@ -65,7 +65,6 @@ export default function Sidebar() {
     <header className="topbar">
       <div className="wrap topbar-inner">
         <a href="/" className="topbar-logo"><Logo size={26} /></a>
-        <p className="side-tag">Refundable x402 payments on Stellar.</p>
 
         <nav className="side-nav" aria-label="Site">
           <p className="side-head">Product</p>
@@ -82,8 +81,7 @@ export default function Sidebar() {
               <code>{copied ? "copied" : `${ESCROW.slice(0, 6)}…${ESCROW.slice(-4)}`}</code>
             </button>
           </div>
-          <a href="/demo" className="pill pill-accent side-cta">Run the demo <span aria-hidden>↗</span></a>
-          <p className="side-meta">v0.1 · MIT · not audited</p>
+          <a href="/demo" className="pill pill-accent side-cta">Demo <span aria-hidden>↗</span></a>
         </div>
       </div>
     </header>
