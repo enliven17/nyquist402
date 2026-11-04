@@ -198,8 +198,7 @@ export default function Demo() {
             <p className="d-cap" style={{ marginBottom: 14 }}>Live demo · x402 auth-capture</p>
             <h1>Pay for work before it is done.</h1>
             <p style={{ marginTop: 18 }}>
-              You authorize 1.00 DEMOUSD into escrow for a metered inference call. The merchant captures what the work
-              cost and releases the rest. If the merchant does nothing, you take the hold back yourself.
+              Hold 1.00 in escrow. The merchant captures what the work cost.
             </p>
           </div>
           <div className="seg" role="group" aria-label="Payer">
@@ -220,7 +219,7 @@ export default function Demo() {
                     address ? (
                       <>Connected as <span className="addr">{short(address)}</span></>
                     ) : (
-                      "Freighter, xBull or Hana, switched to Testnet."
+                      "Freighter, xBull or Hana on Testnet."
                     )
                   }
                 >
@@ -236,7 +235,7 @@ export default function Demo() {
                   n="02"
                   state={stepState(!!address && funded, !!address)}
                   title="Get test DEMOUSD"
-                  body="Opens the account with testnet XLM if needed and sends 10 DEMOUSD. The first claim asks for one signature to add the trustline."
+                  body="First claim adds a trustline: one signature."
                 >
                   <button
                     className="pill-btn"
@@ -256,8 +255,8 @@ export default function Demo() {
               who={mode === "wallet" ? "you" : "agent"}
               body={
                 mode === "wallet"
-                  ? "Your wallet signs one Soroban authorization. The facilitator submits it and pays the fee; 1.00 moves into escrow."
-                  : "The demo agent signs and the facilitator submits; 1.00 moves into escrow."
+                  ? "One signature. No XLM needed."
+                  : "The demo agent signs for you."
               }
             >
               <button
@@ -275,7 +274,7 @@ export default function Demo() {
               state={stepState(paid && !open, paid && open)}
               title="Settle"
               who="merchant"
-              body="Capture 0.60 for the work and release 0.40, or void the whole hold. Captured funds stay refundable until the refund deadline."
+              body="Capture 0.60 and release the rest, or void."
             >
               <button
                 className="pill-btn"
@@ -310,7 +309,7 @@ export default function Demo() {
                 state={stepState(false, paid && capturable > 0 && remaining === 0)}
                 title="Reclaim"
                 who="you"
-                body="If the merchant never settles, the payer takes the hold back after the capture window. The demo window is three minutes."
+                body="If the merchant does nothing, take the hold back after 3 minutes."
               >
                 <button
                   className="pill-btn"
@@ -368,7 +367,7 @@ export default function Demo() {
             <div className="log">
               <span className="d-cap">Transactions</span>
               <ol>
-                {log.length === 0 && <li className="muted">Every step lands on testnet.</li>}
+                {log.length === 0 && <li className="muted">None yet.</li>}
                 {log.map(entry => (
                   <li key={entry.id}>
                     <span>{entry.label}</span>
