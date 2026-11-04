@@ -685,3 +685,72 @@ fn signed_fallback_endpoints_return_or_pay_the_entire_reservation() {
         assert_eq!(s.escrow.payment_state(&id).reserved, 0);
     }
 }
+
+#[test]
+fn javascript_codec_matches_rust_payment_identity() {
+    use soroban_sdk::{xdr, xdr::ToXdr, Bytes, TryFromVal};
+    let env = Env::default();
+    let account = |byte| {
+        Address::try_from_val(
+            &env,
+            &xdr::ScAddress::Account(xdr::AccountId(xdr::PublicKey::PublicKeyTypeEd25519(
+                xdr::Uint256([byte; 32]),
+            ))),
+        )
+        .unwrap()
+    };
+    let contract_address = |byte| {
+        Address::try_from_val(
+            &env,
+            &xdr::ScAddress::Contract(xdr::ContractId(xdr::Hash([byte; 32]))),
+        )
+        .unwrap()
+    };
+    let network = Bytes::from_slice(&env, b"Test SDF Network ; September 2015");
+    env.ledger()
+        .with_mut(|ledger| ledger.network_id = env.crypto().sha256(&network).to_array());
+    let escrow_address = contract_address(5);
+    env.register_at(&escrow_address, ProtectedEscrow, (&account(4),));
+    let terms = PaymentTerms {
+        payer: account(1),
+        seller: account(2),
+        token: contract_address(6),
+        agreement: BytesN::from_array(&env, &[8; 32]),
+        max_amount: 100_000_000,
+        fund_by: 1_800_000_060,
+        delivery_deadline: 1_800_000_360,
+        buyer_arbiter: Some(account(3)),
+        seller_arbiter: Some(account(3)),
+        default_arbiter: account(4),
+        review_seconds: 120,
+        response_seconds: 60,
+        arbiter_seconds: 90,
+        default_seconds: 90,
+        fallback_seller_bps: 2500,
+        salt: BytesN::from_array(&env, &[7; 32]),
+    };
+    let hex = |bytes: Bytes| {
+        bytes
+            .iter()
+            .map(|b| std::format!("{b:02x}"))
+            .collect::<std::string::String>()
+    };
+    let encoded = hex(terms.clone().to_xdr(&env));
+    let payment_id = hex(ProtectedEscrowClient::new(&env, &escrow_address)
+        .payment_hash(&terms)
+        .into());
+    assert_eq!(
+        encoded,
+        std::include_str!("../../../web/tests/fixtures/protected-encoding.json")
+            .split("\"termsXdrHex\": \"")
+            .nth(1)
+            .unwrap()
+            .split('"')
+            .next()
+            .unwrap()
+    );
+    assert_eq!(
+        payment_id,
+        "e8ba1ab8386807e8ddc2386cfa73740f89e3da19f437b3e6ea870bb4ce04738b"
+    );
+}

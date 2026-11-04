@@ -188,6 +188,7 @@ export default function Demo() {
           <a href="/" aria-label="Nyquist402 home"><Logo size={24} /></a>
           <nav>
             <span className="mono"><span className="dot" />Stellar testnet</span>
+            <a href="/demo/protected">Protected demo</a>
             <a href="/docs">Docs</a>
           </nav>
         </header>
