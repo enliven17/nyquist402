@@ -1,6 +1,5 @@
 .protected-demo .d-head p { margin-top: 18px; }
 .protected-demo .protected-notice { padding: 20px 0; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 14px; max-width: 70rem; }
-.protected-demo .protected-error { padding: 14px; border: 1px solid currentColor; overflow-wrap: anywhere; }
 .protected-form { display: grid; gap: 16px; margin-top: 20px; }
 .protected-form label { display: grid; gap: 7px; font-size: 13px; color: var(--ink); }
 .protected-form input, .protected-form textarea, .protected-form select { width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 0; padding: 10px 12px; font: inherit; }
