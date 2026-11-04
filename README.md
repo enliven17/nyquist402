@@ -16,7 +16,7 @@ Work in progress. Not audited.
 
 ```
 contracts/auth-capture-escrow/   Soroban contract
-contracts/protected-escrow/     New protected settlement contract (not deployed)
+contracts/protected-escrow/     Protected settlement contract (configured separately)
 web/                             Landing page and testnet demo
 ```
 
@@ -39,7 +39,7 @@ The payer authorizes `[payment_info]` only, with the token transfer into the esc
 
 After the session expires, `reclaim` returns only unused funds. Claims under review or dispute stay reserved. For example, after 300 units are paid and 400 are disputed from a 1,000-unit deposit, reclaim returns only the unused 300 units.
 
-The contract also implements evidence commitments, custom-to-default arbiter deadline escalation and permissionless execution of a jointly signed timeout-allocation policy. It charges zero arbitration fees in this version. It is not deployed or audited, and the existing web demo/vendored SDK still use the basic escrow. Hosted arbitration, fee support, pre-claim cases and protected SDK/UI integration remain roadmap work.
+The contract also implements evidence commitments, custom-to-default arbiter deadline escalation and permissionless execution of a jointly signed timeout-allocation policy. It charges zero arbitration fees in this version. The local [TypeScript SDK and protected demo](web/lib/protected/README.md) now expose that lifecycle at `/demo/protected`. The basic `/demo` and vendored x402 packages retain their original behavior. Configure the protected testnet deployment explicitly with `DEMO_PROTECTED_ESCROW`; no protected ID is committed here. Hosted arbitration, fee support, pre-claim cases, upstream x402 integration and a formal audit remain roadmap work.
 
 ## Build
 
@@ -59,8 +59,17 @@ Soroban SDK 29 requires Stellar CLI's spec-shaking build step. Use `make build` 
 ```bash
 cd web
 pnpm install
-pnpm setup-demo   # funds testnet accounts, issues DEMOUSD, writes .env.local
+pnpm setup-demo   # once: funds accounts, issues DEMOUSD; preserves existing credentials
 pnpm dev          # http://localhost:3000/demo
+```
+
+For the protected flow, add the settings from [`web/.env.example`](web/.env.example), then open `/demo/protected`. The [local SDK guide](web/lib/protected/README.md) covers signing, claims/disputes, arbiter actions, restart recovery and the optional live testnet script. Browser/imported payment IDs grant no signing authority.
+
+```sh
+cd web
+pnpm test
+pnpm typecheck
+pnpm build
 ```
 
 ## License

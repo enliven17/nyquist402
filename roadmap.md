@@ -1,6 +1,6 @@
 # Nyquist402 — SCF Build Award (Open Track) draft
 
-Updated 2026-11-04 for bilateral disputes, custom arbiters with a Nyquist402 default, and protected repeated captures. The claim-level onchain foundation is now implemented locally in a separate protected contract; deployment, paid arbitration, service/UI integration and remaining product policy are still open. Checked work below means implemented source, not mainnet readiness. Fields marked `TODO` need a team decision or supporting evidence.
+Updated 2026-11-04 for bilateral disputes, custom arbiters with a Nyquist402 default, and protected repeated captures. The claim-level onchain foundation is now implemented locally in a separate protected contract; a local TypeScript SDK and protected demo are now implemented too. Live deployment verification, paid arbitration, hosted service integration and remaining product policy are still open. Checked work below means implemented source, not mainnet readiness. Fields marked `TODO` need a team decision or supporting evidence.
 
 ## Summary
 
@@ -50,11 +50,11 @@ Checked items mean the stated source/artifact exists; they do not claim a fresh 
 - [x] Build the basic payment-lifecycle demo, faucet and payment/balance display.
 - [x] Build the product website and introductory developer docs.
 
-Basic repeated capture is implemented. The new contract below also implements independent protected claims; connecting those capabilities to the SDK and product remains planned.
+Basic repeated capture is implemented. The new contract below also implements independent protected claims; a local SDK and separate protected demo now connect those capabilities. Upstream x402 packaging and hosted product operation remain planned.
 
 ### Implemented protected contract foundation (local code)
 
-Source and API reference: [`contracts/protected-escrow`](contracts/protected-escrow/README.md). This contract is not deployed, audited or connected to the existing demo/SDK.
+Source and API reference: [`contracts/protected-escrow`](contracts/protected-escrow/README.md). A local [SDK and protected demo](web/lib/protected/README.md) integrate this contract. Configure its deployed testnet ID explicitly; no protected ID or live verification result is recorded here. It has no formal audit.
 
 - [x] Jointly authenticated funding terms, including an agreement hash, pinned default/custom preferences, review/response/ruling durations and explicit terminal allocation.
 - [x] Independent repeated claims, reserved versus unclaimed balances and exact-claim buyer acceptance.
@@ -63,7 +63,11 @@ Source and API reference: [`contracts/protected-escrow`](contracts/protected-esc
 - [x] Matching custom selection or deployment-pinned default, fixed custom-to-default authority windows and permissionless signed-policy fallback.
 - [x] Protected lifecycle events, direct authenticated contract actions and accounting tests for multiple payments/claims.
 
-Paid arbitration, concrete product presets, pre-claim/payment-level cases, authenticated evidence bodies, SDK/wallet/console integration, network archive/restore testing, audit and deployment remain open. The contract currently charges zero arbitration fees. Its fallback seller share is a jointly signed parameter, not a published project-wide default.
+Paid arbitration, concrete product presets, pre-claim/payment-level cases, authenticated evidence bodies, upstream SDK/merchant-console integration, live wallet/network verification, network archive/restore testing, audit and deployment operations remain open. The contract currently charges zero arbitration fees. Its fallback seller share is a jointly signed parameter, not a published project-wide default.
+
+- [x] Local protected SDK: exact Rust-matched terms/identity, all claim/case actions, wallet envelope signing and scoped additional authorizations.
+- [x] Protected demo: reviewed quote, buyer/seller disputes, evidence hashes, actual-wallet arbiter rulings, safe unused-fund returns and onchain reload recovery.
+- [ ] Verify those paths against the configured testnet deployment and real wallet extensions; automated archival restoration and hosted evidence remain separate work.
 
 | Component | Present today | Remaining work |
 | --- | --- | --- |
@@ -71,10 +75,10 @@ Paid arbitration, concrete product presets, pre-claim/payment-level cases, authe
 | Protected Soroban escrow | Separate contract with joint terms, repeated claim reservations, bilateral disputes, evidence commitments, scoped rulings, default escalation and fallback | Product integration, paid arbitration, payment-level cases, audit and deployment |
 | Contract tests | 24 unit tests, including authorization-tree checks and a randomized invariant test | Dispute accounting, authorization, deadline/race, recovery and fuzz coverage |
 | Stellar binding | Spec-only PR [x402-foundation/x402 #4124](https://github.com/x402-foundation/x402/pull/4124), tracked in [issue #4122](https://github.com/x402-foundation/x402/issues/4122) | Separately propose protected capabilities; no assumption of upstream acceptance |
-| TypeScript mechanism | Client/server/facilitator packed from the fork into `web/vendor/` | Protected terms/actions, recovery, version negotiation and upstream review |
-| Wallet integration | Freighter, xBull and Hana signing, plus server-agent mode | Real extension verification, protected actions and hosted onboarding |
-| Web demo | Payment-lifecycle controls, faucet, state/balances, capture/release, void, refund and reclaim | Actual metered API, distinct party roles, disputes and durable history |
-| Docs | Introductory client/server/facilitator examples and contract reference | Complete setup, dispute, recovery and error references |
+| TypeScript mechanism | Basic fork packages in `web/vendor/`; local typed protected SDK with terms/actions, exact encoding/identity, simulation, signing and confirmed submission | Upstream protected capability/spec/package integration and network verification |
+| Wallet integration | Existing wallet adapter reused for protected funding, buyer/arbiter actions and fee-paying envelopes; basic agent mode retained | Real extension verification, smart/delegated wallet expansion and hosted onboarding |
+| Web demo | Basic demo preserved; separate protected terms/claims/disputes/evidence/ruling/fallback/reclaim UI with browser history and onchain recovery | Actual metered API, hosted evidence/indexing, extension/live network verification and cross-device recovery |
+| Docs | Basic examples plus local protected SDK/demo setup, actions, errors and recovery reference | Hosted/upstream SDK docs and production recovery runbooks |
 | Hosted infrastructure | In-process SDK facilitator adapter | Public endpoints, durable payment/case storage, indexing, monitoring and deadline jobs |
 | Arbitration | Basic consent hook plus new claim-level onchain selection, evidence commitments, rulings and fallback enforcement | Hosted default/custom adapters, private evidence service, paid arbitration and payment-level cases |
 | Other deliverables | No merchant console, Python implementation or OpenZeppelin plugin in this checkout | Implement against finalized capabilities |
@@ -82,13 +86,13 @@ Paid arbitration, concrete product presets, pre-claim/payment-level cases, authe
 
 Existing basic testnet escrow: `CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI`. It has no dispute protection. Existing payments cannot acquire protection retroactively.
 
-The original contract has 24 tests and the new protected contract has 21 tests. The fork separately reports 317 SDK unit tests and four testnet integration tests; those suites are outside this checkout. TODO: pin the source commits behind vendor packages and link commands/CI results. TODO: substantiate the previously claimed independent security review with reviewer, reviewed commit, report and remediation links. The protected source received an implementation code review, which is not a formal audit.
+The original contract has 24 tests and the new protected contract has 22 tests, including the shared Rust/TypeScript encoding vector. The web integration has 21 SDK/API-boundary/recovery tests, TypeScript and production-build checks; browser layout/import checks use fixtures, not a live wallet/network. The fork separately reports 317 SDK unit tests and four testnet integration tests; those suites are outside this checkout. TODO: pin the source commits behind vendor packages and link commands/CI results. TODO: substantiate the previously claimed independent security review with reviewer, reviewed commit, report and remediation links. The protected source received an implementation code review, which is not a formal audit.
 
 ## Agreed product rules and planning assumptions
 
 **Agreed with the team:** either buyer or seller can open a case; both can present evidence and contest the requested outcome; opening a dispute does not award money. Each party may prefer its own arbiter. A mutually agreed arbiter decides the case; without agreement, Nyquist402's default arbiter decides it.
 
-**Current contract choice:** bind arbiter selection before funding and retain claim reservations in a separate versioned protected escrow. Repeated claims, configurable timing and jointly signed fallback allocation are implemented at contract level. Public policy presets, fee support and end-to-end protected SDK/product integration remain deliverables. The payment-level/pre-claim dispute flow below is still a product requirement; the current contract only opens cases against recorded claims.
+**Current contract choice:** bind arbiter selection before funding and retain claim reservations in a separate versioned protected escrow. Repeated claims, configurable timing and jointly signed fallback allocation are implemented at contract level. The local SDK/demo implements claim-level integration with clearly labeled demonstration timing/fallback inputs. Production presets, fee support, upstream capability integration and hosted/live product verification remain deliverables. The payment-level/pre-claim dispute flow below is still a product requirement; the current contract only opens cases against recorded claims.
 
 ## Protected payment flow
 
@@ -116,7 +120,7 @@ Deadline settlement needs a transaction; contracts do not wake themselves up. Pr
 ### Protected release scope and implementation order
 
 - The single-invoice foundation and repeated claim-level accounting are implemented locally. Full seller payment, full buyer return and split awards are supported.
-- Each protected tranche has a unique claim ID/revision, reserved amount, review period, acceptance and case outcome. Accepting or paying one tranche does not approve later tranches. Product/SDK integration of this contract remains open.
+- Each protected tranche has a unique claim ID/revision, reserved amount, review period, acceptance and case outcome. Accepting or paying one tranche does not approve later tranches. Local SDK/demo integration is implemented; hosted/upstream integration and live verification remain open.
 - One binding case per tranche is enforced, with both parties responding in that case. Add payment-level case scope/precedence separately without allowing overlapping allocation or deadline resets.
 - Previously paid tranches remain final. A later case can allocate only funds still held for that case. Document session closure and returning unclaimed funds without releasing pending reservations.
 - Keep authorized funds, seller awards, unused-budget returns, dispute awards and voluntary post-payout refunds distinct in accounting and documentation.
@@ -166,7 +170,8 @@ Today's `reclaim` authenticates the payer and checks only `authorization_expiry`
 - [x] Permit direct authenticated claim/case/response submission and permissionless already-authorized finalization.
 - [x] Add reclaim/expiry, bilateral case, repeated payout, escalation, rollback, maximum-amount and multi-payment accounting tests.
 - [ ] Extend these guards to pre-claim/payment-wide cases once that distinct scope and precedence are implemented.
-- [ ] Connect the protected SDK/demo and demonstrate archival restoration and network-level operation before deployment.
+- [x] Connect a local protected SDK and separate demo, preserving basic escrow behavior; add encoding, signing-boundary, recovery and UI deadline tests.
+- [ ] Demonstrate real extension signing, deployed network lifecycle and archival restoration before protected launch.
 
 Checking only `dispute_active` in reclaim would still allow expiry to bypass a timely claim's review window, or another payout path to drain the same reservation. The new contract implements reservation accounting and eligible finalization/return paths. The existing basic testnet deployment remains unchanged; using protection requires deploying and integrating the new version.
 
@@ -179,10 +184,10 @@ Checking only `dispute_active` in reclaim would still allow expiry to bypass a t
 | `contracts/protected-escrow/src/events.rs` | Implemented: funded terms, claim/case updates, evidence commitments and final allocation/return events. Remaining: indexing and new scope/fee events as those features ship. |
 | `contracts/protected-escrow/src/test.rs` | Implemented: claim-level timing, authority, accounting, rollback, repeated claims and cross-payment invariants; original 24 tests still apply to the basic contract. Remaining: network archive/restore and product integration suites. |
 | New arbiter adapter and default service | Common ruling interface for third-party arbiters; Nyquist402 default case intake, evidence review, decisions and signed rulings; pinned identities, restricted key access and audit trails |
-| SDK fork and spec | Protection capability negotiation, policy/arbiter validation before signing, claim/case actions, direct submission, ruling verification and cross-language encoding vectors; change/test source, then repack vendor artifacts with provenance |
-| `web/lib/demo.ts` | Durable payment/case storage and event reconciliation instead of Maps/default in-memory lifecycle records; real metered work and protected actions |
-| `web/app/api/demo/route.ts` | Authenticated role-specific claim/dispute/evidence endpoints; a supplied address or known hash is not permission to act as a party or arbiter |
-| `web/lib/wallet.ts` and `web/app/demo/page.tsx` | Display and sign arbiter agreement/default, acceptance and dispute actions; show review/case deadlines, evidence responses and outcomes; preserve history across reloads |
+| Local SDK, SDK fork and spec | Local SDK implements policy validation, typed claim/case actions, direct submission, revision-bound rulings and cross-language vectors. Remaining: upstream capability proposal, fork changes and vendor provenance/repacking. |
+| `web/lib/demo.ts` and `web/lib/protected/` | Basic demo retains its Maps; protected client reconstructs payment/case state from chain without a server payment registry. Browser retains agreements and scoped seller delegations. Remaining: hosted storage/indexing, cross-device recovery and real metered work. |
+| `web/app/api/protected/route.ts` | Implemented explicit protected quote/preparation endpoints and scoped seller signatures; buyer and arbiter authority comes from wallet signatures. Public IDs confer no action privilege. Remaining: hosted service authentication/operations. |
+| `web/lib/wallet.ts` and `web/app/demo/protected/` | Wallet adapter reused; protected page displays signed policy, independent claims, evidence/deadlines/outcomes, scoped seller controls and reload/import recovery. Remaining: real extension/live network verification and production console. |
 | Buyer, merchant and arbiter consoles | Party-owned payment/case lists, delivery claims, evidence/response access, deadlines, decisions and audit history; show when the project default is responsible |
 | Deployment and docs | New IDs/version checks, relay endpoints, indexes/finalization jobs, recovery runbooks and direct action tools; clarify fee sponsorship/reserve requirements; document basic versus protected flows |
 
@@ -210,7 +215,7 @@ The following are explicit roadmap deliverables. Select the exact values and rul
 - [ ] **D3 — Arbiter outage and terminal fallback (Tranches 1–2).** Define fixed custom/default response windows, pre-agreed escalation to the pinned project default, and a bounded terminal allocation if the default also does not respond. Select and document that final rule as part of this deliverable; do not silently invent its economic outcome now. Implement authority-stage changes and transaction-triggered fallback so old arbiters cannot issue late conflicting rulings. Demonstrate both arbiters offline, no indefinite locking, no post-funding admin allocation and exactly-once payout.
 - [ ] **D4 — Protected partial/repeated captures (Tranche 2).** Add unique claim IDs/revisions, disjoint reservations, independent reviews and per-tranche cases under one authorization. Define payment-level case precedence and session closure. Verify multiple captures, acceptance of one claim without approving the next, mixed settled/pending/disputed tranches, split awards, remainder release, expired sessions and recovery. Preserve the maximum budget and prior payout finality.
 
-Contract progress: D1 has configurable timing and boundary enforcement; D3 has custom/default windows and a jointly signed fallback-share mechanism; D4 has repeated claim reservations and claim-level adjudication. These work packages remain open for product presets, payment-wide scope, SDK/services/UI and deployment verification. D2 is not implemented; the new contract is fee-free.
+Contract progress: D1 has configurable timing and boundary enforcement; D3 has custom/default windows and a jointly signed fallback-share mechanism; D4 has repeated claim reservations and claim-level adjudication. The local SDK/demo now exposes D1/D3/D4 claim-level paths. These work packages remain open for production presets, payment-wide scope, upstream/hosted integration and live deployment verification. D2 is not implemented; the new contract is fee-free.
 
 | Decision | Status / planning recommendation |
 | --- | --- |

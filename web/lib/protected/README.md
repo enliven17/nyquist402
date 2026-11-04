@@ -1,0 +1,80 @@
+# Local protected escrow SDK
+
+Reusable TypeScript source for `contracts/protected-escrow`, usable in a browser or Node 22.18+/24. It uses the project's locked Stellar SDK 16.4.1. Import `index.ts` into another TypeScript application along with its Stellar SDK dependency, or use the same imports inside this app. This is not a published npm package or an upstream x402 protection extension. The vendored basic `auth-capture` packages are unchanged.
+
+## Run the demo
+
+```sh
+cd web
+pnpm install --frozen-lockfile
+pnpm setup-demo # once; refuses to overwrite existing funded credentials
+```
+
+For an existing `.env.local`, keep its keys/token. Add `DEMO_PROTECTED_ESCROW` (the deployed protected testnet contract ID) and `DEMO_SESSION_SECRET` (a stable random secret of at least 32 characters; use the generator in `.env.example`). Optionally add `DEMO_SELLER_ARBITER` for the seller's custom preference. Restart the server after configuration changes.
+
+```sh
+pnpm dev
+# http://localhost:3000/demo/protected
+```
+
+The app reads the deployment's default arbiter and verifies its `payment_hash` against the SDK before quoting. Missing, archived or incompatible deployments fail visibly; the app never falls back to the basic contract. No protected contract ID is assumed or published by this integration.
+
+Connect a testnet wallet and acquire 10 DEMOUSD. Request a quote, review the exact agreement/policy and sign the funding transaction. The wallet pays network fees in test XLM. This demo has zero protocol/arbitration fees.
+
+The six-minute session uses a 120-second claim review, at least a 60-second evidence response, and 90 seconds per applicable arbiter stage. These are demonstration presets, not production recommendations. A 50% seller fallback share is an editable example shown before funding. Both parties sign its exact value; neither an API caller nor the project can change it afterward.
+
+Seller controls delegate only this test payment to its browser holder using an unforgeable capability. They demonstrate the seller side; production sellers retain their own signing policy. Buyer/arbiter actions require their actual wallets. Connect the current arbiter's wallet to submit a bounded ruling after evidence closes. No server API signs a ruling.
+
+Claims are independent. Accept one, dispute another, and let the session expire: reclaim returns only unused funds while reviewed/disputed reservations stay locked. Seller early return uses the same available bucket. After an arbitration timeout, anyone can submit the jointly agreed fallback.
+
+## Use the SDK
+
+```ts
+import { authorizeEntry, Keypair, Networks, TransactionBuilder } from '@stellar/stellar-sdk';
+import { ProtectedEscrowClient } from './lib/protected/index.ts';
+
+const client = new ProtectedEscrowClient({
+  contractId: protectedContractId,
+  rpcUrl: 'https://soroban-testnet.stellar.org',
+  networkPassphrase: Networks.TESTNET,
+});
+
+// The fee source's account authority is provided by its transaction-envelope signature.
+// Additional parties sign their exact authorization entries through this callback.
+const prepared = await client.prepare(buyer.publicKey(), { type: 'authorize', terms },
+  async (address, entry, untilLedger) => {
+    if (address !== seller.publicKey()) throw new Error('Unexpected signer');
+    return authorizeEntry(entry, seller, untilLedger, Networks.TESTNET);
+  });
+const tx = TransactionBuilder.fromXDR(prepared.xdr, Networks.TESTNET);
+tx.sign(buyer);
+const { tx: transactionHash } = await client.submit(prepared, tx.toXDR());
+```
+
+For wallets, call `signTransaction(prepared.xdr, connectedAddress)` instead of keypair signing. `AuthorizationSigner` accepts a callback for external/custom account signers; Ed25519 keypairs can use Stellar's `authorizeEntry`. Ordinary legacy and AddressV2 credentials are supported. Delegated CAP-71 credential trees are explicitly rejected in this first SDK; a future integration must validate their expanded authority before enabling them.
+
+`termsToScVal` encodes sorted contract maps, exact i128 amounts and optional addresses. `computePaymentId` binds full terms to the network and contract. A committed Rust-produced fixture checks byte-for-byte encoding and identity. Amounts use integer strings; do not convert them to floating point. The demo's `parseAmount` handles seven-decimal DEMOUSD values exactly.
+
+Typed mutations: `authorize`, `claim`, `accept`, `settle`, `dispute`, `submit_evidence`, `rule`, `finalize_fallback`, `reclaim`, `void_unclaimed`. Reads: `defaultArbiter`, `terms`, `state`, `claimState`, `arbiter`. `prepare` validates full authorization invocation trees before additional signatures and re-simulates completed authorizations in enforcement mode to include custom-account authentication footprints/resources; `submit` rejects a changed wallet envelope and waits for confirmed success. Contract checks remain authoritative when state/deadlines change between preparation and submission.
+
+## Recovery and errors
+
+Browser history is scoped to network/contract/connected account and preserves payment IDs, agreement text and demo seller capabilities. Keep capabilities private: possession intentionally grants the listed seller demo controls. Anyone may import an ID to read state; importing it grants no role. After reload or server restart, terms/balances/claims come from the contract, not an in-memory payment registry. Claims are paginated, 20 at a time. Browser transaction activity is currently session-local.
+
+Funding IDs are saved before submission so a delayed confirmation remains recoverable. A saved ID is not proof of funding. A pending transaction error includes its transaction hash: check that hash or read the payment/claim before rebuilding, to avoid accidentally creating a second claim. Wallet rejection and simulation failures do not produce a success entry.
+
+Store and exchange delivery/evidence bodies separately: the contract and API receive hashes, and no hosted private evidence service is included. Copy the evidence before submitting; the interface does not persist evidence text across reloads. A hash alone does not deliver evidence to an arbiter.
+
+Archived entries produce an explicit restoration error before requesting an additional signature. Restore the required contract/record footprint with Stellar tooling and prepare again. Automated restoration, instance/code TTL maintenance, hosted event indexing/deadline jobs and real extension verification remain operational work. This SDK does not silently submit restoration transactions or claim tested archive recovery.
+
+## Verification
+
+```sh
+pnpm test
+pnpm typecheck
+pnpm build
+# Optional real testnet flow; requires configured/funded demo credentials and deployment:
+node --env-file=.env.local --experimental-strip-types scripts/e2e-protected.ts --reclaim
+```
+
+The live script creates a 10-unit payment, pays 3, disputes 4, recovers state with a fresh client, and optionally waits for session expiry before reclaiming exactly the unused 3. It leaves the disputed claim reserved and prints a recovery ID. Do not run it against funds you did not intend to allocate to this test. Unit/RPC-fixture tests are not live testnet or browser-wallet verification.
