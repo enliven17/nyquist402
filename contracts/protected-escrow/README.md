@@ -8,7 +8,7 @@ Deploy with the Nyquist402 default arbiter address. Both payer and seller author
 
 `fallback_seller_bps` is a jointly accepted last-resort allocation, not a finding that work was delivered. For a 400-unit claim, 2,500 basis points pays 100 to the seller and returns 300 to the payer if neither arbiter rules. Choose and disclose this economic rule before funding; there is no privileged administrator who can change it later.
 
-This first foundation charges zero protocol/arbitration fees. Fee quotes/funding, pre-claim/payment-wide cases, hosted arbitration/evidence services and x402 SDK integration remain roadmap work.
+This first foundation charges zero protocol/arbitration fees. Fee quotes/funding, pre-claim/payment-wide cases, hosted arbitration/evidence services and upstream x402 SDK integration remain roadmap work. A local [TypeScript SDK and protected wallet demo](../../web/lib/protected/README.md) now integrate this contract directly, with payment-scoped seller demonstration controls and actual buyer/arbiter wallet signatures.
 
 ## API
 

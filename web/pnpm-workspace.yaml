@@ -1,0 +1,8 @@
+overrides:
+  '@x402/core': file:vendor/x402-core-2.29.0.tgz
+# Optional native performance addons and wallet telemetry are not needed by this demo.
+allowBuilds:
+  '@reown/appkit': false
+  bufferutil: false
+  secp256k1: false
+  utf-8-validate: false
