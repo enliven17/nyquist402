@@ -25,10 +25,10 @@ export function Mark({ size = 28, className }: { size?: number; className?: stri
   );
 }
 
-export function Logo({ size = 28 }: { size?: number }) {
+export function Logo({ size = 28, mark = true }: { size?: number; mark?: boolean }) {
   return (
     <span className="brand" aria-label="Nyquist402">
-      <Mark size={size} />
+      {mark && <Mark size={size} />}
       <span className="brand-word">
         nyquist<span className="brand-num">402</span>
       </span>

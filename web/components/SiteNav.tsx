@@ -106,7 +106,7 @@ export default function SiteNav() {
   return (
     <header className="topbar">
       <div className="topbar-inner">
-        <a href="/" className="topbar-logo" aria-label="Nyquist402 home"><Logo size={26} /></a>
+        <a href="/" className="topbar-logo" aria-label="Nyquist402 home"><Logo size={26} mark={false} /></a>
 
         <div className="side-wide">{links}</div>
 
