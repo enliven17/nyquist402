@@ -44,3 +44,12 @@ test("fallback decimal percentages become exact basis points", () => {
   for (const [input, expected] of [["0.29", 29], ["0.57", 57], ["1.13", 113], ["50", 5000], ["100.00", 10000], ["0", 0]] as const) assert.equal(flow.parsePercentBps(input), expected);
   for (const invalid of ["", "100.01", "-1", "0.001", "Infinity", "1e2"]) assert.throws(() => flow.parsePercentBps(invalid));
 });
+
+test("demo seller agrees only to a listed non-default arbiter", async () => {
+  const { sellerArbiterFor } = await import("../lib/protected/flow.ts");
+  const c = { sellerArbiter: null, arbiters: [{ name: "d", address: "GDEF", isDefault: true }, { name: "a", address: "GAAA", isDefault: false }] };
+  assert.equal(sellerArbiterFor("GAAA", c), "GAAA");
+  assert.equal(sellerArbiterFor("GDEF", c), null);
+  assert.equal(sellerArbiterFor("GOTHER", c), null);
+  assert.equal(sellerArbiterFor(null, c), null);
+});

@@ -25,3 +25,15 @@
 .protected-claim h3 span { margin-left: 10px; }
 .protected-demo .pstate { margin-top: 0; }
 @media (max-width: 600px) { .protected-details > div { grid-template-columns: 1fr; gap: 4px; } .protected-details dd { text-align: left; } }
+
+/* Arbiter picker and demo-operated ruling desk */
+.arbiter-pick { border: 1px solid var(--line); padding: 14px 16px 10px; margin: 0; display: grid; gap: 8px; }
+.arbiter-pick legend { padding: 0 6px; font-size: 14px; font-weight: 500; }
+.arbiter-pick legend .d-cap { margin-left: 6px; color: #1f9d55; }
+.arbiter-pick label { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
+.arbiter-pick label.on { border-color: var(--accent); }
+.arbiter-pick label span { display: flex; flex-direction: column; gap: 2px; }
+.arbiter-pick label code { font-size: 11px; color: var(--muted); }
+.arbiter-pick label em { font-style: normal; font-family: var(--font-mono), monospace; font-size: 11px; color: #1f9d55; }
+.arbiter-pick input { accent-color: var(--accent); }
+.arbiter-desk { border-left: 2px solid var(--accent); padding-left: 14px; }

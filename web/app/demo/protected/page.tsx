@@ -109,6 +109,8 @@ export default function ProtectedDemo() {
     setPaymentId(offer.paymentId); setOffer(undefined); return result;
   }
   const run = (label: string, action: ProtectedAction) => work(label, () => transact(action));
+  const arbitrate = (claimId: number, sellerAmount: string, name: string) =>
+    work(`${name} rules · claim ${claimId}`, () => post({ operation: "arbitrate", paymentId, claimId, sellerAmount }) as Promise<{ tx: string }>);
   const deadline = (time: number) => `${new Date(time * 1000).toLocaleTimeString()} · ${Math.max(0, time - now)}s left`;
   const disabled = !!busy || !config || !address;
   return <div className="demo protected-demo"><main>
@@ -117,16 +119,21 @@ export default function ProtectedDemo() {
       <button className="pill-btn accent" disabled={!!busy} onClick={() => void work("Connect wallet", async () => { setAddress(await wallet.connect()); })}>{address ? `Switch wallet · ${address.slice(0, 6)}…` : "Connect testnet wallet"}</button>
     </section>
     {error && <p className="note err protected-error" role="alert">{error}</p>}
-    <p className="protected-notice">Testnet demonstration. You pay network fees in test XLM. Arbitration fees are zero. Seller controls below are a payment-scoped demo delegation; rulings require the actual arbiter wallet.</p>
+    <p className="protected-notice">Testnet demonstration. You pay network fees in test XLM. Arbiters work for free. Seller controls and the listed arbiters are operated by this demo, so you can play every role.</p>
     {busy && <p role="status" className="note"><span className="spin" aria-hidden /> {busy} — waiting for wallet or network confirmation.</p>}
     <div className="d-grid"><section>
       <div className="step-row"><span className="step-num">01</span><div><h2>Agree and fund</h2><p>Authorize 10.00 DEMOUSD. Review closes 120s after each claim; disputes allow at least 60s for evidence, then 90s per arbiter stage. The session lasts six minutes.</p>
         <div className="protected-form">
           <label>Service agreement<textarea value={agreement} maxLength={10000} onChange={e => { setAgreement(e.target.value); setOffer(undefined); }} /></label>
-          <label>Your preferred arbiter (optional)<input value={preferred} onChange={e => { setPreferred(e.target.value); setOffer(undefined); }} placeholder="G… or C…; blank uses project default" /></label>
+          <fieldset className="arbiter-pick"><legend>Choose an arbiter <span className="d-cap">free during testnet</span></legend>
+            {(config?.arbiters ?? []).map(a => <label key={a.address} className={(preferred || config?.defaultArbiter) === a.address ? "on" : undefined}>
+              <input type="radio" name="arbiter" checked={(preferred || config?.defaultArbiter) === a.address} onChange={() => { setPreferred(a.isDefault ? "" : a.address); setOffer(undefined); }} />
+              <span><strong>{a.name}</strong><code>{a.address.slice(0, 6)}…{a.address.slice(-4)}</code></span><em>0 DEMOUSD fee</em>
+            </label>)}
+            <p className="muted">The seller agrees to your pick. If your arbiter misses its window, the Nyquist default takes over.</p>
+          </fieldset>
           <label>Seller share if both arbiters time out (%)<input type="number" min="0" max="100" step="0.01" value={fallback} onChange={e => { setFallback(e.target.value); setOffer(undefined); }} /></label>
           <p className="muted">50% is an editable example, not a production policy. If no arbiter rules, this signed split applies to the disputed claim. Neither party can change it after funding.</p>
-          <p className="muted">Seller preference: <code>{config?.sellerArbiter ?? "None"}</code>. Matching preferences select that arbiter; otherwise the project default handles the case.</p>
           <div className="acts">
             <button className="pill-btn" disabled={disabled} onClick={() => void work("Get DEMOUSD", async () => {
               const step = await fetch("/api/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "faucet", address }) }).then(r => r.json());
@@ -139,7 +146,7 @@ export default function ProtectedDemo() {
           </div>
           {offer && <div className="protected-offer"><h3>Before you sign</h3><dl className="protected-details">
             <div><dt>Budget</dt><dd>{formatAmount(offer.terms.max_amount)} DEMOUSD</dd></div>
-            <div><dt>Chosen arbiter</dt><dd><code>{selectedArbiter(offer.terms)}</code></dd></div>
+            <div><dt>Chosen arbiter</dt><dd>{config?.arbiters.find(a => a.address === selectedArbiter(offer.terms))?.name ?? <code>{selectedArbiter(offer.terms)}</code>} · free</dd></div>
             <div><dt>Project default</dt><dd><code>{offer.terms.default_arbiter}</code></dd></div>
             <div><dt>Funding closes</dt><dd>{deadline(offer.terms.fund_by)}</dd></div>
             <div><dt>Session closes</dt><dd>{deadline(offer.terms.delivery_deadline)}</dd></div>
@@ -158,7 +165,7 @@ export default function ProtectedDemo() {
           <label>Delivery description<textarea value={delivery} maxLength={10000} onChange={e => setDelivery(e.target.value)} placeholder="Describe the delivered result; save it for review." /></label>
           <button className="pill-btn" disabled={disabled || !sellerControl || !delivery.trim() || now >= snapshot.terms.delivery_deadline || BigInt(snapshot.state.available) === 0n} onClick={() => void work("Record claim", async () => transact({ type: "claim", paymentId, amount: parseAmount(claimAmount), delivery: await hashText(delivery) }))}>Seller records claim</button>
         </div></div></div>
-        <div className="protected-claims"><h2>Claims and disputes</h2>{snapshot.claims.length === 0 && <p>No claims recorded.</p>}{snapshot.claims.map(item => <ClaimPanel key={`${paymentId}:${item.id}`} {...item} terms={snapshot.terms} paymentId={paymentId} address={address} sellerControl={sellerControl} now={now} busy={!!busy} run={run} />)}
+        <div className="protected-claims"><h2>Claims and disputes</h2>{snapshot.claims.length === 0 && <p>No claims recorded.</p>}{snapshot.claims.map(item => <ClaimPanel key={`${paymentId}:${item.id}`} {...item} terms={snapshot.terms} paymentId={paymentId} address={address} sellerControl={sellerControl} now={now} busy={!!busy} run={run} arbiters={config?.arbiters ?? []} arbitrate={arbitrate} />)}
           <div className="acts"><button className="pill-btn sm" disabled={offset === 0} onClick={() => setOffset(n => Math.max(0, n - 20))}>Previous claims</button><button className="pill-btn sm" disabled={snapshot.nextOffset === null} onClick={() => setOffset(snapshot.nextOffset ?? offset)}>Next claims</button></div>
         </div>
       </>}

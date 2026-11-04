@@ -1,10 +1,12 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
-import { authorizeEntry, Keypair, Networks, StrKey } from "@stellar/stellar-sdk";
+import { authorizeEntry, Keypair, Networks, StrKey, TransactionBuilder } from "@stellar/stellar-sdk";
 import { ProtectedEscrowClient } from "./client.ts";
 import { assertAddress, assertHash, CAPABILITY, computePaymentId, integer, termsToScVal, validateTerms } from "./codec.ts";
 import { issueCapability, parseRequest } from "./capability.ts";
 import { authorizeDemoAction } from "./policy.ts";
+import { operatedArbiters, publicRoster } from "./arbiters.ts";
+import { sellerArbiterFor } from "./flow.ts";
 import type { DemoConfig, PaymentTerms } from "./types.ts";
 
 function env(name: string): string {
@@ -21,9 +23,10 @@ export async function config(): Promise<DemoConfig> {
   const token = env("DEMO_TOKEN"); assertAddress(token, true);
   const sellerArbiter = process.env.DEMO_SELLER_ARBITER || null;
   if (sellerArbiter) assertAddress(sellerArbiter);
+  const defaultArbiter = await client.defaultArbiter();
   return {
     contractId: client.contractId, networkPassphrase: Networks.TESTNET, rpcUrl: "https://soroban-testnet.stellar.org",
-    token, seller, sellerArbiter, defaultArbiter: await client.defaultArbiter(),
+    token, seller, sellerArbiter, defaultArbiter, arbiters: publicRoster(operatedArbiters(defaultArbiter)),
     preset: { budget: "100000000", session: 360, review: 120, response: 60, custom: 90, default: 90 },
   };
 }
@@ -34,12 +37,13 @@ export async function quote(request: Record<string, unknown>) {
   const agreement = request.agreementHash; assertHash(agreement);
   const preferred = request.buyerArbiter ?? null;
   if (preferred !== null) assertAddress(preferred);
+  if (preferred !== null && c.arbiters.length && !c.arbiters.some(a => a.address === preferred)) throw new Error("Choose an arbiter from the demo roster");
   const fallback = integer(request.fallbackSellerBps, 0, 10000);
   const now = Math.floor(Date.now() / 1000);
   const terms: PaymentTerms = {
     payer, seller: c.seller, token: c.token, agreement, max_amount: c.preset.budget,
     fund_by: now + 120, delivery_deadline: now + c.preset.session,
-    buyer_arbiter: preferred, seller_arbiter: c.sellerArbiter, default_arbiter: c.defaultArbiter,
+    buyer_arbiter: preferred, seller_arbiter: sellerArbiterFor(preferred, c), default_arbiter: c.defaultArbiter,
     review_seconds: c.preset.review, response_seconds: c.preset.response,
     arbiter_seconds: c.preset.custom, default_seconds: c.preset.default,
     fallback_seller_bps: fallback, salt: randomBytes(32).toString("hex"),
@@ -79,4 +83,26 @@ export async function snapshot(paymentId: string, offset = 0) {
     return { id, claim, arbiter };
   }));
   return { paymentId, terms, state, claims, nextOffset: end < state.next_claim_id ? end : null };
+}
+
+/**
+ * Submits a ruling from a demo-operated arbiter. Only the arbiter currently holding the case can
+ * rule, and only within the contract's ruling window; the contract enforces both again.
+ */
+export async function arbitrate(request: Record<string, unknown>) {
+  const paymentId = request.paymentId; assertHash(paymentId);
+  const claimId = integer(request.claimId, 0, 0xffffffff);
+  const sellerAmount = request.sellerAmount;
+  if (typeof sellerAmount !== "string" || !/^(0|[1-9][0-9]{0,30})$/.test(sellerAmount)) throw new Error("Invalid seller award");
+  const client = protectedClient();
+  const terms = await client.terms(paymentId);
+  if (terms.seller !== Keypair.fromSecret(env("DEMO_MERCHANT_SECRET")).publicKey() || terms.token !== env("DEMO_TOKEN")) throw new Error("Payment is outside this demo seller/token");
+  const [claim, current] = await Promise.all([client.claimState(paymentId, claimId), client.arbiter(paymentId, claimId)]);
+  if (BigInt(sellerAmount) > BigInt(claim.amount)) throw new Error("Award exceeds the claim");
+  const arbiter = operatedArbiters(await client.defaultArbiter()).find(a => a.address === current);
+  if (!arbiter) throw new Error("The current arbiter is not operated by this demo; its own wallet must rule");
+  const prepared = await client.prepare(arbiter.address, { type: "rule", paymentId, claimId, sellerAmount, revision: claim.revision });
+  const tx = TransactionBuilder.fromXDR(prepared.xdr, Networks.TESTNET);
+  tx.sign(arbiter.keypair);
+  return { ...(await client.submit(prepared, tx.toXDR())), arbiter: arbiter.name };
 }

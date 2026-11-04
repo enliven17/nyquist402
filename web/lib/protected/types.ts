@@ -24,9 +24,12 @@ export type ProtectedAction =
   | { type: "reclaim" | "void_unclaimed"; paymentId: string };
 export type Prepared = { xdr: string; source: string; networkPassphrase: string; contractId: string };
 export type HistoryRecord = { paymentId: string; agreement: string; capability?: string };
+export type DemoArbiter = { name: string; address: string; isDefault: boolean };
 export type DemoConfig = {
   contractId: string; networkPassphrase: string; rpcUrl: string; token: string; seller: string;
   defaultArbiter: string; sellerArbiter: string | null;
+  /** Demo-operated arbiters; free and selectable by the buyer. */
+  arbiters: DemoArbiter[];
   preset: { budget: string; session: number; review: number; response: number; custom: number; default: number };
 };
 export type Snapshot = {
