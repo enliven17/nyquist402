@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Logo } from "@/components/Logo";
 import * as wallet from "@/lib/wallet";
+import "./demo.css";
 
 const TX_URL = "https://stellar.expert/explorer/testnet/tx/";
 const UNIT = 10_000_000;
+const HOLD = 10_000_000;
 
 type Status = {
   addresses: { agent: string; merchant: string; escrow: string; token: string };
@@ -15,46 +17,79 @@ type Status = {
 type Step = {
   ok: boolean;
   tx?: string;
-  amount?: string;
   paymentHash?: string;
   captureDeadline?: number;
   xdr?: string;
   error?: string;
 };
-type LogEntry = { label: string; step: Step };
+type LogEntry = { id: number; label: string; step: Step };
 type Mode = "wallet" | "server";
+type StepState = "locked" | "active" | "done";
 
-const fmt = (base: string | undefined) => (base === undefined ? "–" : (Number(base) / UNIT).toFixed(2));
-const short = (a: string) => `${a.slice(0, 4)}…${a.slice(-4)}`;
+const fmt = (base: string | number | undefined) => (base === undefined ? "–" : (Number(base) / UNIT).toFixed(2));
+const short = (a: string) => `${a.slice(0, 5)}…${a.slice(-5)}`;
 
 async function api(body: Record<string, unknown>): Promise<Step & Record<string, unknown>> {
   const res = await fetch("/api/demo", { method: "POST", body: JSON.stringify(body) });
   return res.json();
 }
 
-const errorText = (e: unknown) =>
-  e instanceof Error ? e.message : typeof e === "object" && e && "message" in e ? String(e.message) : String(e);
+/** Turns wallet and simulation errors into one readable line. */
+function friendly(e: unknown): string {
+  const raw =
+    e instanceof Error ? e.message : typeof e === "object" && e && "message" in e ? String(e.message) : String(e);
+  if (raw.includes("trustline entry is missing")) return "Your wallet has no DEMOUSD yet. Run step 02 first.";
+  if (/declined|rejected|denied|cancel/i.test(raw)) return "Request rejected in the wallet.";
+  if (raw.includes("not been installed") || raw.includes("not available")) return "Wallet extension not found.";
+  return raw.length > 220 ? `${raw.slice(0, 220)}…` : raw;
+}
+
+function Row(props: {
+  n: string;
+  state: StepState;
+  title: string;
+  who?: string;
+  children?: React.ReactNode;
+  body: React.ReactNode;
+}) {
+  return (
+    <div className="step-row" data-state={props.state}>
+      <span className="step-num">{props.state === "done" ? "✓" : props.n}</span>
+      <div>
+        <h2>
+          {props.title}
+          {props.who && <span className="d-cap who">{props.who}</span>}
+        </h2>
+        <p>{props.body}</p>
+        {props.children && <div className="acts">{props.children}</div>}
+      </div>
+    </div>
+  );
+}
 
 export default function Demo() {
   const [mode, setMode] = useState<Mode>("wallet");
   const [address, setAddress] = useState<string>();
   const [status, setStatus] = useState<Status>();
   const [hash, setHash] = useState<string>();
-  const [deadline, setDeadline] = useState<number>();
+  const [window_, setWindow] = useState<{ start: number; end: number }>();
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
   const [busy, setBusy] = useState<string>();
   const [log, setLog] = useState<LogEntry[]>([]);
   const [error, setError] = useState<string>();
+  const seq = useRef(0);
 
   const payer = mode === "wallet" ? address : undefined;
 
   const refresh = useCallback(
     async (paymentHash = hash) => {
+      const id = ++seq.current;
       const q = new URLSearchParams();
       if (paymentHash) q.set("paymentHash", paymentHash);
       if (payer) q.set("payer", payer);
       const res = await fetch(`/api/demo?${q}`);
       const body = await res.json();
+      if (id !== seq.current) return; // a newer request superseded this one
       if (!res.ok) return setError(body.error);
       setStatus(body);
     },
@@ -62,6 +97,7 @@ export default function Demo() {
   );
 
   useEffect(() => {
+    setStatus(undefined);
     refresh();
   }, [refresh]);
 
@@ -70,10 +106,10 @@ export default function Demo() {
     return () => clearInterval(id);
   }, []);
 
-  function switchMode(next: Mode) {
+  function reset(next: Mode) {
     setMode(next);
     setHash(undefined);
-    setDeadline(undefined);
+    setWindow(undefined);
     setLog([]);
     setError(undefined);
   }
@@ -83,32 +119,41 @@ export default function Demo() {
     setError(undefined);
     try {
       const step = await work();
-      setLog(l => [{ label, step }, ...l]);
+      setLog(l => [{ id: Date.now(), label, step: step.ok ? step : { ...step, error: friendly(step.error) } }, ...l]);
+      if (!step.ok) setError(friendly(step.error));
       if (step.paymentHash) setHash(step.paymentHash);
-      if (step.captureDeadline) setDeadline(step.captureDeadline);
+      if (step.captureDeadline) setWindow({ start: Math.floor(Date.now() / 1000), end: step.captureDeadline });
       await refresh(step.paymentHash ?? hash);
     } catch (e) {
-      setError(errorText(e));
+      setError(friendly(e));
     } finally {
       setBusy(undefined);
     }
   }
 
-  /** Runs a server step that may return a transaction for the wallet to sign. */
+  /** Runs a server step that may hand back a transaction for the wallet to sign. */
   async function signed(body: Record<string, unknown>): Promise<Step> {
     const step = await api(body);
     if (!step.ok || !step.xdr) return step;
-    const signedXdr = await wallet.signTransaction(step.xdr, address!);
-    return api({ action: "submit", xdr: signedXdr });
+    return api({ action: "submit", xdr: await wallet.signTransaction(step.xdr, address!) });
   }
 
   async function connect() {
     setError(undefined);
+    setBusy("Connect");
     try {
       setAddress(await wallet.connect());
     } catch (e) {
-      setError(errorText(e));
+      setError(friendly(e));
+    } finally {
+      setBusy(undefined);
     }
+  }
+
+  async function disconnect() {
+    await wallet.disconnect().catch(() => {});
+    setAddress(undefined);
+    reset("wallet");
   }
 
   const walletPay = async (): Promise<Step> => {
@@ -117,187 +162,235 @@ export default function Demo() {
     return api({ action: "pay", quoteId, payload });
   };
 
+  // Balances count only once they belong to the payer shown.
+  const own = !!status && (mode === "server" || status.addresses.agent === address);
+  const payerBalance = own ? Number(status.balances.agent) : undefined;
   const state = status?.state;
   const capturable = Number(state?.capturable ?? 0);
   const refundable = Number(state?.refundable ?? 0);
-  const payerBalance = Number(status?.balances.agent ?? 0);
-  const remaining = deadline ? deadline - now : undefined;
-  const canPay = mode === "server" || (!!address && payerBalance >= UNIT);
-  const disabled = !!busy;
+  const remaining = window_ ? Math.max(0, window_.end - now) : undefined;
+  const windowPct = window_ && remaining !== undefined ? (remaining / (window_.end - window_.start)) * 100 : 0;
+
+  const connected = mode === "server" || !!address;
+  const funded = mode === "server" || (payerBalance ?? 0) >= HOLD;
+  const paid = !!hash;
+  const open = capturable > 0 || refundable > 0;
+  const stepState = (done: boolean, ready: boolean): StepState => (done ? "done" : ready ? "active" : "locked");
+  const b = (label: string) => busy === label;
+  const Spinner = ({ on }: { on: boolean }) => (on ? <span className="spin" aria-hidden /> : null);
+
+  const n = (i: number) => String(mode === "wallet" ? i : i - 2).padStart(2, "0");
 
   return (
-    <main>
-      <nav className="nav">
-        <a href="/" style={{ textDecoration: "none" }}><Logo size={24} /></a>
-        <span className="badge" style={{ margin: 0 }}>Stellar testnet</span>
-      </nav>
+    <div className="demo">
+      <main>
+        <header className="d-top">
+          <a href="/" aria-label="Nyquist402 home"><Logo size={24} /></a>
+          <nav>
+            <span className="mono"><span className="dot" />Stellar testnet</span>
+            <a href="/docs">Docs</a>
+          </nav>
+        </header>
 
-      <section>
-        <h1>Live demo</h1>
-        <p className="lead">
-          Pay for a metered inference API with x402 <code>auth-capture</code>. You authorize 1.00 DEMOUSD into
-          escrow. The merchant captures what the work cost, releases the rest, and can refund later. If the merchant
-          does nothing, you reclaim the hold yourself. Every step is a real testnet transaction.
-        </p>
-        <div className="actions">
-          <button className={`btn ${mode === "wallet" ? "btn-primary" : ""}`} onClick={() => switchMode("wallet")}>
-            Use my wallet
-          </button>
-          <button className={`btn ${mode === "server" ? "btn-primary" : ""}`} onClick={() => switchMode("server")}>
-            Try without a wallet
-          </button>
-        </div>
-      </section>
-
-      {mode === "wallet" && (
-        <section>
-          <h2>1. Your wallet</h2>
-          {!address ? (
-            <>
-              <p className="muted">Freighter, xBull or Hana, set to Testnet. Paying needs no XLM.</p>
-              <div className="actions" style={{ marginTop: 16 }}>
-                <button className="btn btn-primary" onClick={connect}>Connect wallet</button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p>
-                Connected <code>{short(address)}</code>{" "}
-                <button
-                  className="btn"
-                  style={{ padding: "2px 10px", marginLeft: 8 }}
-                  onClick={async () => {
-                    await wallet.disconnect().catch(() => {});
-                    setAddress(undefined);
-                    switchMode("wallet");
-                  }}
-                >
-                  Disconnect
-                </button>
-              </p>
-              <div className="actions" style={{ marginTop: 16 }}>
-                <button
-                  className="btn"
-                  disabled={disabled || payerBalance >= 10 * UNIT}
-                  onClick={() => run("Get 10 DEMOUSD", () => signed({ action: "faucet", address }))}
-                >
-                  Get 10 test DEMOUSD
-                </button>
-              </div>
-              <p className="muted" style={{ marginTop: 12 }}>
-                New accounts are funded with testnet XLM. The first claim asks you to sign a trustline.
-              </p>
-            </>
-          )}
+        <section className="d-head">
+          <div>
+            <p className="d-cap" style={{ marginBottom: 14 }}>Live demo · x402 auth-capture</p>
+            <h1>Pay for work before it is done.</h1>
+            <p style={{ marginTop: 18 }}>
+              You authorize 1.00 DEMOUSD into escrow for a metered inference call. The merchant captures what the work
+              cost and releases the rest. If the merchant does nothing, you take the hold back yourself.
+            </p>
+          </div>
+          <div className="seg" role="group" aria-label="Payer">
+            <button aria-pressed={mode === "wallet"} onClick={() => reset("wallet")}>My wallet</button>
+            <button aria-pressed={mode === "server"} onClick={() => reset("server")}>Demo agent</button>
+          </div>
         </section>
-      )}
 
-      <section>
-        <h2>Balances</h2>
-        <div className="grid">
-          {([["agent", mode === "wallet" ? "You" : "Agent"], ["merchant", "Merchant"], ["escrow", "Escrow"]] as const).map(
-            ([k, label]) => (
-              <div className="card" key={k}>
-                <h3>{label}</h3>
-                <p style={{ fontSize: "1.5rem", color: "var(--text)" }}>{fmt(status?.balances[k])}</p>
-              </div>
-            ),
-          )}
-        </div>
-        {state && (
-          <p className="muted" style={{ marginTop: 16 }}>
-            Payment: capturable {fmt(state.capturable)} · refundable {fmt(state.refundable)}
-            {remaining !== undefined && capturable > 0 &&
-              (remaining > 0 ? ` · capture window closes in ${remaining}s` : " · capture window closed")}
-          </p>
-        )}
-      </section>
-
-      <section>
-        <h2>{mode === "wallet" ? "2. Pay" : "Agent"}</h2>
-        <div className="actions" style={{ marginTop: 0 }}>
-          <button
-            className="btn btn-primary"
-            disabled={disabled || !canPay}
-            onClick={() =>
-              run("Authorize 1.00", mode === "wallet" ? walletPay : () => api({ action: "authorize" }))
-            }
-          >
-            {mode === "wallet" ? "Pay: authorize 1.00 (sign in wallet)" : "Agent pays (authorize 1.00)"}
-          </button>
-          {mode === "wallet" && (
-            <button
-              className="btn"
-              disabled={disabled || capturable === 0 || remaining === undefined || remaining > 0}
-              onClick={() => run("Reclaim hold", () => signed({ action: "reclaim", address, paymentHash: hash }))}
-            >
-              Reclaim hold (after window)
-            </button>
-          )}
-        </div>
-      </section>
-
-      <section>
-        <h2>{mode === "wallet" ? "3. Merchant" : "Merchant"}</h2>
-        <div className="actions" style={{ marginTop: 0 }}>
-          <button
-            className="btn"
-            disabled={disabled || capturable === 0}
-            onClick={() =>
-              run("Capture 0.60, release rest", () =>
-                api({ action: "capture", paymentHash: hash, amount: "6000000", voidRemainder: true }),
-              )
-            }
-          >
-            Capture 0.60, release rest
-          </button>
-          <button
-            className="btn"
-            disabled={disabled || capturable === 0}
-            onClick={() => run("Void hold", () => api({ action: "void", paymentHash: hash }))}
-          >
-            Void instead
-          </button>
-          <button
-            className="btn"
-            disabled={disabled || refundable < 2_000_000}
-            onClick={() => run("Refund 0.20", () => api({ action: "refund", paymentHash: hash, amount: "2000000" }))}
-          >
-            Refund 0.20
-          </button>
-        </div>
-        {busy && <p className="muted" style={{ marginTop: 16 }}>{busy}: submitting to testnet…</p>}
-        {error && <p style={{ marginTop: 16, color: "#c62828" }}>{error}</p>}
-      </section>
-
-      <section>
-        <h2>Transactions</h2>
-        {log.length === 0 && <p className="muted">No steps yet.</p>}
-        <table>
-          <tbody>
-            {log.map((entry, i) => (
-              <tr key={i}>
-                <td>{entry.label}</td>
-                <td>
-                  {entry.step.ok && entry.step.tx ? (
-                    <a href={TX_URL + entry.step.tx} target="_blank" rel="noreferrer">
-                      <code>{entry.step.tx.slice(0, 12)}…</code>
-                    </a>
-                  ) : entry.step.ok ? (
-                    <span className="muted">done</span>
+        <div className="d-grid">
+          <section aria-label="Steps">
+            {mode === "wallet" && (
+              <>
+                <Row
+                  n="01"
+                  state={stepState(!!address, true)}
+                  title="Connect a wallet"
+                  body={
+                    address ? (
+                      <>Connected as <span className="addr">{short(address)}</span></>
+                    ) : (
+                      "Freighter, xBull or Hana, switched to Testnet."
+                    )
+                  }
+                >
+                  {!address ? (
+                    <button className="pill-btn accent" disabled={!!busy} onClick={connect}>
+                      <Spinner on={b("Connect")} />Connect wallet
+                    </button>
                   ) : (
-                    <span style={{ color: "#c62828" }}>{entry.step.error}</span>
+                    <button className="pill-btn sm" onClick={disconnect}>Disconnect</button>
                   )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+                </Row>
+                <Row
+                  n="02"
+                  state={stepState(!!address && funded, !!address)}
+                  title="Get test DEMOUSD"
+                  body="Opens the account with testnet XLM if needed and sends 10 DEMOUSD. The first claim asks for one signature to add the trustline."
+                >
+                  <button
+                    className="pill-btn"
+                    disabled={!!busy || !address || payerBalance === undefined || payerBalance >= 10 * UNIT}
+                    onClick={() => run("Get 10 DEMOUSD", () => signed({ action: "faucet", address }))}
+                  >
+                    <Spinner on={b("Get 10 DEMOUSD")} />Get 10 DEMOUSD
+                  </button>
+                </Row>
+              </>
+            )}
 
-      <footer>
-        Escrow <code>{status?.addresses.escrow}</code>
-      </footer>
-    </main>
+            <Row
+              n={n(3)}
+              state={stepState(paid, connected && funded)}
+              title="Authorize 1.00"
+              who={mode === "wallet" ? "you" : "agent"}
+              body={
+                mode === "wallet"
+                  ? "Your wallet signs one Soroban authorization. The facilitator submits it and pays the fee; 1.00 moves into escrow."
+                  : "The demo agent signs and the facilitator submits; 1.00 moves into escrow."
+              }
+            >
+              <button
+                className="pill-btn accent"
+                disabled={!!busy || !connected || !funded}
+                onClick={() => run("Authorize 1.00", mode === "wallet" ? walletPay : () => api({ action: "authorize" }))}
+              >
+                <Spinner on={b("Authorize 1.00")} />
+                {paid ? "Authorize again" : mode === "wallet" ? "Sign and pay" : "Agent pays"}
+              </button>
+            </Row>
+
+            <Row
+              n={n(4)}
+              state={stepState(paid && !open, paid && open)}
+              title="Settle"
+              who="merchant"
+              body="Capture 0.60 for the work and release 0.40, or void the whole hold. Captured funds stay refundable until the refund deadline."
+            >
+              <button
+                className="pill-btn"
+                disabled={!!busy || capturable === 0}
+                onClick={() =>
+                  run("Capture 0.60", () =>
+                    api({ action: "capture", paymentHash: hash, amount: "6000000", voidRemainder: true }),
+                  )
+                }
+              >
+                <Spinner on={b("Capture 0.60")} />Capture 0.60
+              </button>
+              <button
+                className="pill-btn"
+                disabled={!!busy || capturable === 0}
+                onClick={() => run("Void", () => api({ action: "void", paymentHash: hash }))}
+              >
+                <Spinner on={b("Void")} />Void
+              </button>
+              <button
+                className="pill-btn"
+                disabled={!!busy || refundable < 2_000_000}
+                onClick={() => run("Refund 0.20", () => api({ action: "refund", paymentHash: hash, amount: "2000000" }))}
+              >
+                <Spinner on={b("Refund 0.20")} />Refund 0.20
+              </button>
+            </Row>
+
+            {mode === "wallet" && (
+              <Row
+                n="05"
+                state={stepState(false, paid && capturable > 0 && remaining === 0)}
+                title="Reclaim"
+                who="you"
+                body="If the merchant never settles, the payer takes the hold back after the capture window. The demo window is three minutes."
+              >
+                <button
+                  className="pill-btn"
+                  disabled={!!busy || capturable === 0 || remaining !== 0}
+                  onClick={() => run("Reclaim", () => signed({ action: "reclaim", address, paymentHash: hash }))}
+                >
+                  <Spinner on={b("Reclaim")} />
+                  {remaining ? `Reclaim in ${remaining}s` : "Reclaim hold"}
+                </button>
+              </Row>
+            )}
+
+            {error && <p className="note err" role="alert">{error}</p>}
+          </section>
+
+          <aside className="d-side" aria-label="Ledger">
+            <div className="bal">
+              {(
+                [
+                  ["agent", mode === "wallet" ? "You" : "Agent"],
+                  ["merchant", "Merchant"],
+                  ["escrow", "Escrow"],
+                ] as const
+              ).map(([k, label]) => (
+                <div key={k} className={k}>
+                  <span className="d-cap">{label}</span>
+                  <strong>{own ? fmt(status.balances[k]) : "–"}</strong>
+                </div>
+              ))}
+            </div>
+
+            <div className="pstate">
+              <span className="d-cap">Payment</span>
+              {state ? (
+                <>
+                  <div className="kv"><span>Held in escrow</span><span>{fmt(capturable)}</span></div>
+                  <div className="bar"><i style={{ width: `${(capturable / HOLD) * 100}%` }} /></div>
+                  <div className="kv"><span>Captured, refundable</span><span>{fmt(refundable)}</span></div>
+                  <div className="bar"><i style={{ width: `${(refundable / HOLD) * 100}%` }} /></div>
+                  {window_ && capturable > 0 && (
+                    <>
+                      <div className="kv">
+                        <span>Capture window</span>
+                        <span>{remaining ? `${remaining}s left` : "closed"}</span>
+                      </div>
+                      <div className="bar time"><i style={{ width: `${windowPct}%` }} /></div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <p className="muted" style={{ fontSize: 14, marginTop: 8 }}>No payment yet.</p>
+              )}
+            </div>
+
+            <div className="log">
+              <span className="d-cap">Transactions</span>
+              <ol>
+                {log.length === 0 && <li className="muted">Every step lands on testnet.</li>}
+                {log.map(entry => (
+                  <li key={entry.id}>
+                    <span>{entry.label}</span>
+                    {entry.step.ok && entry.step.tx ? (
+                      <a href={TX_URL + entry.step.tx} target="_blank" rel="noreferrer">
+                        {entry.step.tx.slice(0, 10)}… ↗
+                      </a>
+                    ) : entry.step.ok ? (
+                      <span className="muted">done</span>
+                    ) : (
+                      <span className="bad">{entry.step.error}</span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <p className="d-foot">
+              Escrow <code>{status?.addresses.escrow ?? "…"}</code>
+            </p>
+          </aside>
+        </div>
+      </main>
+    </div>
   );
 }
