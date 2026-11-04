@@ -2,18 +2,21 @@
 import { useState } from "react";
 import { claimActions, formatAmount, parseAmount } from "@/lib/protected/flow";
 import { hashText } from "@/lib/protected/codec";
-import type { Claim, PaymentTerms, ProtectedAction } from "@/lib/protected/types";
+import type { Claim, DemoArbiter, PaymentTerms, ProtectedAction } from "@/lib/protected/types";
 
-export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sellerControl, now, busy, run }: {
+export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sellerControl, now, busy, run, arbiters, arbitrate }: {
   id: number; claim: Claim; arbiter: string | null; terms: PaymentTerms; paymentId: string;
   address?: string; sellerControl: boolean; now: number; busy: boolean;
   run: (label: string, action: ProtectedAction) => Promise<void>;
+  arbiters: DemoArbiter[];
+  arbitrate: (claimId: number, sellerAmount: string, name: string) => Promise<void>;
 }) {
   const [evidence, setEvidence] = useState("");
   const [award, setAward] = useState("");
   const allowed = claimActions(claim, now);
   const buyer = address === terms.payer;
   const canRule = address === arbiter && allowed.rule;
+  const desk = arbiters.find(a => a.address === arbiter);
   const disabled = busy || !address;
   const deadline = (value: number) => `${new Date(value * 1000).toLocaleTimeString()} (${Math.max(0, value - now)}s left)`;
   async function evidenceAction(party: string, type: "dispute" | "submit_evidence") {
@@ -31,7 +34,7 @@ export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sell
         <div><dt>Evidence closes</dt><dd>{deadline(claim.response_until)}</dd></div>
         <div><dt>Custom arbiter closes</dt><dd>{deadline(claim.custom_until)}</dd></div>
         <div><dt>Final fallback</dt><dd>{deadline(claim.fallback_at)}</dd></div>
-        <div><dt>Current arbiter</dt><dd><code>{arbiter ?? "Ruling window closed"}</code></dd></div>
+        <div><dt>Current arbiter</dt><dd>{arbiter ? desk?.name ?? <code>{arbiter}</code> : "Ruling window closed"}</dd></div>
         <div><dt>Evidence revision</dt><dd>{claim.revision}</dd></div>
       </>}
       {claim.buyer_evidence && <div><dt>Buyer evidence hash</dt><dd><code>{claim.buyer_evidence}</code></dd></div>}
@@ -51,7 +54,19 @@ export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sell
         <button className="pill-btn" disabled={disabled || !sellerControl || !evidence.trim()} onClick={() => void evidenceAction(terms.seller, allowed.dispute ? "dispute" : "submit_evidence")}>{allowed.dispute ? "Seller disputes" : "Seller responds"}</button>
       </div>
     </div>}
-    {canRule && <div className="protected-form">
+    {desk && claim.status === "Disputed" && <div className="protected-form arbiter-desk">
+      <p><strong>{desk.name}</strong> <span className="d-cap">free · operated by this demo</span></p>
+      {allowed.rule ? <>
+        <p className="muted">Decide the split after reading both sides. The remainder returns to the buyer.</p>
+        <div className="acts">
+          {[["Seller wins", 1n, 1n], ["Split 50/50", 1n, 2n], ["Buyer wins", 0n, 1n]].map(([label, num, den]) => {
+            const sellerAmount = (BigInt(claim.amount) * (num as bigint) / (den as bigint)).toString();
+            return <button key={label as string} className="pill-btn" disabled={busy} onClick={() => void arbitrate(id, sellerAmount, desk.name)}>{label as string} · {formatAmount(sellerAmount)} to seller</button>;
+          })}
+        </div>
+      </> : <p className="muted">Rules once the evidence window closes ({Math.max(0, claim.response_until - now)}s).</p>}
+    </div>}
+    {canRule && !desk && <div className="protected-form">
       <label>Seller award (DEMOUSD)<input inputMode="decimal" value={award} onChange={e => setAward(e.target.value)} placeholder={`0 to ${formatAmount(claim.amount)}`} /></label>
       <button className="pill-btn accent" disabled={disabled || !award} onClick={() => {
         try {

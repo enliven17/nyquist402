@@ -2,6 +2,10 @@ import { amount, CAPABILITY, computePaymentId, validateTerms } from "./codec.ts"
 import type { Claim, DemoConfig, PaymentTerms } from "./types.ts";
 export type Quote = { protocol: string; terms: PaymentTerms; paymentId: string; capability: string };
 export type QuoteInput = { payer: string; agreementHash: string; buyerArbiter: string | null; fallbackSellerBps: number };
+/** The demo seller agrees to any listed non-default arbiter the buyer picks; otherwise it keeps its own preference. */
+export function sellerArbiterFor(buyerArbiter: string | null, c: Pick<DemoConfig, "sellerArbiter"> & { arbiters?: DemoConfig["arbiters"] }): string | null {
+  return buyerArbiter && c.arbiters?.some(a => a.address === buyerArbiter && !a.isDefault) ? buyerArbiter : c.sellerArbiter;
+}
 export function claimActions(c: Claim, now: number) {
   return {
     accept: c.status === "Review", dispute: c.status === "Review" && now < c.review_until,
@@ -35,7 +39,7 @@ export async function validateQuote(q: Quote, c: DemoConfig, input: QuoteInput, 
   validateTerms(q.terms, { contractId: c.contractId, defaultArbiter: c.defaultArbiter, now });
   const t = q.terms;
   if (t.payer !== input.payer || t.seller !== c.seller || t.token !== c.token || t.agreement !== input.agreementHash ||
-      t.buyer_arbiter !== input.buyerArbiter || t.seller_arbiter !== c.sellerArbiter || t.fallback_seller_bps !== input.fallbackSellerBps ||
+      t.buyer_arbiter !== input.buyerArbiter || t.seller_arbiter !== sellerArbiterFor(input.buyerArbiter, c) || t.fallback_seller_bps !== input.fallbackSellerBps ||
       t.max_amount !== c.preset.budget || t.review_seconds !== c.preset.review || t.response_seconds !== c.preset.response ||
       t.arbiter_seconds !== c.preset.custom || t.default_seconds !== c.preset.default ||
       t.delivery_deadline <= now || t.delivery_deadline > now + c.preset.session ||

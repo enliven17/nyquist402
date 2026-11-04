@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readProtectedRequest } from "@/lib/protected/request";
-import { config, prepare, quote, snapshot } from "@/lib/protected/demo";
+import { arbitrate, config, prepare, quote, snapshot } from "@/lib/protected/demo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +18,7 @@ export async function POST(req: Request) {
     if (origin && origin !== new URL(req.url).origin) return response({ ok: false, error: "Cross-origin action rejected" }, 403);
     const body = await readProtectedRequest(req);
     if (body.operation === "quote") return response({ ok: true, ...await quote(body) });
+    if (body.operation === "arbitrate") { const { tx, arbiter } = await arbitrate(body); return response({ ok: true, tx, arbiter }); }
     if (body.operation === "prepare") return response({ ok: true, prepared: await prepare(body) });
     return response({ ok: false, error: "Unsupported protected operation" }, 400);
   } catch (error) { return response({ ok: false, error: error instanceof Error ? error.message : "Protected action failed" }, 400); }

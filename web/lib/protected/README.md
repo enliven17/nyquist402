@@ -23,7 +23,7 @@ Connect a testnet wallet and acquire 10 DEMOUSD. Request a quote, review the exa
 
 The six-minute session uses a 120-second claim review, at least a 60-second evidence response, and 90 seconds per applicable arbiter stage. These are demonstration presets, not production recommendations. A 50% seller fallback share is an editable example shown before funding. Both parties sign its exact value; neither an API caller nor the project can change it afterward.
 
-Seller controls delegate only this test payment to its browser holder using an unforgeable capability. They demonstrate the seller side; production sellers retain their own signing policy. Buyer/arbiter actions require their actual wallets. Connect the current arbiter's wallet to submit a bounded ruling after evidence closes. No server API signs a ruling.
+Seller controls delegate only this test payment to its browser holder using an unforgeable capability. They demonstrate the seller side; production sellers retain their own signing policy. Buyer actions require the buyer's wallet. Before funding, the buyer picks an arbiter from the demo roster (`DEMO_ARBITER_SECRETS`); the demo seller agrees to any listed arbiter, so the contract selects it. Listed arbiters are operated by the demo server and charge no fee: after evidence closes, the `arbitrate` operation signs a bounded ruling only as the arbiter that currently holds the case. Arbiters outside the roster still rule from their own wallet.
 
 Claims are independent. Accept one, dispute another, and let the session expire: reclaim returns only unused funds while reviewed/disputed reservations stay locked. Seller early return uses the same available bucket. After an arbitration timeout, anyone can submit the jointly agreed fallback.
 
