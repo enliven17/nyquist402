@@ -187,7 +187,6 @@ export default function Demo() {
       <main>
         <section className="d-head">
           <div>
-            <p className="d-cap" style={{ marginBottom: 14 }}>Live demo · x402 auth-capture</p>
             <h1>Pay for work before it is done.</h1>
             <p style={{ marginTop: 18 }}>
               Hold 1.00 in escrow. The merchant captures what the work cost.

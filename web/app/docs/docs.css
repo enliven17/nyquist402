@@ -14,7 +14,6 @@
 .docs ul.points { margin: 14px 0 0; padding-left: 18px; color: var(--muted); max-width: 46rem; }
 .docs ul.points li { margin: 6px 0; }
 .docs ul.points strong, .docs p strong { color: var(--ink); font-weight: 500; }
-.docs .eyebrow { font-family: var(--font-mono), monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; display: block; }
 .docs .lead { font-size: 1.15rem; margin-top: 20px; }
 .docs pre { margin-top: 16px; }
 .docs table { margin-top: 16px; }
