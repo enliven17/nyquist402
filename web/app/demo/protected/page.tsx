@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Logo } from "@/components/Logo";
 import * as wallet from "@/lib/wallet";
 import { ProtectedEscrowClient } from "@/lib/protected/client";
 import { assertHash, hashText, selectedArbiter } from "@/lib/protected/codec";
@@ -113,7 +112,7 @@ export default function ProtectedDemo() {
   const deadline = (time: number) => `${new Date(time * 1000).toLocaleTimeString()} · ${Math.max(0, time - now)}s left`;
   const disabled = !!busy || !config || !address;
   return <div className="demo protected-demo"><main>
-    <header className="d-top"><a href="/" aria-label="Nyquist402 home"><Logo size={24} /></a><nav><span className="mono"><span className="dot" />Stellar testnet</span><a href="/demo">Basic demo</a><a href="/docs">Docs</a></nav></header>
+
     <section className="d-head"><div><p className="d-cap">Protected settlement · local SDK v1</p><h1>Review the work.<br />Keep the budget protected.</h1><p>Each delivery gets its own reserved claim. Either party can dispute. After the session ends, the buyer can reclaim unused funds while reserved claims stay in escrow.</p></div>
       <button className="pill-btn accent" disabled={!!busy} onClick={() => void work("Connect wallet", async () => { setAddress(await wallet.connect()); })}>{address ? `Switch wallet · ${address.slice(0, 6)}…` : "Connect testnet wallet"}</button>
     </section>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Logo } from "@/components/Logo";
 import * as wallet from "@/lib/wallet";
 import "./demo.css";
 
@@ -184,15 +183,6 @@ export default function Demo() {
   return (
     <div className="demo">
       <main>
-        <header className="d-top">
-          <a href="/" aria-label="Nyquist402 home"><Logo size={24} /></a>
-          <nav>
-            <span className="mono"><span className="dot" />Stellar testnet</span>
-            <a href="/demo/protected">Protected demo</a>
-            <a href="/docs">Docs</a>
-          </nav>
-        </header>
-
         <section className="d-head">
           <div>
             <p className="d-cap" style={{ marginBottom: 14 }}>Live demo · x402 auth-capture</p>

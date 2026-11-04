@@ -3,7 +3,6 @@ import { Logo, Mark } from "@/components/Logo";
 import HeroFigure from "@/components/landing/HeroFigure";
 import Lifecycle from "@/components/landing/Lifecycle";
 import Motion from "@/components/landing/Motion";
-import Sidebar from "@/components/landing/Sidebar";
 
 const REPO_URL = "https://github.com/enliven17/nyquist402";
 const SPEC_PR = "https://github.com/x402-foundation/x402/pull/4124";
@@ -57,7 +56,6 @@ export default function Home() {
     <div className="landing">
       <Motion />
 
-      <Sidebar />
 
 
       <main>

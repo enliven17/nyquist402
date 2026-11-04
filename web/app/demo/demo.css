@@ -13,11 +13,6 @@
 }
 .d-cap { color: var(--muted); }
 
-.d-top { display: flex; justify-content: space-between; align-items: center; height: 64px; border-bottom: 1px solid var(--line); }
-.d-top nav { display: flex; gap: 20px; align-items: center; font-size: 14px; }
-.d-top nav a { color: var(--muted); }
-.d-top nav a:hover { color: var(--ink); }
-.dot { width: 7px; height: 7px; background: #1f9d55; display: inline-block; border-radius: 50%; margin-right: 8px; }
 
 .demo .d-head { display: grid; gap: 24px; padding: 56px 0 40px; border-bottom: 1px solid var(--line); }
 .d-head h1 { font-size: clamp(2.25rem, 5vw, 4rem); font-weight: 300; letter-spacing: -0.035em; line-height: 1; }
