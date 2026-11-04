@@ -1,6 +1,7 @@
 // Creates funded testnet accounts and a demo token, then writes web/.env.local.
 // Usage: node scripts/setup-demo.mjs
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 import {
   Asset,
   BASE_FEE,
@@ -11,6 +12,9 @@ import {
   rpc,
   TransactionBuilder,
 } from "@stellar/stellar-sdk";
+
+const envPath = new URL("../.env.local", import.meta.url);
+if (existsSync(envPath)) throw new Error(".env.local already exists. Keep its funded account keys and add protected settings from .env.example instead of recreating them.");
 
 const HORIZON = "https://horizon-testnet.stellar.org";
 const RPC = "https://soroban-testnet.stellar.org";
@@ -59,7 +63,10 @@ const env = [
   `DEMO_MERCHANT_SECRET=${merchant.secret()}`,
   `DEMO_FACILITATOR_SECRET=${facilitator.secret()}`,
   `DEMO_TOKEN=${asset.contractId(Networks.TESTNET)}`,
+  `DEMO_SESSION_SECRET=${randomBytes(32).toString("hex")}`,
+  `DEMO_PROTECTED_ESCROW=${process.env.DEMO_PROTECTED_ESCROW ?? ""}`,
+  `DEMO_SELLER_ARBITER=${process.env.DEMO_SELLER_ARBITER ?? ""}`,
   "",
 ].join("\n");
-writeFileSync(new URL("../.env.local", import.meta.url), env);
+writeFileSync(envPath, env, { mode: 0o600, flag: "wx" });
 console.log(`Demo token ${asset.contractId(Networks.TESTNET)}. Wrote .env.local.`);
