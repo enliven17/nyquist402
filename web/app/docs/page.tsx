@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Logo } from "@/components/Logo";
 
 export const metadata: Metadata = { title: "Docs · Nyquist402" };
 
@@ -75,14 +74,6 @@ const contract = [
 export default function Docs() {
   return (
     <main>
-      <nav className="nav">
-        <a href="/" style={{ textDecoration: "none" }}><Logo size={24} /></a>
-        <div className="nav-links">
-          <a href="/demo">Demo</a>
-          <a href={SPEC_URL}>Spec</a>
-        </div>
-      </nav>
-
       <section>
         <h1>Docs</h1>
         <p className="lead">
