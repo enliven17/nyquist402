@@ -16,6 +16,7 @@ Work in progress. Not audited.
 
 ```
 contracts/auth-capture-escrow/   Soroban contract
+contracts/protected-escrow/     New protected settlement contract (not deployed)
 web/                             Landing page and testnet demo
 ```
 
@@ -32,18 +33,28 @@ web/                             Landing page and testnet demo
 
 The payer authorizes `[payment_info]` only, with the token transfer into the escrow as a sub-invocation. The consent address is `receiver_authorizer`, or `receiver` when unset, and authorizes the exact call arguments.
 
+## Protected settlement contract
+
+[`contracts/protected-escrow`](contracts/protected-escrow/README.md) implements a separate, versioned contract with per-claim reservations. Both parties approve the funding terms and arbiter policy. Each seller claim has an independent review period; either party can dispute it, and the agreed arbiter (or pinned project default) can allocate only that claim's funds.
+
+After the session expires, `reclaim` returns only unused funds. Claims under review or dispute stay reserved. For example, after 300 units are paid and 400 are disputed from a 1,000-unit deposit, reclaim returns only the unused 300 units.
+
+The contract also implements evidence commitments, custom-to-default arbiter deadline escalation and permissionless execution of a jointly signed timeout-allocation policy. It charges zero arbitration fees in this version. It is not deployed or audited, and the existing web demo/vendored SDK still use the basic escrow. Hosted arbitration, fee support, pre-claim cases and protected SDK/UI integration remain roadmap work.
+
 ## Build
 
-Requires Rust with the `wasm32v1-none` target and stellar-cli 25.2 or later.
+The workspace pins Rust 1.91.1 with `rust-toolchain.toml`: Soroban SDK 29.0.1 needs at least Rust 1.91, and Stellar CLI rejects the 1.91.0 compiler for contract builds. It includes the `wasm32v1-none` target, rustfmt and Clippy. `make build` additionally uses stellar-cli 25.2 or later.
 
 ```bash
 make build
 make test
 ```
 
+Soroban SDK 29 requires Stellar CLI's spec-shaking build step. Use `make build` / `stellar contract build`; a plain `cargo build --target wasm32v1-none` is not a deployable-contract build for this SDK.
+
 ## Demo
 
-`web/` includes a testnet demo at `/demo`: an agent pays a metered API with `auth-capture`, and the server captures, voids, or refunds. The demo uses the `@x402/stellar` auth-capture mechanism from the x402 fork, packed into `web/vendor/`.
+`web/` includes a testnet payment-lifecycle demo at `/demo`: a payer authorizes a budget, and the server captures, voids, or refunds it. Capture amounts are controlled by the demo; an actual metered API is still planned. The demo uses the basic `@x402/stellar` auth-capture mechanism from the x402 fork, packed into `web/vendor/`.
 
 ```bash
 cd web
