@@ -54,7 +54,7 @@ Basic repeated capture is implemented. The new contract below also implements in
 
 ### Implemented protected contract foundation (local code)
 
-Source and API reference: [`contracts/protected-escrow`](contracts/protected-escrow/README.md). A local [SDK and protected demo](web/lib/protected/README.md) integrate this contract. Configure its deployed testnet ID explicitly; no protected ID or live verification result is recorded here. It has no formal audit.
+Source and API reference: [`contracts/protected-escrow`](contracts/protected-escrow/README.md). A local [SDK and protected demo](web/lib/protected/README.md) integrate this contract. The protected contract is deployed on testnet at `CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW`, with default arbiter `GDNHZLVUYH5AHUBQWMSB3BK7ZYCSCOZRQQT7CJT3REDJGRK2SI7ZV67B`. Configure that ID explicitly; a deployed ID alone is not end-to-end SDK/demo verification. It has no formal audit.
 
 - [x] Jointly authenticated funding terms, including an agreement hash, pinned default/custom preferences, review/response/ruling durations and explicit terminal allocation.
 - [x] Independent repeated claims, reserved versus unclaimed balances and exact-claim buyer acceptance.
@@ -173,7 +173,7 @@ Today's `reclaim` authenticates the payer and checks only `authorization_expiry`
 - [x] Connect a local protected SDK and separate demo, preserving basic escrow behavior; add encoding, signing-boundary, recovery and UI deadline tests.
 - [ ] Demonstrate real extension signing, deployed network lifecycle and archival restoration before protected launch.
 
-Checking only `dispute_active` in reclaim would still allow expiry to bypass a timely claim's review window, or another payout path to drain the same reservation. The new contract implements reservation accounting and eligible finalization/return paths. The existing basic testnet deployment remains unchanged; using protection requires deploying and integrating the new version.
+Checking only `dispute_active` in reclaim would still allow expiry to bypass a timely claim's review window, or another payout path to drain the same reservation. The new contract implements reservation accounting and eligible finalization/return paths. The existing basic testnet deployment remains unchanged; using protection requires selecting the deployed protected contract and its separate SDK/demo integration.
 
 ### Required project changes
 

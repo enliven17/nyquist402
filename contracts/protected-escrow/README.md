@@ -1,6 +1,6 @@
 # Protected escrow (new contract version)
 
-Contract foundation for reviewable, disputed partial payments. This is a separate contract from `AuthCaptureEscrow`; the published basic testnet contract and existing x402 vendor packages do not gain these rules automatically. A deployment ID must be configured separately; no formal audit is claimed.
+Contract foundation for reviewable, disputed partial payments. This is a separate contract from `AuthCaptureEscrow`; the published basic testnet contract and existing x402 vendor packages do not gain these rules automatically. Deployed on testnet at `CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW` with default arbiter `GDNHZLVUYH5AHUBQWMSB3BK7ZYCSCOZRQQT7CJT3REDJGRK2SI7ZV67B`. Not audited.
 
 ## Terms and identity
 
