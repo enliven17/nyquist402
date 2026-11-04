@@ -131,14 +131,14 @@ export default function Docs() {
             </p>
             <div className="modes">
               <div>
-                <h3>Basic auth-capture <span className="tag live">testnet</span></h3>
+                <h3>Basic auth-capture <span className="tag tag-live">testnet</span></h3>
                 <p>
                   The x402 <code>auth-capture</code> scheme. Hold a budget, capture the real price, void the rest and
                   refund later. The seller decides the final amount.
                 </p>
               </div>
               <div>
-                <h3>Protected settlement <span className="tag live">testnet</span></h3>
+                <h3>Protected settlement <span className="tag tag-live">testnet</span></h3>
                 <p>
                   Each delivery becomes a claim the buyer reviews. Either side can dispute, an agreed arbiter rules,
                   and signed timeouts guarantee every claim ends.
@@ -332,7 +332,7 @@ export default function Docs() {
                 <tbody>
                   {roadmap.map(([state, title, text]) => (
                     <tr key={title}>
-                      <td style={{ width: 120 }}><span className={`tag ${state}`} style={{ marginLeft: 0 }}>{state === "live" ? "live" : "next"}</span></td>
+                      <td style={{ width: 120 }}><span className={`tag tag-${state}`} style={{ marginLeft: 0 }}>{state === "live" ? "live" : "next"}</span></td>
                       <td><strong>{title}</strong><br /><span className="muted">{text}</span></td>
                     </tr>
                   ))}

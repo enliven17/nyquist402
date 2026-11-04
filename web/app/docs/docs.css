@@ -22,8 +22,8 @@
 .docs td code { white-space: nowrap; }
 
 .tag { display: inline-block; font-family: var(--font-mono), monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border: 1px solid currentColor; vertical-align: 0.2em; margin-left: 8px; }
-.tag.live { color: #1f9d55; }
-.tag.next { color: var(--accent); }
+.tag-live { color: #1f9d55; }
+.tag-next { color: var(--accent); }
 
 .modes { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 28px; }
 @media (min-width: 760px) { .modes { grid-template-columns: 1fr 1fr; } }
