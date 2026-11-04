@@ -113,7 +113,6 @@ export default function Lifecycle() {
     <section ref={root} className="lifecycle" id="lifecycle" data-section>
       <div className="wrap lifecycle-inner">
         <div className="lifecycle-copy">
-          <p className="eyebrow"><span className="tick" />03 · Lifecycle</p>
           <h2 className="h-lg">One payment.<br />Four moves.</h2>
           <ol className="steps">
             {steps.map((s) => (

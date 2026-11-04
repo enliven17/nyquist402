@@ -117,7 +117,7 @@ export default function ProtectedDemo() {
   return <div className="demo protected-demo">
       <Toast message={error} onClose={() => setError(undefined)} /><main>
 
-    <section className="d-head"><div><p className="d-cap">Protected settlement · local SDK v1</p><h1>Review the work.<br />Keep the budget protected.</h1><p>Each delivery gets its own reserved claim. Either party can dispute. After the session ends, the buyer can reclaim unused funds while reserved claims stay in escrow.</p></div>
+    <section className="d-head"><div><h1>Review the work.<br />Keep the budget protected.</h1><p>Each delivery gets its own reserved claim. Either party can dispute. After the session ends, the buyer can reclaim unused funds while reserved claims stay in escrow.</p></div>
       <button className="pill-btn accent" disabled={!!busy} onClick={() => void work("Connect wallet", async () => { setAddress(await wallet.connect()); })}>{address ? `Switch wallet · ${address.slice(0, 6)}…` : "Connect testnet wallet"}</button>
     </section>
     <p className="protected-notice">Testnet demonstration. You pay network fees in test XLM. Arbiters work for free. Seller controls and the listed arbiters are operated by this demo, so you can play every role.</p>

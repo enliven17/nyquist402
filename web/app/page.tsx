@@ -83,7 +83,6 @@ export default function Home() {
         {/* 02 The gap */}
         <section className="why" id="s2" data-section>
           <div className="wrap">
-            <p className="eyebrow"><span className="tick" />02 · The gap</p>
             <h2 className="h-lg" data-split>Final at signature<br />is not a business model.</h2>
 
             <div className="panel" data-reveal>
@@ -99,7 +98,6 @@ export default function Home() {
             </div>
 
             <div className="why-copy">
-              <p className="t-cap">Problem</p>
               <p className="fill-text" data-fill>
                 x402 on Stellar settles once, at a price fixed in advance.
               </p>
@@ -113,7 +111,6 @@ export default function Home() {
         {/* Soroban features */}
         <section className="features">
           <div className="wrap">
-            <p className="eyebrow"><span className="tick" />Built for Soroban</p>
             <h2 className="h-lg" data-split>Stronger on Stellar<br />than where it started.</h2>
             <div className="feature-grid">
               {features.map((f, i) => (
@@ -133,7 +130,6 @@ export default function Home() {
         {/* 04 Use cases */}
         <section className="uses" id="s4" data-section>
           <div className="wrap">
-            <p className="eyebrow"><span className="tick" />04 · Use cases</p>
             <h2 className="h-lg" data-split>For anything priced<br />after it runs.</h2>
             <ul className="use-list">
               {uses.map(([name, text]) => (
@@ -150,7 +146,6 @@ export default function Home() {
         {/* 05 Proof */}
         <section className="proof" id="s5" data-section>
           <div className="wrap">
-            <p className="eyebrow"><span className="tick" />05 · Status</p>
             <div className="proof-grid">
               <blockquote className="proof-quote" data-fill>
                 Live on testnet. Spec <em>under review at the x402 Foundation</em>.
@@ -171,7 +166,6 @@ export default function Home() {
         {/* 06 Start */}
         <section className="start" id="s6" data-section>
           <div className="wrap">
-            <p className="eyebrow"><span className="tick" />06 · Get started</p>
             <h2 className="h-lg" data-split>Three roles.<br />One package.</h2>
             <div className="start-grid">
               {[
@@ -196,7 +190,6 @@ export default function Home() {
         <section className="faq" id="s7" data-section>
           <div className="wrap faq-grid">
             <div>
-              <p className="eyebrow eyebrow-dark"><span className="tick" />07 · FAQ</p>
               <h2 className="h-lg" data-split>Common<br />questions</h2>
             </div>
             <div className="faq-list">

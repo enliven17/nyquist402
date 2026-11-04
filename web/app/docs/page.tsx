@@ -123,7 +123,6 @@ export default function Docs() {
       <main>
         <article>
           <section id="overview">
-            <span className="eyebrow">Documentation</span>
             <h1>Pay for work, then settle what it cost.</h1>
             <p className="lead">
               Nyquist402 brings refundable, reviewable payments to x402 on Stellar. A buyer authorizes a maximum, the
