@@ -8,15 +8,18 @@ A payer authorizes a maximum amount once. The resource server can then capture p
 
 Work in progress. Not audited.
 
-| Network | `AuthCaptureEscrow` |
+| Contract | Testnet |
 | --- | --- |
-| Testnet | `CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI` |
+| `AuthCaptureEscrow` | `CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI` |
+| `ProtectedEscrow` | `CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW` |
+
+`ProtectedEscrow` default arbiter on testnet: `GDNHZLVUYH5AHUBQWMSB3BK7ZYCSCOZRQQT7CJT3REDJGRK2SI7ZV67B`.
 
 ## Layout
 
 ```
 contracts/auth-capture-escrow/   Soroban contract
-contracts/protected-escrow/     New protected settlement contract (not deployed)
+contracts/protected-escrow/     Protected settlement contract (testnet)
 web/                             Landing page and testnet demo
 ```
 
@@ -39,7 +42,7 @@ The payer authorizes `[payment_info]` only, with the token transfer into the esc
 
 After the session expires, `reclaim` returns only unused funds. Claims under review or dispute stay reserved. For example, after 300 units are paid and 400 are disputed from a 1,000-unit deposit, reclaim returns only the unused 300 units.
 
-The contract also implements evidence commitments, custom-to-default arbiter deadline escalation and permissionless execution of a jointly signed timeout-allocation policy. It charges zero arbitration fees in this version. It is not deployed or audited, and the existing web demo/vendored SDK still use the basic escrow. Hosted arbitration, fee support, pre-claim cases and protected SDK/UI integration remain roadmap work.
+The contract also implements evidence commitments, custom-to-default arbiter deadline escalation and permissionless execution of a jointly signed timeout-allocation policy. It charges zero arbitration fees in this version. It is deployed on testnet and not audited. The existing web demo/vendored SDK still use the basic escrow. Hosted arbitration, fee support, pre-claim cases and protected SDK/UI integration remain roadmap work.
 
 ## Build
 
