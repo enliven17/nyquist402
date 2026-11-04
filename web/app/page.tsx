@@ -10,7 +10,6 @@ const ISSUE_URL = "https://github.com/x402-foundation/x402/issues/4122";
 const ESCROW = "CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI";
 const ESCROW_URL = `https://stellar.expert/explorer/testnet/contract/${ESCROW}`;
 
-const ticker = ["x402 v2", "auth-capture", "Soroban", "Stellar Asset Contract", "HTTP 402", "CAP-71 auth", "stellar:testnet"];
 
 const features = [
   {
@@ -62,12 +61,6 @@ export default function Home() {
         {/* 01 Hero */}
         <section className="hero" id="s1" data-section>
           <div className="wrap">
-            <div className="meta-row">
-              <dl><dt>Scheme</dt><dd>auth-capture</dd></dl>
-              <dl><dt>Network</dt><dd>stellar:testnet</dd></dl>
-              <dl><dt>Status</dt><dd><span className="live" />Live · not audited</dd></dl>
-            </div>
-            <div className="rule" data-line />
 
             <div className="hero-grid">
               <div>
@@ -85,13 +78,6 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="ticker" aria-hidden>
-            <div className="ticker-track">
-              {[...ticker, ...ticker, ...ticker, ...ticker].map((t, i) => (
-                <span key={i}>{t}<i>✳</i></span>
-              ))}
-            </div>
-          </div>
         </section>
 
         {/* 02 The gap */}

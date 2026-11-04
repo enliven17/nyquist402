@@ -100,3 +100,10 @@ pre {
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); }
 .brand-word { font-size: 19px; font-weight: 500; letter-spacing: -0.04em; }
 .brand-num { font-family: var(--font-mono), monospace; font-size: 0.72em; font-weight: 500; letter-spacing: 0; color: var(--accent); margin-left: 2px; vertical-align: 0.35em; }
+
+/* Minimal scrollbars */
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 22%, transparent) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink) 22%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--ink) 40%, transparent); }

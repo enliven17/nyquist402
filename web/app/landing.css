@@ -17,7 +17,7 @@
 .lead { font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.5; color: var(--muted); max-width: 34rem; margin-top: 32px; }
 .lead code { color: var(--ink); }
 
-.eyebrow, .t-cap, .meta-row dt {
+.eyebrow, .t-cap {
   font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -51,20 +51,11 @@
 
 /* Hero */
 .hero { padding-top: 28px !important; position: relative; }
-.meta-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 8px 0 18px; }
-.meta-row dl { margin: 0; }
-.meta-row dt { color: var(--muted); }
-.meta-row dd { margin: 4px 0 0; font-family: var(--font-mono), monospace; font-size: 13px; display: flex; align-items: center; gap: 8px; }
 
 .hero-title { font-size: clamp(3rem, 5.6vw, 5.75rem); line-height: 0.95; letter-spacing: -0.045em; }
 .hero-grid { display: grid; grid-template-columns: 0.82fr 1.18fr; gap: 48px; align-items: center; padding: clamp(36px, 5vw, 72px) 0 clamp(48px, 6vw, 88px); }
 .t-sub { font-family: var(--font-mono), monospace; font-size: 11px; fill: var(--muted); letter-spacing: 0.04em; }
 
-.ticker { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); overflow: hidden; padding: 18px 0; }
-.ticker-track { display: flex; width: max-content; animation: marquee 40s linear infinite; }
-.ticker-track span { font-size: clamp(18px, 2vw, 26px); font-weight: 300; letter-spacing: -0.02em; white-space: nowrap; display: inline-flex; align-items: center; }
-.ticker-track i { font-style: normal; color: var(--accent); margin: 0 36px; font-size: 0.8em; }
-@keyframes marquee { to { transform: translateX(-50%); } }
 
 /* The gap */
 .why { padding: clamp(96px, 12vw, 160px) 0 !important; }
@@ -190,9 +181,7 @@
   .foot-cols { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 720px) {
-  .meta-row { grid-template-columns: 1fr 1fr; }
-  .meta-row dl:last-child { grid-column: span 2; }
-  .panel-row, .why-copy { grid-template-columns: 1fr; gap: 10px; }
+      .panel-row, .why-copy { grid-template-columns: 1fr; gap: 10px; }
   .feature-grid, .start-grid { grid-template-columns: 1fr; }
   .use-list li { grid-template-columns: 1fr 28px; }
   .use-text { grid-column: 1; }
@@ -200,6 +189,5 @@
   .lifecycle .h-lg { font-size: 2rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ticker-track { animation: none; }
-  [data-split] { opacity: 1; }
+    [data-split] { opacity: 1; }
 }
