@@ -1,0 +1,44 @@
+---
+title: Payment lifecycle
+description: The intended sequence from an API offer to final settlement and return of unused reserves.
+---
+## Agree before funding
+
+The seller supplies an offer describing delivery and pricing. Both parties agree the work budget, token, deadlines, review policy, arbiter selection and fallback allocation. The buyer also approves protocol and arbitration fee limits and the applicable accepted quotes.
+
+Quote validation happens before any funding signature. The signed agreement binds the deployment and economic policy so later service responses cannot change what the buyer authorized.
+
+## Fund separate balances
+
+The buyer funds principal, protocol-fee reserve and arbitration reserve. The seller does not make a deposit to receive protected payments or initiate a claim dispute. Work payments and fees remain separately accounted for throughout the lifecycle.
+
+## Deliver and reserve a claim
+
+The seller performs work, produces a delivery/usage receipt and records a claim before the session deadline. The claim binds an amount and delivery commitment, reserves that amount of principal and allocates the required arbitration capacity. A claim without sufficient accepted fee capacity must be rejected.
+
+Recording a claim asserts delivery; it is not proof that the delivery was correct. Every claim receives its own review period.
+
+## Review or dispute
+
+The buyer may accept the exact claim. An undisputed claim becomes eligible for settlement after review. Either party can dispute before review closes, freezing the covered reservation while both parties provide evidence.
+
+<ClaimStateDiagram />
+
+One disputed claim does not block unrelated eligible claims or reverse an earlier finalized payment.
+
+## Finalize the claim
+
+| Finalization route | Principal outcome | Arbitration fee outcome |
+| --- | --- | --- |
+| Buyer acceptance | Claimed principal pays the seller | Unused case capacity is released under the payment policy |
+| Undisputed review expiry | Claimed principal pays the seller after an eligible transaction | No arbitration ruling fee is earned |
+| Valid ruling | Bounded award pays the seller; the claim remainder returns to the buyer | The accepted ruling fee is paid once |
+| Final arbiter timeout | The jointly agreed fallback splits the claim | Unearned arbitration funds are returned |
+
+Protocol fees follow the earning and return conditions accepted for the contract version; they cannot be inferred from the principal outcome or charged outside the approved cap.
+
+## Close the session
+
+After session expiry, the buyer can reclaim unused principal and reserves no longer needed by pending claims. Active claims retain their principal and required fee reservations until they finalize. The seller can return unclaimed funds early where the contract permits it.
+
+No timeout executes itself. The execution service or a direct caller must submit the eligible action. See [facilitator and execution](/docs/services/facilitator).

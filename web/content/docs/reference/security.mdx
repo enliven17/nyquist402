@@ -1,0 +1,31 @@
+---
+title: Security model
+description: Technical invariants and trust assumptions across contracts, signing and operated services.
+---
+## Fund isolation
+
+Principal, protocol-fee reserves and arbitration reserves remain separately accounted for. Claims reserve disjoint principal and fee capacity. An award is bounded by its case scope; a fee is bounded by accepted pricing and caps. Replays, retries and competing submissions cannot pay an award or fee twice.
+
+Unused-fund returns cannot consume active reservations. Finalized claims remain final and unaffected claims can settle independently.
+
+## Authorization and compatibility
+
+Exact funded terms bind parties, network, deployment, policy, arbiter and economic limits. SDK signing checks cover full invocation trees and changed wallet envelopes. Required protected capability must never silently downgrade to basic settlement.
+
+Services cannot replace a pinned arbiter, reset a deadline, revive a finalized case or invent an allocation during recovery. A valid ruling does not need the losing party's later consent.
+
+## Evidence and judgment
+
+Evidence bodies remain private offchain, retrievable by authorized participants and assigned arbiters, and verifiable against onchain commitments. Rulings bind the current evidence revision. The contract checks authority and allocation; it does not judge delivery quality.
+
+Parties rely on the selected arbiter's judgment within the accepted policy. The terminal fallback provides a bounded allocation when no valid ruling arrives, not a guarantee that the resulting split reflects the merits of the case.
+
+## Liveness and recovery
+
+Deadline services, index reconciliation, storage maintenance and restoration support continued execution. Direct submission remains possible during relay outage. A contract safety property does not itself ensure that someone submits a due transaction or retains an evidence body.
+
+## Release verification
+
+Security qualification must cover accounting, quote reuse, stale revisions, conflicting transactions, evidence access, signing, worker retries and restoration. Independent review must include code that affects fund allocation, authorization, evidence access or recovery before mainnet activation.
+
+No audit or mainnet readiness is claimed for the current testnet release. See [implementation status](/docs/roadmap) and the [current verification commands](/docs/setup#build-and-serve).

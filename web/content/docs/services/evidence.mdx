@@ -1,0 +1,25 @@
+---
+title: Evidence delivery & access
+description: Private offchain case material verified against onchain commitments.
+---
+## Commitments and bodies
+
+The contract stores minimal delivery and evidence commitments. The intended evidence service stores the corresponding agreement, delivery receipts and case submissions and delivers them to authorized participants. A hash alone neither stores a document nor gives an arbiter access to it.
+
+On retrieval, verify each body against its recorded commitment. Keep the case revision and the exact evidence snapshot visible to the arbiter and parties.
+
+## Access control
+
+Authorize access for the payment's buyer, seller and currently assigned arbiter. Authenticate the requesting account and check its case relationship; a public payment ID is not an access token. Separate public state/history views from private evidence retrieval.
+
+When a case escalates, enable the pinned default to retrieve the evidence required to decide the case, with access changes consistent with the current assignment. Do not expose evidence to unrelated accounts.
+
+## Submission and revisions
+
+An evidence body must remain available when its commitment is submitted. Updates preserve the previous record for audit purposes and bind the current version used by a ruling. A server restart, browser reload or assignment change must not erase the submitted evidence or its access permissions.
+
+## Retention and confidentiality
+
+The service must publish retention, access and deletion behavior and preserve availability throughout the response and ruling windows, including handoff. Deployment documentation specifies retention durations, storage limits and service guarantees.
+
+Do not publish private evidence bodies to the ledger. Operators need restricted storage/key access and access audit records. See [operations](/docs/services/operators).

@@ -1,0 +1,29 @@
+---
+title: Buyers & agents
+description: Verify offers, authorize bounded funding and manage delivered work through final settlement.
+---
+## Evaluate an offer
+
+Require explicit protected-payment capability from the seller and facilitator. Verify the service agreement, pricing criteria, asset, principal budget, deployment, deadlines, arbiter policy and fallback allocation. An agent requiring protection must reject a basic-only offer before signing.
+
+## Review and fund
+
+The buyer interface presents the work budget, protocol-fee reserve, arbitration reserve, accepted quotes and per-case/total caps separately. The buyer signs the exact versioned terms after the seller agrees. An agent applies the same checks through the SDK rather than relying on interface text.
+
+Funding establishes the permitted budget and policy; it does not pre-approve every later delivery or give a service unrestricted spending authority.
+
+## Review delivery claims
+
+Read the delivery receipt, usage record, claim amount and review deadline. Accepting a claim commits to that exact delivery claim. If review expires without a dispute, the claim becomes eligible for settlement.
+
+To dispute, retain the evidence body, submit its commitment before review closes and make the body available through the authorized case service. Update evidence within the response window when needed.
+
+## Track and recover
+
+The buyer interface exposes payment history, pending transaction hashes, claim states, evidence access and deadline alerts. On reload or a different browser, authenticate with the buyer account and recover service history reconciled with onchain state.
+
+After session expiry, reclaim unused principal and eligible reserve returns. Pending claims retain the funds they need. Confirm the transaction outcome before retrying a mutation.
+
+## Current testnet instructions
+
+The [protected demo guide](/docs/quickstart) demonstrates the fee-free core. It does not implement the full funding breakdown or durable service history described above.

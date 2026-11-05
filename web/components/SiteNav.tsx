@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { docGroups } from "@/lib/docs/navigation";
 import { Logo } from "@/components/Logo";
 import "./site-nav.css";
 
 const ESCROW = "CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI";
 
 type Item = { label: string; href: string; external?: boolean };
-const groups: [string, Item[]][] = [
+const siteGroups: [string, Item[]][] = [
   [
     "Product",
     [
@@ -31,12 +32,16 @@ const groups: [string, Item[]][] = [
     ],
   ],
 ];
-const sections = groups[0][1].map(i => i.href.slice(2));
+const sections = siteGroups[0][1].map(i => i.href.slice(2));
 
 /** One navigation for every page: a left sidebar on wide screens, a top bar with a menu below. */
 export default function SiteNav() {
   // Each page is a full document load, so the path is fixed for the life of this component.
   const path = typeof window === "undefined" ? "/" : window.location.pathname.replace(/\/$/, "") || "/";
+  const isDocs = path === "/docs" || path.startsWith("/docs/");
+  const groups: [string, Item[]][] = isDocs
+    ? [["Nyquist402", [{ label: "Website", href: "/" }, { label: "Protected demo", href: "/demo/protected" }]], ...docGroups.map(group => [group.title, group.pages.map(page => ({ label: page.title, href: page.slug ? `/docs/${page.slug}` : '/docs' }))] as [string, Item[]])]
+    : siteGroups;
   const [section, setSection] = useState<string>();
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -102,7 +107,7 @@ export default function SiteNav() {
   );
 
   return (
-    <header className="topbar">
+    <header className={`topbar${isDocs ? " docs-site-nav" : ""}`}>
       <div className="topbar-inner">
         <a href="/" className="topbar-logo" aria-label="Nyquist402 home"><Logo size={26} mark={false} /></a>
 
@@ -115,11 +120,11 @@ export default function SiteNav() {
 
         <div className="side-foot">
           <div className="side-status">
-            <p><span className="live" />stellar:testnet</p>
-            <button type="button" onClick={copy} title="Copy escrow address">
+            <p>{isDocs ? "Technical documentation" : <><span className="live" />stellar:testnet</>}</p>
+            {!isDocs && <button type="button" onClick={copy} title="Copy escrow address">
               <span>Escrow</span>
               <code>{copied ? "copied" : `${ESCROW.slice(0, 6)}…${ESCROW.slice(-4)}`}</code>
-            </button>
+            </button>}
           </div>
         </div>
       </div>

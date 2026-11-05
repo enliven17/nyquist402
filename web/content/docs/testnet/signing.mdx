@@ -1,0 +1,43 @@
+---
+title: Local signing example
+description: Separate fee-source signatures from the exact authorizations each contract action requires.
+---
+## Who signs what
+
+| Action | Required authority |
+| --- | --- |
+| Authorize the budget | Buyer and seller |
+| Record a claim or return unused funds early | Seller |
+| Accept a claim or reclaim after expiry | Buyer |
+| Dispute or update evidence | The named buyer or seller |
+| Rule | Current arbiter |
+| Settle after review or apply fallback | Publicly callable when eligible |
+
+Publicly callable does not mean fee-free. Someone still submits a transaction and pays its network fees.
+
+## Additional authorization
+
+The transaction source signs the envelope. Additional parties authorize exact contract calls. The SDK validates invocation trees before asking for their signatures.
+
+```ts
+import { authorizeEntry, Networks, TransactionBuilder } from '@stellar/stellar-sdk';
+
+const prepared = await client.prepare(buyer.publicKey(),
+  { type: 'authorize', terms },
+  async (address, entry, untilLedger) => {
+    if (address !== seller.publicKey()) throw new Error('Unexpected signer');
+    return authorizeEntry(entry, seller, untilLedger, Networks.TESTNET);
+  });
+
+const tx = TransactionBuilder.fromXDR(prepared.xdr, Networks.TESTNET);
+tx.sign(buyer);
+await client.submit(prepared, tx.toXDR());
+```
+
+This Node signing example assumes funded `buyer` and `seller` keypairs, agreed `terms`, and a configured SDK `client`. Keep secret keys on the appropriate signer's side. Browser integrations should use their wallet's signing API instead.
+
+## Supported credentials
+
+The local SDK supports ordinary legacy and AddressV2 authorization credentials. It rejects delegated CAP-71 credential trees in this version. Custom account authentication is re-simulated in enforcement mode before envelope signing.
+
+The protected demo charges network fees to the connected wallet in test XLM. Basic demo sponsorship is a separate integration and should not be assumed for protected settlement.

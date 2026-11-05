@@ -1,0 +1,29 @@
+---
+title: x402 payment negotiation
+description: The intended protected HTTP payment flow between a consumer, resource server and facilitator.
+---
+## Negotiate a protected route
+
+The resource server returns HTTP 402 payment requirements identifying supported network, asset, deployment and payment capability. A consumer requiring review and disputes selects a protected route only when the seller and facilitator support its contract and schema version.
+
+The existing basic auth-capture mechanism is not automatically a protected extension. Protection requirements must fail closed before a signature when the required capability is absent.
+
+## Validate the offer
+
+The SDK verifies delivery/pricing terms, principal limit, deadlines, arbiter selection, accepted quote applicability and fee caps. Both parties agree the complete terms. The buyer funds principal and the two fee reserves under the selected contract version.
+
+## Invoke and account for work
+
+Once funding is confirmed, the consumer invokes the resource with the appropriate payment context. The seller meters real work, returns a usage/delivery receipt and records the matching claim. Client verification compares the receipt with the offer and claimed amount.
+
+Receipt production is an offchain integration responsibility. A claim's hash records a commitment and does not establish that the service met its promise.
+
+## Review and settle
+
+The buyer accepts the claim or either party disputes it during review. An undisputed claim can settle after review; a disputed claim follows evidence, ruling and fallback rules. These are lifecycle actions, not an immediate final payment implied by receiving an HTTP response.
+
+## Wire compatibility
+
+The protected x402 binding and public SDK are intended to publish versioned requirements, payloads, compatibility rules and examples. This page specifies the technical sequence, not finalized header extensions or a released protected npm import.
+
+Current runnable examples are the [local protected SDK](/docs/testnet/sdk) and the separate [basic x402 integration](/docs/basic/integration).

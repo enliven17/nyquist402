@@ -1,0 +1,52 @@
+---
+title: Local SDK reference
+description: Read contract state and prepare signed actions using the repository’s protected escrow client.
+---
+## Use the local source
+
+The SDK lives at `web/lib/protected/index.ts`. Use it within this app, or copy the reusable source with its Stellar SDK dependency into your TypeScript application. It supports browsers and Node 22.18+/24; it is not published as an npm package.
+
+```ts
+import { Networks } from '@stellar/stellar-sdk';
+import { ProtectedEscrowClient } from './lib/protected/index.ts';
+
+const client = new ProtectedEscrowClient({
+  contractId: protectedContractId,
+  rpcUrl: 'https://soroban-testnet.stellar.org',
+  networkPassphrase: Networks.TESTNET,
+});
+
+const terms = await client.terms(paymentId);
+const balances = await client.state(paymentId);
+const claim = await client.claimState(paymentId, claimId);
+const authority = await client.arbiter(paymentId, claimId);
+```
+
+The example assumes your configured `protectedContractId`, `paymentId` and `claimId`. Confirm deployment and network values before using them.
+
+## Prepare, sign and submit
+
+```ts
+const prepared = await client.prepare(buyerAddress, {
+  type: 'accept',
+  paymentId,
+  claimId,
+  commitment: claim.commitment,
+});
+
+const signedXdr = await signTransaction(prepared.xdr, buyerAddress);
+const result = await client.submit(prepared, signedXdr);
+console.log(result.tx);
+```
+
+`signTransaction` is your wallet adapter. `prepare` simulates and validates the action. `submit` checks that the wallet did not change the prepared transaction and waits for confirmed success. Authorizing a new payment requires the seller's additional signature; see [wallets and authorization](/docs/testnet/signing).
+
+## Action and read methods
+
+Mutations use a typed action with `prepare`: `authorize`, `claim`, `accept`, `dispute`, `submit_evidence`, `rule`, `settle`, `finalize_fallback`, `reclaim` and `void_unclaimed`.
+
+Read methods are `defaultArbiter`, `terms`, `state`, `claimState` and `arbiter`. Contract deadlines and authorization remain authoritative if state changes between simulation and submission.
+
+## Exact amounts
+
+Token amounts are integer strings in base units. Seven-decimal DEMOUSD represents 3.00 as `"30000000"`. Do not use JavaScript floating point for token arithmetic. Hashes and payment IDs are 32-byte values represented as hex strings.

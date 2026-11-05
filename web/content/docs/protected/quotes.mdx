@@ -1,0 +1,32 @@
+---
+title: Quotes & arbiter selection
+description: Agree on arbitration authority, applicable pricing and limits before funding.
+---
+## Select the authority
+
+Matching nonempty buyer and seller preferences select a mutually agreed custom arbiter. Otherwise the pinned default handles the case. The selected path, default identity, time windows and terminal fallback are part of the funded agreement.
+
+After funding, a party or service cannot replace those terms unilaterally. A release supporting a different selection policy must identify that policy explicitly.
+
+## Obtain and accept pricing
+
+The intended quote mechanism supports published pricing and direct quotes. Before funding, the integration verifies that the custom and default quotes apply to the agreed payment and arbitration policy, including any escalation costs.
+
+| Binding | Validation purpose |
+| --- | --- |
+| Arbiter and fee recipient | Identify who is authorized to rule and receive the accepted fee |
+| Payment / case scope | Prevent a quote being applied to unrelated work or liability |
+| Asset, network and deployment | Prevent cross-asset or cross-deployment interpretation |
+| Price and limits | Bound per-case and total arbitration liability |
+| Validity and reuse conditions | Reject expired, altered, stale or improperly reused quotes |
+| Evidence and deadline policy | Ensure the offered service matches the funded dispute process |
+
+Both parties accept the arbitration terms; the buyer authorizes the funded fee amounts and caps. A quote response must not be treated as trusted merely because it came through the facilitator.
+
+## Escalation
+
+The agreement must account for default handling when a custom arbiter times out. Handoff preserves evidence access, the current revision and existing deadlines. It must not create a new fee obligation outside the buyer's accepted limit.
+
+## Format and release compatibility
+
+The quote envelope, signature encoding, replay protection and funded commitment will be defined by the fee-capable release. The bindings above describe required validation, not a published JSON schema or callable quote API. Integrations must use the versioned schema shipped with that release.

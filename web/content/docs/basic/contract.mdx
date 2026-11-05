@@ -1,0 +1,26 @@
+---
+title: Basic contract reference
+description: The basic escrow operations and who must authorize each fund movement.
+---
+## Contract operations
+
+| Operation | Authority | Effect |
+| --- | --- | --- |
+| `authorize(payment_info)` | Operator and payer | Hold the maximum in escrow |
+| `charge(payment_info, amount, fee_amount, fee_receiver)` | Operator, payer and seller consent | Pay immediately and return the remainder |
+| `capture(payment_info, amount, fee_amount, fee_receiver, void_remainder)` | Operator and seller consent | Pay from the held budget |
+| `void(payment_info)` | Operator and seller consent | Release the remaining hold |
+| `refund(payment_info, amount, funder)` | Operator, seller consent and funder | Return tokens supplied by the funder |
+| `reclaim(payment_info)` | Payer | Recover eligible held funds after the capture deadline |
+
+## Consent boundaries
+
+Consent comes from `receiver_authorizer`, or `receiver` when unset, and covers exact call arguments. The escrow rejects the operator as consent address or refund funder. A facilitator cannot independently choose a seller's payout.
+
+## Refund funding
+
+The refund funder supplies returned tokens. An insurer, treasury or seller may fund the refund with the required consent. This is different from a protected ruling, which distributes the disputed claim's retained funds.
+
+## Deployment and specification
+
+See the [recorded testnet deployment](/docs/setup#recorded-testnet-deployments), the [Stellar scheme specification](https://github.com/enliven17/x402/blob/feat/stellar-auth-capture/specs/schemes/auth-capture/scheme_auth_capture_stellar.md) and the [basic contract source](https://github.com/enliven17/nyquist402/tree/main/contracts/auth-capture-escrow).

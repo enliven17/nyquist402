@@ -1,0 +1,31 @@
+---
+title: Disputes & rulings
+description: Case scope, evidence revisions, arbiter authority and bounded finalization.
+---
+## Case scope
+
+Either the buyer or seller may dispute a recorded claim before its review deadline. Opening a case freezes that claim's reservation; it does not decide who should be paid. Both parties respond within the same case, and no seller deposit is required.
+
+This documented protocol uses claim-level cases. Payment-wide and pre-claim disputes are not assumed to be supported by either the current implementation or the fee-capable release described here.
+
+## Evidence period
+
+The response deadline must preserve the original review period and a minimum opportunity to answer the dispute. Evidence updates create a new recorded revision. The arbiter reads the current commitments and verifies the supplied bodies before deciding.
+
+The [evidence service](/docs/services/evidence) delivers case material only to authorized participants and the currently assigned arbiter. Onchain hashes do not provide evidence storage or delivery.
+
+## Ruling authority
+
+The selected custom arbiter can rule during its eligible window after evidence closes. If it times out, authority passes to the pinned default for its window. If the default was selected initially, there is no additional custom delay.
+
+A ruling binds the payment, claim, current evidence revision, authorized arbiter and bounded award. The seller award cannot exceed the case's reserved principal. The remainder returns to the buyer; applicable fees consume only their designated reserves.
+
+## Execution
+
+The contract checks current authority, deadlines, scope and exactly-once settlement. A valid ruling does not require a new signature from the losing party or discretionary relay approval. Submission through an adapter, facilitator or direct caller must produce the same contract outcome.
+
+## Timeout finalization
+
+After the final ruling window closes, anyone may execute the jointly signed fallback allocation. Late rulings cannot override fallback eligibility or a finalized outcome. Unearned arbitration funds are returned when no valid ruling was delivered.
+
+The fallback is an agreed terminal allocation, not an adjudication of delivery quality. Deadline workers and direct submission are described under [execution](/docs/services/facilitator).

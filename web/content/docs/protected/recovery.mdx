@@ -1,0 +1,31 @@
+---
+title: History & recovery
+description: Durable history, transaction reconciliation and restoration without changing settlement authority.
+---
+## Durable payment and case history
+
+The intended index persists payment, claim and case relationships, accepted terms, evidence references, deadlines and transaction outcomes. Buyer, seller and arbiter views can recover their permitted work from another browser after authentication.
+
+The ledger remains authoritative for funds, claim status and ruling authority. Reconcile indexed records with contract state; an index response must not conceal lag or invent a confirmed result.
+
+## Pending transactions
+
+Persist a submission's identity before waiting for confirmation. If processing stops after broadcast, recover the original transaction and outcome on restart. A client receives the transaction hash and confirmation state so it can query before retrying.
+
+Repeated requests and replayed jobs must not create duplicate claims, rulings, fees or payouts. When state has already advanced, return or reconcile the existing result instead of repeating its economic effect.
+
+## Deadlines and active reservations
+
+Session expiry permits returning eligible unused funds; it does not settle existing claims. Preserve principal and fee reservations needed by pending cases. Workers recover scheduled actions from durable state and re-check current deadlines and eligibility before execution.
+
+## Soroban storage lifetime
+
+Maintain contract instance/code and persistent payment/claim storage through the required lifecycle, subject to network limits. When an entry is archived, restore the required footprint before retrying the intended call. Restoration cannot alter the agreement or allocate funds.
+
+Restoration tooling and release capabilities must identify which states they support. A stale index, archived entry and nonexistent payment are distinct conditions and must be reported distinctly.
+
+## Recovery during service outage
+
+Keep direct-action tools and public deployment identifiers available. Parties can read onchain state and submit eligible actions without relay permission. Private evidence still requires the agreed delivery/retention mechanism; restoring a chain record does not restore a missing evidence body.
+
+The current browser-only recovery behavior is documented in the [local SDK reference](/docs/testnet/sdk).

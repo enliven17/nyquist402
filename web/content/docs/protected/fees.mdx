@@ -1,0 +1,37 @@
+---
+title: Funding & fee reserves
+description: Separate work payments from protocol charges and accepted arbitration costs.
+---
+## Funding responsibilities
+
+The buyer approves and funds three separately tracked amounts in the agreed payment asset:
+
+| Balance | Purpose | Constraint |
+| --- | --- | --- |
+| Principal | Pay for delivered work | Claims reserve disjoint portions of the agreed work budget |
+| Protocol-fee reserve | Cover the accepted protocol fee policy | Collection and return follow signed rules and limits |
+| Arbitration reserve | Cover accepted custom/default arbitration charges | Per-case and payment-wide caps bound possible fees |
+
+The seller does not post a separate dispute deposit. Fee reserves cannot silently reduce the principal promised for delivery.
+
+## Reserve capacity per claim
+
+A payment can contain several claims with independent review and dispute windows. Before accepting a new claim, the contract must account for its principal and potential arbitration liability, including the accepted escalation path. One case cannot spend another case's reserved fee capacity.
+
+Unused reserve may be released only when it is no longer required for unresolved claims. Session expiry alone does not free those reservations.
+
+## Earned fees and returns
+
+A valid ruling earns its accepted quoted arbitration fee once, whether the principal award favors the buyer, seller or splits the claim. Opening a dispute does not itself earn a ruling fee. When no valid ruling is delivered, unearned arbitration funds return to the buyer.
+
+Escalation must stay within the accepted fee limits. No custom or default service may introduce an unapproved charge after funding. A duplicate submission must not pay the same fee twice.
+
+The signed policy for each contract version specifies protocol fee rates, earning triggers, cancellation handling and return conditions.
+
+## Accounting requirements
+
+Track principal movements, reserved liabilities, earned protocol fees, arbiter payouts and returned funds separately. Reports must distinguish Nyquist402 protocol revenue from payments to an external arbiter. Directly submitted transactions obey the same accounting rules as relayed transactions.
+
+## Current implementation
+
+The existing protected testnet contract is fee-free and does not implement these additional reserves. Its deployed records must not be interpreted using the future schema. See [implementation status](/docs/roadmap).

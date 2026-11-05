@@ -1,0 +1,29 @@
+---
+title: Sellers
+description: Publish protected offers, provide verifiable delivery receipts and claim payment for completed work.
+---
+## Advertise supported terms
+
+The resource server advertises its protected capability, network, deployment, asset and delivery/pricing criteria through x402 negotiation. Agree the buyer's exact budget, review policy, arbiter selection, accepted quote references and fallback before funding.
+
+A seller must not substitute basic settlement when a buyer required protection.
+
+## Execute and record delivery
+
+After confirmed funding, the seller runs the service and creates a usage/delivery receipt that can be checked against the agreed pricing criteria. The receipt and delivery body remain retrievable offchain; their commitments bind the onchain claim.
+
+Record each claim within the available principal and reserved arbitration capacity before the session deadline. Claims have independent review periods. Recording delivery does not authorize unrestricted capture of the budget.
+
+## Handle review and disputes
+
+The seller interface shows active claims, evidence requests, response deadlines, accepted arbitration terms and settlement status. The seller can initiate a claim dispute or answer the buyer in the existing case without a separate deposit.
+
+Retain delivery and usage evidence and deliver it through the case service. A ruling must bind the current evidence revision.
+
+## Reconcile payments
+
+Track accepted claims, undisputed settlement, arbitration awards and unused-fund returns against the ledger. Already finalized claims remain final when another claim is disputed. Returning unused principal cannot consume a pending claim's reservation.
+
+## Signing policy
+
+Production sellers control their own signing credentials and permitted actions. Payment-scoped seller controls in the current demo are demonstration delegation, not the intended production authentication model. See [signing](/docs/signing).

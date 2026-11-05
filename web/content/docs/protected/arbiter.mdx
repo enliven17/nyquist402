@@ -1,0 +1,27 @@
+---
+title: Arbiters
+description: Access authorized cases, verify evidence and submit a ruling within the funded policy.
+---
+## Integrate an arbitration service
+
+An arbiter adapter connects the provider's quote and case-handling process to Nyquist402's funded terms. The default service and custom providers follow the same contract authority and allocation rules.
+
+The adapter identifies the ruling account, accepted fee recipient, applicable quote and supported case policy before funding. It must not introduce charges or authority after the parties have agreed the payment.
+
+## Read the assigned case
+
+Authenticate the operator, verify that the signing account is the current arbiter and retrieve the authorized evidence bundle. Check each body against its onchain commitment and the current revision. Missing or inaccessible evidence must not be silently treated as a complete record.
+
+The arbiter interface shows assignment, response and ruling deadlines, quote/fee terms, evidence versions, proposed award and submission status.
+
+## Decide and sign
+
+After the evidence window closes, choose a seller award bounded by the claim's reserved principal. The buyer receives the remainder. Bind the ruling to the exact payment, claim and current evidence revision, then sign as the currently authorized arbiter.
+
+A valid ruling earns the accepted fee once, independent of which party receives the principal award. No ruling fee is earned merely by assignment or case opening.
+
+## Handle escalation
+
+When custom authority expires, stop signing that case and permit evidence handoff to the pinned default. The default must verify the current state itself. At the final deadline, ruling authority expires and the signed fallback becomes eligible.
+
+Operators need restricted key access, conflict-of-interest handling and audit records for case access and decisions. Deployment-specific operating procedures belong in published operator guidance, not in the contract's allocation rules.

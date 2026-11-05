@@ -1,0 +1,32 @@
+---
+title: Contract operations
+description: Existing protected operations and the required behavior of the intended fee-capable contract.
+---
+## Core lifecycle operations
+
+The current protected contract exposes the following operations. They establish the lifecycle that the fee-capable version must preserve; future argument schemas must be read from that version's release specification.
+
+| Operation | Authority | Effect |
+| --- | --- | --- |
+| `authorize(terms)` | Buyer and seller | Fund the agreed budget; return payment ID |
+| `claim(payment_id, amount, delivery_hash)` | Seller | Reserve available principal and start review |
+| `accept(payment_id, claim_id, commitment)` | Buyer | Pay that exact eligible claim |
+| `settle(payment_id, claim_id)` | Anyone | Pay an undisputed claim after review |
+| `dispute(payment_id, claim_id, party, evidence_hash)` | Named party | Open a claim case before review ends |
+| `submit_evidence(payment_id, claim_id, party, evidence_hash)` | Named party | Update evidence before response closes |
+| `rule(payment_id, claim_id, seller_amount, expected_revision)` | Current arbiter | Pay a bounded award and return the remainder |
+| `finalize_fallback(payment_id, claim_id)` | Anyone | Apply signed allocation after final timeout |
+| `reclaim(payment_id)` | Buyer | Return eligible unused funds after session expiry |
+| `void_unclaimed(payment_id)` | Seller | Return unused funds early |
+
+## Fee-capable behavior
+
+The new contract must validate accepted quotes, collect separate reserves, allocate fee capacity to claims, enforce per-case/total caps, pay earned fees once and return unearned funds. All settlement, cancellation and direct-action paths must follow those rules.
+
+A claim cannot consume another claim's principal or fee allocation. Expiry cannot release capacity needed by a pending case. There is no unrestricted protected `capture` operation that bypasses review or arbitration.
+
+## Reads and finality
+
+Current reads include `payment_terms`, `payment_state`, `claim_state`, `case_arbiter`, `default_arbiter` and `payment_hash`. The fee-capable version must also expose the state needed to reconcile its reserves and liabilities; exact read signatures are release-specific.
+
+Claims and disputes must be recorded before their applicable closing deadlines. A ruling requires current authority and revision after evidence closes. At the final deadline, fallback becomes eligible. Every transition requires a transaction and a finalized claim cannot pay twice.
