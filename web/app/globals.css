@@ -1,5 +1,7 @@
 /* Brand tokens */
 :root {
+  --font-sans: 'Inter Tight';
+  --font-mono: 'JetBrains Mono';
   --paper: #f3f3ef;
   --ink: #0e0f12;
   --night: #0b0c10;

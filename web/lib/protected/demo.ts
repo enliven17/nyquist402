@@ -1,4 +1,3 @@
-import "server-only";
 import { randomBytes } from "node:crypto";
 import { authorizeEntry, Keypair, Networks, StrKey, TransactionBuilder } from "@stellar/stellar-sdk";
 import { ProtectedEscrowClient } from "./client.ts";

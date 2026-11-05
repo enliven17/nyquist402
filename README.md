@@ -63,8 +63,10 @@ Soroban SDK 29 requires Stellar CLI's spec-shaking build step. Use `make build` 
 cd web
 pnpm install
 pnpm setup-demo   # once: funds accounts, issues DEMOUSD; preserves existing credentials
-pnpm dev          # http://localhost:3000/demo
+pnpm dev          # http://localhost:3000/demo (Vite + React; the demo API runs inside the dev server)
 ```
+
+Production: `pnpm build && pnpm start` serves the built client and the API from one Node process (Hono). Set `PORT` to change the port.
 
 For the protected flow, add the settings from [`web/.env.example`](web/.env.example), then open `/demo/protected`. The [local SDK guide](web/lib/protected/README.md) covers signing, claims/disputes, arbiter actions, restart recovery and the optional live testnet script. Browser/imported payment IDs grant no signing authority.
 

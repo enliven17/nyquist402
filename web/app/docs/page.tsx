@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import {
   ArbiterSelectionDiagram,
   ArchitectureDiagram,
@@ -8,8 +7,6 @@ import {
   DeadlineDiagram,
 } from "@/components/docs/Diagrams";
 import "./docs.css";
-
-export const metadata: Metadata = { title: "Docs · Nyquist402" };
 
 const BASIC = "CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI";
 const PROTECTED = "CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW";

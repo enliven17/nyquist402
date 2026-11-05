@@ -1,5 +1,3 @@
-"use client";
-
 import gsap from "gsap";
 import { useEffect, useRef } from "react";
 import { HERO, HERO_SVG } from "./heroArt";

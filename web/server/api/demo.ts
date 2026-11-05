@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import type { PaymentPayload } from "@x402/core/types";
 import {
   authorize,
@@ -14,15 +13,13 @@ import {
   voidHold,
 } from "@/lib/demo";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 const HASH = /^[0-9a-f]{64}$/;
 const AMOUNT = /^[1-9][0-9]{0,18}$/;
 const UUID = /^[0-9a-f-]{36}$/;
 const MAX_XDR = 20_000;
 
-const bad = (error: string) => NextResponse.json({ ok: false, error }, { status: 400 });
+const bad = (error: string) => Response.json({ ok: false, error }, { status: 400 });
 
 export async function GET(req: Request) {
   const params = new URL(req.url).searchParams;
@@ -31,9 +28,9 @@ export async function GET(req: Request) {
   if (hash && !HASH.test(hash)) return bad("invalid paymentHash");
   if (payer && !isAccount(payer)) return bad("invalid payer");
   try {
-    return NextResponse.json(await status(hash, payer));
+    return Response.json(await status(hash, payer));
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    return Response.json({ error: String(error) }, { status: 500 });
   }
 }
 
@@ -46,38 +43,38 @@ export async function POST(req: Request) {
   try {
     switch (action) {
       case "authorize":
-        return NextResponse.json(await authorize());
+        return Response.json(await authorize());
       case "quote":
-        return NextResponse.json(await quote(true));
+        return Response.json(await quote(true));
       case "pay":
         if (typeof quoteId !== "string" || !UUID.test(quoteId)) return bad("invalid quoteId");
         if (!payload || typeof payload !== "object") return bad("invalid payload");
-        return NextResponse.json(await pay(quoteId, payload as PaymentPayload));
+        return Response.json(await pay(quoteId, payload as PaymentPayload));
       case "faucet":
         if (!addressOk) return bad("invalid address");
-        return NextResponse.json(await faucet(address as string));
+        return Response.json(await faucet(address as string));
       case "reclaim":
         if (!addressOk) return bad("invalid address");
         if (!hashOk) return bad("invalid paymentHash");
-        return NextResponse.json(await reclaimTx(address as string, paymentHash as string));
+        return Response.json(await reclaimTx(address as string, paymentHash as string));
       case "submit":
         if (typeof xdr !== "string" || xdr.length > MAX_XDR) return bad("invalid xdr");
-        return NextResponse.json(await submit(xdr));
+        return Response.json(await submit(xdr));
       case "capture":
         if (!hashOk) return bad("invalid paymentHash");
         if (!amountOk) return bad("invalid amount");
-        return NextResponse.json(await capture(paymentHash as string, amount as string, body.voidRemainder === true));
+        return Response.json(await capture(paymentHash as string, amount as string, body.voidRemainder === true));
       case "void":
         if (!hashOk) return bad("invalid paymentHash");
-        return NextResponse.json(await voidHold(paymentHash as string));
+        return Response.json(await voidHold(paymentHash as string));
       case "refund":
         if (!hashOk) return bad("invalid paymentHash");
         if (!amountOk) return bad("invalid amount");
-        return NextResponse.json(await refund(paymentHash as string, amount as string));
+        return Response.json(await refund(paymentHash as string, amount as string));
       default:
         return bad("unknown action");
     }
   } catch (error) {
-    return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
+    return Response.json({ ok: false, error: String(error) }, { status: 500 });
   }
 }

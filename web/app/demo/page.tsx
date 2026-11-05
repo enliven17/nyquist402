@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as wallet from "@/lib/wallet";
 import { Toast } from "@/components/Toast";
