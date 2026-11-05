@@ -1,4 +1,3 @@
-import "server-only";
 import { Keypair } from "@stellar/stellar-sdk";
 import type { DemoArbiter } from "./types.ts";
 

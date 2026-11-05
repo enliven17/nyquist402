@@ -1,5 +1,3 @@
-"use client";
-
 import { Buffer } from "buffer";
 import type { PaymentPayload, PaymentRequired } from "@x402/core/types";
 

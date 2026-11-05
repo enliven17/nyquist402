@@ -1,7 +1,4 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import "./site-nav.css";
 
@@ -38,7 +35,8 @@ const sections = groups[0][1].map(i => i.href.slice(2));
 
 /** One navigation for every page: a left sidebar on wide screens, a top bar with a menu below. */
 export default function SiteNav() {
-  const path = usePathname();
+  // Each page is a full document load, so the path is fixed for the life of this component.
+  const path = typeof window === "undefined" ? "/" : window.location.pathname.replace(/\/$/, "") || "/";
   const [section, setSection] = useState<string>();
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);

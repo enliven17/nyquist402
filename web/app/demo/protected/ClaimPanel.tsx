@@ -1,4 +1,3 @@
-"use client";
 import { useState } from "react";
 import { claimActions, formatAmount, parseAmount } from "@/lib/protected/flow";
 import { hashText } from "@/lib/protected/codec";

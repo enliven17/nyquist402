@@ -1,10 +1,7 @@
-import { NextResponse } from "next/server";
 import { readProtectedRequest } from "@/lib/protected/request";
 import { arbitrate, config, prepare, quote, snapshot } from "@/lib/protected/demo";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-const response = (value: unknown, status = 200) => NextResponse.json(value, { status, headers: { "Cache-Control": "no-store" } });
+const response = (value: unknown, status = 200) => Response.json(value, { status, headers: { "Cache-Control": "no-store" } });
 export async function GET(req: Request) {
   try {
     const params = new URL(req.url).searchParams;
