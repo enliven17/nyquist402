@@ -1,0 +1,41 @@
+---
+title: Protected demo guide
+description: Fund a test budget, record a delivery, and verify its settlement in the protected demo.
+---
+## What you need
+
+Run the [configured local app](/docs/setup) and use a supported Stellar wallet on **Testnet**, with test XLM for network fees. The protected demo uses DEMOUSD and a 10.00 budget. This walkthrough does not require a real API service.
+
+<Steps>
+
+### Agree and fund
+
+Open the [protected demo](/demo/protected) and select **Connect testnet wallet**. Use **Get 10 DEMOUSD**, choose an available free demo arbiter, and read the service agreement and fallback share. Select **Review terms** to see the exact budget, deadlines and arbiter before signing. Then sign and fund the payment.
+
+The ledger should show 10.00 available and no claim reservations. Keep the payment ID.
+
+### Record a delivery
+
+Enter a 3.00 delivery and a description under **Record a delivery**. Select **Seller records claim**. The demo provides seller controls for this payment; a production seller uses its own signer.
+
+The ledger should now show 7.00 available and 3.00 reserved. Recording a claim does not pay the seller.
+
+### Review and pay
+
+Find the claim and select **Accept and pay** with the buyer wallet. Once confirmed, the reserved 3.00 is paid to the seller and the available balance stays at 7.00.
+
+### Verify the result
+
+Follow the transaction link in Activity to Stellar Expert. Read the payment again or reload the page: the contract remains the authority for balances and claim status.
+
+</Steps>
+
+## Dispute a delivery
+
+Record a second claim for 4.00. Before review closes, save your evidence text and select **Buyer disputes**. The 4.00 remains reserved. After the evidence period, the currently selected demo arbiter can submit a ruling through the displayed arbitration controls.
+
+After session expiry, **Reclaim unused** returns only the available 3.00, even if the 4.00 dispute remains open. For the intended fee-capable lifecycle, see [payment lifecycle](/docs/protected/lifecycle).
+
+## If something blocks you
+
+A configuration error means the demo server needs [setup](/docs/setup). A disabled action may mean the connected wallet has the wrong role or a deadline has not arrived. For delayed confirmations, check the transaction hash before preparing another action; see [recovery](/docs/protected/recovery).

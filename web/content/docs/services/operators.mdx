@@ -1,0 +1,29 @@
+---
+title: Deployment & operations
+description: Deploy compatible components and preserve execution, evidence and recovery services.
+---
+## Release configuration
+
+Publish network identifiers, contract addresses/code hashes, SDK compatibility, supported policies, API specifications and deployment configuration for each release. Match clients to the contract version they understand. Do not reuse fee-free payment terms as fee-capable records.
+
+A self-hosted deployment needs configured signing authority, network access, durable records, evidence storage and execution workers. Concrete launch commands and configuration keys belong to the release artifacts; the [current setup](/docs/setup) covers the existing demo only.
+
+## Keys and role separation
+
+Separate transaction submission credentials, seller authority, arbiter ruling keys and evidence access. Apply restricted key access and audit use. A restart, restore or key-management operation must not replace the arbiter pinned to a funded payment.
+
+Publish assignment, conflict-of-interest and escalation procedures for the operated default arbitration service.
+
+## Monitoring and reconciliation
+
+Monitor API failures, index lag, pending transactions, eligible actions waiting for submission, arbiter deadlines, evidence retrieval and storage lifetime. Reconcile principal, reserves, earned fees, arbiter payouts and returns with onchain movements.
+
+Deployment documentation must specify how service availability and execution latency are measured.
+
+## Incident recovery
+
+Document service restart, database and evidence backup restoration, archived-state restoration, failed transaction recovery and direct contract submission. Reconcile interrupted work before resuming retries. Recovery must preserve participant permissions, deadlines, evidence revisions and exactly-once economic effects.
+
+## Mainnet release boundary
+
+Mainnet activation depends on reviewed contracts and security-relevant SDK/service code, verified deployment configuration and recovery tooling. The intended review scope includes allocation, signing, quote checks, evidence access and restoration. See [implementation status](/docs/roadmap) for current availability.

@@ -1,0 +1,33 @@
+---
+title: SDK responsibilities
+description: The intended SDK surface for capability checks, protected signing, receipts and recovery.
+---
+## Integration responsibilities
+
+The SDK connects buyer/agent clients, seller resource servers, facilitators and direct contract callers. Its responsibilities are:
+
+- Identify supported contract, network, policy and x402 versions before signing.
+- Validate complete payment terms and custom/default quote applicability.
+- Present principal, fee reserves and caps without hidden economic changes.
+- Encode canonical terms and compute the deployment-bound payment identity.
+- Prepare and verify authorized transaction invocation trees.
+- Read payment, claim, case and fee state and track submitted transaction outcomes.
+- Support delivery/usage receipt verification and direct lifecycle actions.
+
+## Signing boundary
+
+Preparation simulates the action and checks required authorization. Each role signs only its permitted exact call. Additional authorizers are handled through explicit signing callbacks; the transaction fee source signs the envelope.
+
+The SDK must reject a modified wallet transaction, unsupported permissions, stale quotes and mismatched deployment or network bindings. A failed compatibility check must not downgrade a protected request to basic settlement.
+
+## Recovery boundary
+
+Submission returns a transaction identity and confirmation status so a consumer can resolve uncertain outcomes before retrying. Durable history and job scheduling belong to the operated services; the SDK provides the reads and submissions needed to recover or act directly.
+
+Automatic restoration is a separately versioned capability. A client must report an unsupported restoration requirement rather than imply that an archived record is absent or its funds are lost.
+
+## Package and schema availability
+
+A public release is intended to include installable packages, supported-version declarations and runnable integration examples. Use the package identifiers, protected wire encodings and fee-capable method signatures published for the selected release.
+
+The current source client is documented separately in the [local SDK reference](/docs/testnet/sdk), with a [working signing example](/docs/testnet/signing).

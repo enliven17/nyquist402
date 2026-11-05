@@ -1,0 +1,34 @@
+---
+title: Signing & authorization
+description: Authority boundaries for funding, lifecycle actions, evidence and arbitration.
+---
+## Fund the exact agreement
+
+Both buyer and seller approve the versioned payment terms. The buyer authorizes the principal, protocol reserve and arbitration reserve, including the applicable limits and accepted quote commitments. Signatures bind the network and deployment, not only an amount displayed by a server.
+
+The transaction fee source and the payment's economic roles are distinct. A relay may sponsor network fees when configured; sponsorship does not authorize it to allocate protected funds. Do not assume that funding one transaction authorizes the entire disputed lifecycle.
+
+## Action authority
+
+| Action | Required authority |
+| --- | --- |
+| Authorize agreed funding | Buyer and seller |
+| Record a claim or return unused funds early | Seller |
+| Accept a claim or reclaim after session expiry | Buyer |
+| Dispute or update evidence | The named buyer or seller |
+| Rule on a case | Current arbiter, within its time window |
+| Settle after review or execute terminal fallback | Publicly callable when eligible |
+
+Fee checks and reserve accounting must apply equally to direct and relayed calls.
+
+## Validate signatures and payloads
+
+A signer must verify the complete invocation tree, exact call arguments, intended deployment and required token movements. The SDK must reject a wallet envelope whose transaction body changes after preparation. Authorization replay protection and quote reuse protection are separate concerns and both must be enforced.
+
+## Service authentication
+
+Authenticated service requests establish account identity and case membership. Knowing a public payment ID, claiming a role in a request body or possessing a delivery hash does not confer authority. Evidence access is checked separately from public state reads.
+
+## Current credential support
+
+The local testnet SDK supports ordinary legacy and AddressV2 credentials and rejects delegated CAP-71 trees. No broader signing support is claimed by the target architecture. See the [local signing reference](/docs/testnet/signing) for executable code.

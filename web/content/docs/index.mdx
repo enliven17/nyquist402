@@ -1,0 +1,36 @@
+---
+title: Nyquist402 documentation
+description: Technical architecture and integration model for protected API payments on Stellar.
+---
+Nyquist402 combines x402 payment negotiation with Soroban escrow. A buyer or software agent funds an agreed work budget. The seller records delivery claims, the buyer reviews them, and disputed claims are resolved under arbitration terms accepted before funding.
+
+This documentation describes the intended system: payment contracts, SDK integration, transaction relay, case history, evidence delivery and role interfaces. It also provides separate instructions for the current testnet implementation.
+
+## Payment model
+
+Protected payments separate **principal**, **protocol-fee reserves** and **arbitration reserves**. A claim reserves part of the work budget and enough accepted arbitration capacity for its possible case. Neither unused-fund return nor a dispute over another claim can spend that reservation.
+
+Settlement follows buyer acceptance, an undisputed review deadline, a valid ruling or the agreed terminal fallback. Escrow enforces the authority and allocation for each route. Services submit and track eligible actions; they do not decide who owns the funds.
+
+## Documentation paths
+
+| Subject | Documentation |
+| --- | --- |
+| Components and trust boundaries | [System architecture](/docs/architecture) |
+| Funding, claims and finalization | [Payment lifecycle](/docs/protected/lifecycle) |
+| Principal and fee accounting | [Funding and fee reserves](/docs/protected/fees) |
+| Pricing and arbitration agreement | [Quotes and arbiter selection](/docs/protected/quotes) |
+| HTTP payment integration | [x402 negotiation](/docs/integration) and [SDK](/docs/sdk) |
+| Case data and execution | [Evidence](/docs/services/evidence), [recovery](/docs/protected/recovery) and [operations](/docs/services/operators) |
+
+## Roles
+
+[Buyers and agents](/docs/protected/buyer) approve budgets and review deliveries. [Sellers](/docs/protected/seller) publish offers, record claims and provide delivery evidence. [Arbiters](/docs/protected/arbiter) review the current case evidence and sign bounded rulings. Each role has its own authenticated interface and signing authority.
+
+## Basic auth-capture
+
+Basic auth-capture remains a separate payment flow: the seller captures the actual cost from an authorized hold and can arrange a funded refund. It does not provide protected claim review or arbitration. See the [basic reference](/docs/basic).
+
+## Release availability
+
+The existing protected contract and local SDK implement the fee-free claim lifecycle on testnet. The fee-capable contract, public integration and operated services described in the design sections are not released. See [implementation status](/docs/roadmap) for the exact boundary and [testnet setup](/docs/setup) for executable instructions.

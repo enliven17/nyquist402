@@ -1,0 +1,43 @@
+---
+title: Local setup & deployments
+description: Run the React website and its API, then connect the demos to the recorded testnet contracts.
+---
+## Run the website
+
+Use Node 22.18+ or Node 24 and pnpm. From the repository root:
+
+```sh
+cd web
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Open `http://localhost:3000/docs`. Vite serves the React website and the Hono demo API in development. Documentation and the illustrative lifecycle work without funded demo accounts.
+
+## Configure the payment demos
+
+Follow `web/.env.example` and the protected SDK README. For a new demo environment, `pnpm setup-demo` creates testnet accounts and DEMOUSD. It allocates test assets and should be run intentionally. Keep existing funded credentials when configuring an existing environment.
+
+Protected settlement requires `DEMO_PROTECTED_ESCROW` and a stable `DEMO_SESSION_SECRET` of at least 32 characters. The server must also have the basic demo account/token settings. Optional `DEMO_ARBITER_SECRETS` configures the free demo arbiter roster; `DEMO_SELLER_ARBITER` sets a seller preference. Keep secret keys and capabilities private. Restart the server after changing configuration.
+
+The app verifies the configured protected deployment and reads its default arbiter before offering terms. It does not substitute the basic contract when configuration is missing.
+
+## Recorded testnet deployments
+
+| Contract | Address |
+| --- | --- |
+| Basic auth-capture | [CCB3W554…HCCI](https://stellar.expert/explorer/testnet/contract/CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI) |
+| Protected escrow | [CCQLNKUM…XKCEW](https://stellar.expert/explorer/testnet/contract/CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW) |
+
+These are separate deployments. No mainnet release is documented here. Read the current default arbiter from the protected contract rather than treating a demo roster as a universal authority.
+
+## Build and serve
+
+```sh
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm start
+```
+
+The production Hono server serves the built website and demo API. Environment settings remain necessary for payment operations.

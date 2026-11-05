@@ -1,3 +1,4 @@
+import { resolveDocSlug } from "@/lib/docs/search";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@fontsource/inter-tight/300.css";
@@ -21,7 +22,7 @@ const routes: Record<string, [title: string, page: () => React.ReactNode]> = {
   "/docs": ["Docs · Nyquist402", Docs],
 };
 const path = window.location.pathname.replace(/\/$/, "") || "/";
-const [title, Page] = routes[path] ?? ["Not found · Nyquist402", () => <main style={{ padding: "120px 24px" }}><h1>Not found</h1><p><a href="/">Back home</a></p></main>];
+const [title, Page] = (resolveDocSlug(path) !== undefined ? ["Docs · Nyquist402", Docs] as const : routes[path]) ?? ["Not found · Nyquist402", () => <main style={{ padding: "120px 24px" }}><h1>Not found</h1><p><a href="/">Back home</a></p></main>];
 document.title = title;
 
 createRoot(document.getElementById("root")!).render(

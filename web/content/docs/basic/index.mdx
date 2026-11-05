@@ -1,0 +1,25 @@
+---
+title: Basic auth-capture
+description: Authorize a spending ceiling and let the seller capture the actual cost.
+---
+## The basic payment flow
+
+Basic auth-capture is the x402 scheme integrated through the vendored `@x402/stellar` fork. It uses a separate contract from protected settlement. The seller consents to the final amount; there is no claim review or arbitration process.
+
+<BasicLifecycleDiagram />
+
+## Basic testnet procedure
+
+Open the [basic demo](/demo), connect a testnet wallet or choose the demo agent, and obtain test DEMOUSD. Authorize 1.00, capture 0.60 while releasing 0.40, then optionally refund 0.20. Follow the transaction links and balances to inspect the result.
+
+The basic demo facilitator submits transactions and pays network fees. The payer signs authorization; adding a token trustline may require a separate setup signature.
+
+## Capture, release and refund
+
+Capture pays from the escrow hold. Void releases unused held funds. A refund requires a funder to supply the returned tokens: it cannot claw back funds from the seller after payment. The payer can reclaim an eligible unused hold after the capture deadline.
+
+## Choose the appropriate protection
+
+Use [protected settlement](/docs/protected/lifecycle) when individual deliveries need buyer review and claim disputes. An existing basic payment does not gain those rules automatically.
+
+Continue to [x402 integration](/docs/basic/integration) for seller, client and facilitator examples.

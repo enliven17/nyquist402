@@ -1,0 +1,33 @@
+---
+title: Implementation status
+description: Availability of the documented protocol, integrations and operated services.
+---
+## Documentation scope
+
+The main protocol and service guides describe the intended technical system. The current testnet section documents executable code. The distinction applies to each contract version and deployment; a design description is not evidence that a public service is running.
+
+## Current testnet
+
+| Component | Available implementation |
+| --- | --- |
+| Protected escrow | Joint terms, claim reservations, review, bilateral disputes, evidence commitments, bounded rulings, timeouts and unused-fund reclaim |
+| Local protected SDK | Typed reads/actions, signing validation and transaction submission |
+| Protected demo | Wallet funding, claims, evidence commitments, recovery by ID and free demo arbiters |
+| Basic auth-capture | Separate escrow and vendored x402 integrations |
+
+These contracts are unaudited and run on testnet. Protected settlement currently charges no protocol or arbitration fee. Demo browser history is not a durable payment/case service.
+
+## Target capabilities not yet released
+
+| Component | Intended capability |
+| --- | --- |
+| Fee-capable protected contract | Accepted quotes, separate reserves, claim fee capacity, fee caps and earned/unearned fee accounting |
+| Public SDK and protected x402 binding | Versioned installable integration, capability checks and usage/delivery receipt handling |
+| Public facilitator | Supported/verify/settle APIs, confirmation tracking and self-hosted operation |
+| Payment/case services | Durable history, private evidence delivery, recovery and deadline jobs |
+| Role interfaces | Complete buyer, seller and arbiter workflows over those services |
+| Mainnet release | Reviewed deployment, monitored operations and recovery tooling |
+
+## Run the available code
+
+Use [testnet setup](/docs/setup), the [protected demo guide](/docs/quickstart), [local SDK](/docs/testnet/sdk) and [local signing example](/docs/testnet/signing). Future endpoint URLs, package identifiers, fee schedules and wire schemas must come from their published release artifacts.

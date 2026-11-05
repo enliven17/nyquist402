@@ -1,0 +1,25 @@
+---
+title: Facilitator & execution
+description: Relay responsibilities, confirmation tracking and permissionless finalization.
+---
+## Public facilitator
+
+The intended facilitator exposes supported capabilities, payment verification and settlement submission, with versioned OpenAPI documentation and a self-hosted release. Capability discovery identifies networks, contracts, policies and supported x402 bindings.
+
+Verification must reject incompatible protected terms and return a machine-readable reason. Submission tracks the resulting transaction rather than reporting a signed or queued payload as a confirmed success. Endpoint payloads and deployment URLs must come from the released API specification; the current demo adapter is not that public API.
+
+## Transaction lifecycle
+
+Persist the action intent and transaction identity before confirmation tracking can be interrupted. Return the hash and status for pending transactions. After a crash, reconcile the original submission with the ledger before retrying; do not rebuild a second claim or payout merely because the first response was lost.
+
+Idempotency and reconciliation must cover repeated requests, timeouts, worker retries and confirmation received after a client disconnect.
+
+## Deadline workers
+
+Workers identify eligible undisputed settlements, escalation-related actions and terminal fallback execution from authoritative deadlines. Before submitting, re-read state and revalidate eligibility. A race with buyer acceptance or another worker must resolve without a duplicate payout.
+
+The contract does not wake itself at a deadline. Service scheduling provides liveness; contract checks enforce authority and safety.
+
+## Direct actions and outages
+
+Parties and eligible public callers can submit lifecycle actions directly without facilitator approval. Publish the contract/network information and direct-action tooling needed to do so. A relay outage must not become a new veto over valid acceptance, disputes, rulings or fallback.

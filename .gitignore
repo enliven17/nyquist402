@@ -8,3 +8,6 @@ node_modules/
 dist/
 out/
 *.tsbuildinfo
+
+# Local planning documents
+roadmap.md

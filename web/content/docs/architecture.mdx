@@ -1,0 +1,34 @@
+---
+title: System architecture
+description: Components, responsibilities and trust boundaries of the intended protected-payment system.
+---
+## Component model
+
+<SystemArchitecture />
+
+| Component | Responsibility |
+| --- | --- |
+| Buyer / agent integration | Verify the offer, accepted quotes and total funding; sign permitted actions; validate delivery receipts |
+| Seller integration | Advertise protected payment capability, agree terms, execute metered work and record delivery claims |
+| SDK | Encode versioned terms, verify quote applicability, prepare authorization and transactions, read state and track confirmation |
+| Facilitator | Advertise supported capabilities, verify payment payloads, relay authorized transactions and report their status |
+| Payment / case service | Persist history, reconcile onchain state, enforce access to case material and expose role-specific views |
+| Arbiter adapter | Retrieve authorized evidence, identify current ruling authority and produce a signed decision |
+| Execution workers | Submit eligible settlement/fallback actions, track pending transactions and maintain storage lifetime |
+| Soroban escrow | Enforce signers, reservations, deadlines, fee limits, ruling scope and final allocation |
+
+## Contract authority
+
+Balances, accepted terms, claim reservations, evidence commitments, revisions and final outcomes are authoritative onchain. An index or browser cache can lag and must reconcile with the contract. A relay response alone is not proof of settlement.
+
+A facilitator cannot change a funded agreement, substitute an arbiter, award a disputed claim or require the losing party to approve a valid ruling. Direct contract submission remains available when relay services are unavailable.
+
+## Service boundaries
+
+Payment history, evidence storage and deadline execution have separate responsibilities. A case index does not grant access to evidence. Evidence storage does not grant ruling authority. An execution worker submits an eligible transaction and cannot create a new allocation policy.
+
+Buyer, seller and arbiter interfaces derive permitted actions from the authenticated account, contract state and current deadlines. A payment ID identifies a record; it is not a credential.
+
+## Version boundaries
+
+The fee-capable protected contract requires an explicit deployment and schema version. Existing fee-free and basic payments retain their original semantics. Clients must negotiate the required capability before signing; see [terms and compatibility](/docs/reference/terms).

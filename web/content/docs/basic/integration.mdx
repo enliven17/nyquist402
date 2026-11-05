@@ -1,0 +1,79 @@
+---
+title: x402 integration
+description: Wire the basic auth-capture scheme into a resource server, client and facilitator.
+---
+## Use the forked packages
+
+The app vendors the x402 fork under `web/vendor`. Install this repository's locked dependencies, or follow the [auth-capture fork](https://github.com/enliven17/x402/tree/feat/stellar-auth-capture). The snippets below assume your surrounding application supplies its accounts, keys and facilitator client.
+
+These examples apply to **basic auth-capture**. The protected SDK is a [separate integration](/docs/testnet/sdk).
+
+## Seller resource server
+
+```ts
+import { x402ResourceServer } from "@x402/core/server";
+import { createEd25519Signer } from "@x402/stellar";
+import { AuthCaptureStellarScheme } from "@x402/stellar/auth-capture/server";
+
+const scheme = new AuthCaptureStellarScheme({
+  // Signs consent for charge, capture, void and refund.
+  consentSigner: createEd25519Signer(process.env.RECEIVER_PRIVATE_KEY!),
+});
+const server = new x402ResourceServer(facilitatorClient).register("stellar:testnet", scheme);
+
+// Route accepts entry
+{
+  scheme: "auth-capture",
+  network: "stellar:testnet",
+  price: "$0.10",
+  payTo: receiverAddress,
+  extra: { paymentFlow: "escrow", captureMode: "deferred",
+           captureDeadlineSeconds: 3600, refundDeadlineSeconds: 86400 },
+}
+```
+
+`escrow` with `sync` captures the final amount after the handler. `escrow` with `deferred` leaves capture or void for later. The `authorization` flow verifies before the handler and charges the final amount afterward.
+
+## Buyer or agent
+
+```ts
+import { x402Client } from "@x402/core/client";
+import { createEd25519Signer } from "@x402/stellar";
+import { AuthCaptureStellarScheme } from "@x402/stellar/auth-capture/client";
+
+const client = new x402Client().register(
+  "stellar:testnet",
+  new AuthCaptureStellarScheme(createEd25519Signer(process.env.AGENT_PRIVATE_KEY!)),
+);
+```
+
+## Capture and refund
+
+```ts
+const lifecycle = scheme.createLifecycleManager(facilitatorClient);
+
+await lifecycle.capture(paymentHash, { amount: "6000000", voidRemainder: true });
+await lifecycle.refund(paymentHash, { amount: "2000000" });
+```
+
+Use integer base-unit strings. Refunds need a funder to provide the tokens being returned.
+
+## Facilitator
+
+```ts
+import { x402Facilitator } from '@x402/core/facilitator';
+import { createEd25519Signer } from '@x402/stellar';
+import { AuthCaptureStellarScheme } from '@x402/stellar/auth-capture/facilitator';
+
+const facilitator = new x402Facilitator().register(
+  'stellar:testnet',
+  new AuthCaptureStellarScheme(
+    [createEd25519Signer(process.env.OPERATOR_PRIVATE_KEY!)],
+    { feeTerms: { minFeeBps: 0, maxFeeBps: 0 } },
+  ),
+);
+```
+
+The facilitator registers the scheme with its operator signer and fee policy. It submits calls and pays network fees; seller consent is still required for capture, void and refund.
+
+See the [basic contract reference](/docs/basic/contract) for exact authorities and effects.
