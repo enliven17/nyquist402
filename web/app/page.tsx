@@ -1,4 +1,5 @@
 import { PROTECTED_CONTRACT } from "@/lib/deployment";
+import StatsSection from "@/app/stats/page";
 import "./landing.css";
 import { Logo, Mark } from "@/components/Logo";
 import HeroFigure from "@/components/landing/HeroFigure";
@@ -144,25 +145,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 05 Proof */}
-        <section className="proof" id="s5" data-section>
-          <div className="wrap">
-            <div className="proof-grid">
-              <blockquote className="proof-quote" data-fill>
-                Protected escrow on testnet. <em>Official Circle test USDC.</em>
-              </blockquote>
-              <dl className="stats">
-                <div><dt>3</dt><dd>participant roles</dd></div>
-                <div><dt>1</dt><dd>unified demo</dd></div>
-                <div><dt>USDC</dt><dd>Circle testnet asset</dd></div>
-                <div><dt>Testnet</dt><dd>not audited</dd></div>
-              </dl>
-            </div>
-            <a href={ESCROW_URL} className="contract-chip" data-reveal>
-              <span>Escrow · testnet</span><code>{ESCROW.slice(0, 10)}…{ESCROW.slice(-10)}</code><span aria-hidden>↗</span>
-            </a>
-          </div>
-        </section>
+        {/* 05 Live stats */}
+        <StatsSection />
 
         {/* 06 Start */}
         <section className="start" id="s6" data-section>

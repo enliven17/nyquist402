@@ -13,7 +13,6 @@ import { appPath, routeLinks } from "@/lib/site";
 import Home from "@/app/page";
 import Demo from "@/app/demo/page";
 import Docs from "@/app/docs/page";
-import Stats from "@/app/stats/page";
 import Status from "@/app/status/page";
 
 // Every navigation is a full document load (plain links), which keeps cross-document view transitions.
@@ -21,9 +20,10 @@ const routes: Record<string, [title: string, page: () => React.ReactNode]> = {
   "/": ["Nyquist402 · Protected API payments on Stellar", Home],
   "/demo": ["Demo · Nyquist402", Demo],
   "/docs": ["Docs · Nyquist402", Docs],
-  "/stats": ["Stats · Nyquist402", Stats],
   "/status": ["Status · Nyquist402", Status],
 };
+// The stats page became a home page section.
+if (window.location.pathname.replace(/\/$/, "") === "/stats") window.location.replace("/#stats");
 if (window.location.pathname.replace(/\/$/, "") === "/demo/protected") window.location.replace("/demo" + window.location.search + window.location.hash);
 routeLinks();
 const path = appPath();

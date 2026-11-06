@@ -1,5 +1,7 @@
-.st { max-width: 1120px; margin: 0 auto; padding: 56px 24px 96px; }
-.st-head h1 { font-size: clamp(2.25rem, 4.6vw, 3.75rem); font-weight: 300; letter-spacing: -0.04em; line-height: 1; margin: 0 0 14px; }
+/* section.st beats the home page's ".landing section" reset. */
+.landing section.st, section.st { padding: clamp(96px, 12vw, 160px) 0; border-top: 1px solid var(--line); }
+.st-head h2 { margin: 0 0 24px; }
+.st .st-head > p { max-width: 40rem; margin-top: 28px; }
 .st-head p { color: var(--muted); margin: 0; }
 .st-meta { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px !important; font-family: var(--font-mono), monospace; font-size: 12px; }
 .st-meta a { color: var(--accent); text-decoration: none; }
@@ -15,9 +17,9 @@
 .st-tiles b { display: block; font-size: clamp(2rem, 3.6vw, 2.9rem); font-weight: 300; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
 .st-tiles span { display: block; margin-top: 8px; font-size: 13px; color: var(--muted); }
 
-.st-card, section.st-card:first-of-type { border: 1px solid var(--line); background: var(--surface); padding: 22px 24px; margin-bottom: 24px; }
-.st-card h2 { font-size: 15px; font-weight: 500; margin: 0 0 18px; }
-.st-card h2.st-sub { margin-top: 28px; }
+.st-card { border: 1px solid var(--line); background: var(--surface); padding: 22px 24px; margin-bottom: 24px; }
+.st .st-card h2 { font-size: 15px; font-weight: 500; letter-spacing: 0; line-height: 1.3; margin: 0 0 18px; }
+.st .st-card h2.st-sub { margin-top: 28px; }
 .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .st-grid .st-card { margin-bottom: 24px; }
 
@@ -51,7 +53,6 @@
 .st-table code { font-family: var(--font-mono), monospace; font-size: 12px; }
 
 @media (max-width: 760px) {
-  .st { padding-top: 32px; }
   .st-tiles { grid-template-columns: 1fr 1fr; }
   .st-tiles > div { border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line) !important; }
   .st-tiles > div:nth-child(2n) { border-right: 0 !important; }
@@ -82,7 +83,7 @@
 .st-sk-bars .sk { flex: 1; }
 .st-note { margin: -8px 0 18px; font-size: 13px; }
 .st-chart-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-.st-chart-head h2 { margin: 0; }
+.st .st-chart-head h2 { margin: 0; }
 .st-range { display: flex; border: 1px solid var(--line); }
 .st-range button { font: inherit; font-family: var(--font-mono), monospace; font-size: 12px; background: none; border: 0; border-left: 1px solid var(--line); color: var(--muted); padding: 6px 12px; cursor: pointer; }
 .st-range button:first-child { border-left: 0; }

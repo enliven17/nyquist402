@@ -48,3 +48,12 @@
   .live { animation: none; }
   .side-nav a, .side-nav a::before { transition: none; }
 }
+
+/* Status link: the last row of the sidebar footer box, and the last item of the mobile menu. */
+.side-status-link { display: flex; align-items: center; gap: 8px; color: var(--ink); text-decoration: none; }
+.side-status-link i { margin-left: auto; font-style: normal; color: var(--muted); transition: transform 0.2s; }
+.side-status-link:hover i { transform: translateX(3px); color: var(--accent); }
+.side-status .side-status-link { padding: 10px 12px; border-top: 1px solid var(--line); transition: background 0.2s; }
+.side-status .side-status-link:hover { background: var(--paper); }
+.side-status .side-status-link[aria-current="page"] { color: var(--accent); }
+.side-menu-panel .side-status-link { margin-top: 16px; padding: 12px 14px; border: 1px solid var(--line); font-family: var(--font-mono), monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
