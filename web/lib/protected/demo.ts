@@ -91,7 +91,7 @@ export async function quote(request: Record<string, unknown>) {
   const remoteId = await protectedClient().read("payment_hash", [termsToScVal(terms)]);
   if (remoteId !== paymentId) throw new Error("Protected deployment identity is incompatible with this SDK");
   const capability = issueCapability({ network: c.networkPassphrase, contractId: c.contractId, paymentId }, env("DEMO_SESSION_SECRET"));
-  rememberPayment(c.contractId,paymentId,payer,c.seller,typeof request.agreement === "string" ? request.agreement : "Obtain the original agreement from the parties.");
+  await rememberPayment(c.contractId,paymentId,payer,c.seller,typeof request.agreement === "string" ? request.agreement : "Obtain the original agreement from the parties.");
   return { protocol: "nyquist402:protected:v2", terms, paymentId, capability };
 }
 export async function prepare(request: Record<string, unknown>) {
@@ -147,7 +147,7 @@ export async function arbitrate(request: Record<string, unknown>) {
     const prepared = await client.prepare(arbiter.address, { type: "rule", paymentId, claimId, sellerAmount, revision: claim.revision });
     const tx = TransactionBuilder.fromXDR(prepared.xdr, Networks.TESTNET);
     tx.sign(arbiter.keypair);
-    track(tx.hash().toString("hex"),client.contractId,paymentId,arbiter.address,"rule");
+    await track(tx.hash().toString("hex"),client.contractId,paymentId,arbiter.address,"rule");
     return client.submit(prepared, tx.toXDR());
   })), arbiter: arbiter.name };
 }

@@ -1,4 +1,5 @@
 import { rpc, scValToNative } from "@stellar/stellar-sdk";
+import { requestBackend } from "../lib/backend.ts";
 import { PROTECTED_CONTRACT, PROTECTED_DEPLOY_TX } from "../lib/deployment.ts";
 
 const server = new rpc.Server("https://soroban-testnet.stellar.org");
@@ -17,7 +18,6 @@ export type Stats = {
   activity: { bin: number; points: { at: number; transactions: number }[] };
   recent: { kind: string; at: number; tx: string; paymentId: string; amount: string | null }[];
 };
-
 let cache: { at: number; value: Promise<Stats> } | undefined;
 let startLedger: number | undefined;
 
@@ -53,6 +53,12 @@ async function events(): Promise<{ list: Event[]; latestLedger: number }> {
 const sum = (xs: unknown[]) => xs.reduce<bigint>((a, x) => a + BigInt(x as bigint), 0n).toString();
 
 async function build(): Promise<Stats> {
+  // The hosted event index retains history beyond the RPC retention window.
+  if (process.env.BACKEND_URL) {
+    const url = process.env.BACKEND_URL;
+    const chain = await requestBackend<Omit<Stats, "contractId">>(url, "query", "events:stats", {});
+    return { contractId: PROTECTED_CONTRACT, ...chain };
+  }
   const { list, latestLedger } = await events();
   const of = (kind: string) => list.filter(e => e.kind === kind);
   const funded = of("payment_funded"), claims = of("claim_recorded"), cases = of("case_updated");

@@ -42,6 +42,10 @@ Preserve existing funded keys and keep secrets out of Git. For a new environment
 
 Keep private service data in `web/.nyquist-data` (or `DEMO_DATA_DIR`) out of Git and static hosting. Wallet sign-in controls private history and evidence access; transaction signatures separately control fund movements. See the [client guide](web/lib/protected/README.md) for integration and verification details.
 
+## Hosting
+
+The site runs on Vercel. `scripts/vercel-build.mjs` bundles the API into one Node function next to the static client.
+
 ## Verify
 
 ```sh
