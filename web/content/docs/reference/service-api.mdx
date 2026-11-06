@@ -1,0 +1,127 @@
+---
+title: Public service API
+description: Planned endpoints, payloads, authentication, transaction states and retry rules.
+---
+**Not fully implemented yet.** This page defines the planned public service contract. The linked schemas describe the target interface, not a claim that these endpoints are running. The service origin is supplied by the seller's offer and verified by the client; `https://service.example` is a placeholder, not a deployed endpoint.
+
+Download the [planned OpenAPI contract](/service-contract.openapi.json). The field names, limits and state transitions below are the design baseline for implementation.
+
+## Encoding and scope
+
+Requests and responses use UTF-8 JSON and `Content-Type: application/json`. Each service origin handles the network and escrow advertised by `GET /supported`. Responses identify that scope; a client pins it for the lifetime of the payment. Amounts are integer strings in token base units; hashes are lowercase, 64-character hexadecimal values. Times are Unix seconds. Structured signed objects use [RFC 8785 canonical JSON](https://www.rfc-editor.org/rfc/rfc8785); parsers reject duplicate object keys, nonfinite numbers and lone Unicode surrogates before verification. Monetary values remain strings, and body text is never Unicode-normalized. Stellar addresses must pass checksum validation, in addition to schema shape checks.
+
+The JSON `terms` object follows [payment terms](/docs/reference/terms), with fee fields grouped under `terms.fees`. All fee fields are required, including zeros and explicit null quote references. Unknown required capabilities are rejected before signing. Changes to the service origin do not change a payment's contract or funded agreement.
+
+## Endpoints
+
+Paths are relative to the configured service origin. A session is a wallet-authenticated bearer token. Public reads return chain-derived state, never agreement bodies, unsigned authorizations or private case records.
+
+| Method and path | Access | Request and result |
+| --- | --- | --- |
+| `GET /supported` | Public | Network, contract, code hash, asset, default arbiter, capability names, limits and credential support |
+| `POST /auth/challenges` | Public | `{ account }` → `{ challengeId, account, xdr, expiresAt, origin, network }` |
+| `POST /auth/sessions` | Public | `{ challengeId, signedXdr }` → `{ token, account, expiresAt }` |
+| `GET /arbiters` | Public | `cursor`, `limit` → signed provider manifests and `nextCursor` |
+| `GET /arbiters/{account}` | Public | One signed manifest, including price policy, service windows and quote URL |
+| `POST /quotes` | Session: buyer or seller | `{ terms, agreement }` → complete terms, accepted quote records, payment ID, exact funding total and expiry |
+| `POST /verify` | Public, rate limited | Terms, payment ID and either signed funding XDR or a funding transaction hash → verification result; never broadcasts |
+| `POST /payments/{paymentId}/prepare` | Session | Source account, typed action and optional completed authorizations → preparation state and signing material |
+| `POST /settle` | Session | `{ preparationId, signedXdr }` → transaction hash, state and status URL; relays the prepared action |
+| `POST /transactions/track` | Session | `{ paymentId, action, signedXdr }` → durable tracking record for a direct transaction; never broadcasts |
+| `GET /transactions/{hash}` | Public | Hash, `pending`, `confirmed`, `failed`, `unknown` or `expired` state, last checked ledger and status timestamps |
+| `GET /payments` | Session | Participant payment history, paginated by `cursor` and `limit` |
+| `GET /payments/{paymentId}` | Public | Payment terms and balances, indexed and checked ledger numbers, and claim pagination |
+| `GET /payments/{paymentId}/claims/{claimId}` | Public | Claim amount, commitments, revision, deadlines, status and current arbiter |
+| `GET /payments/{paymentId}/materials` | Session: participant/current arbiter | Optional `claimId`, plus `cursor` and `limit` → authorized material IDs, hashes, versions and current claim revision |
+| `POST /payments/{paymentId}/materials` | Session: buyer or seller | Text body, kind and claim reference → immutable material ID, body hash and retention state |
+| `GET /payments/{paymentId}/materials/{materialId}` | Session: participant/current arbiter | Exact retained body, author, kind, body hash and stored time |
+| `DELETE /payments/{paymentId}/materials/{materialId}` | Session: original author | Deletion request → `202` scheduled, or `409 RETENTION_LOCKED` with earliest eligible time |
+
+The OpenAPI file defines each request and response object. Request objects reject unknown fields with `400 INVALID_REQUEST`; clients tolerate additive response fields unless a required capability changes. A `claimId` is a nonnegative integer. HTTP work IDs are 16–96 non-space printable ASCII characters; claim work IDs may append `/sequence` and allow up to 128 characters. List pages default to 20 items and allow at most 100. Cursors are opaque and scoped to the account and deployment; an invalid or mismatched cursor returns `400 INVALID_CURSOR`.
+
+## Wallet authentication
+
+Challenges expire after 300 seconds and can be used once. The wallet signs the exact supplied challenge XDR; the service compares the transaction body, verifies the signature and current account threshold, and consumes the challenge atomically before issuing a 1,800-second session. A session identifies one account, network and origin. Reusing a challenge returns `409 CHALLENGE_USED`; expiry returns `410 CHALLENGE_EXPIRED`.
+
+The challenge is never broadcast and grants no contract authorization. Browser clients keep tokens in memory and obtain a fresh challenge after expiry; they do not put bearer tokens in URLs. Private endpoints return `Cache-Control: no-store`. Cross-origin browser mutations require an explicitly allowed origin; wildcard credentialed access is disallowed.
+
+The initial login method accepts ordinary account wallets whose master signer meets the medium threshold. Other login credentials return `422 UNSUPPORTED_AUTH_MODE`. [Delegated transaction signing](/docs/signing#delegated-authorization) has its own capability check; it does not implicitly authenticate private service access.
+
+## Prepare and authorize an action
+
+`POST /payments/{paymentId}/prepare` accepts `sourceAccount`, `action`, optional `preparationId` and optional `authorizations`. Funding uses `action: { type: "authorize", terms }`; other actions use the fields in the [contract operation reference](/docs/reference/contract). Claim creation also requires a `workId` identifying the seller's delivery operation.
+
+The response has one of these states:
+
+| State | Client action |
+| --- | --- |
+| `authorization_required` | Validate and sign each returned `{ address, entryXdr, validUntilLedger }`; repeat preparation with the same `preparationId` and completed entries |
+| `ready` | Verify the prepared envelope, collect the source wallet signature and submit it to `/settle` |
+| `restoration_required` | Inspect the returned footprint and estimated network fee; follow [storage recovery](/docs/protected/recovery#automatic-restoration) before retrying preparation |
+
+A preparation expires after at most 120 seconds, or earlier if its transaction bounds or action deadline require it. Completed additional authorizations are re-simulated in enforcement mode before `ready` is returned. Changed action arguments, invocation trees or source accounts invalidate the preparation. The source signs only after those checks succeed.
+
+The service never treats a bearer session as buyer, seller or arbiter transaction consent. Every nonpublic contract action still needs its exact role authorization. A nonparticipant may submit only publicly eligible settlement or fallback actions and must provide an authorized transaction source.
+
+## Verification and submission
+
+A verification request carries `network`, `contractId`, `terms`, `paymentId` and exactly one of `signedXdr` or `fundingTransaction`. The service checks canonical identity, token movements, signatures, required authority, accepted quotes, bounds and contract compatibility. A transaction hash proves funding only after ledger success and a matching payment state read. `200 { valid: false, reason }` is a business verification rejection; malformed JSON is an HTTP error.
+
+`POST /settle` means submit the prepared contract action. It is not an instruction to pay the seller immediately. For example, a submitted `authorize` funds the agreement; a submitted `dispute` opens a case.
+
+`POST /transactions/track` validates the signed envelope, payment scope and caller’s permitted role, then persists its hash before a direct caller broadcasts. It accepts `action: "restore"` only for a restoration footprint within the payment’s dependency allowlist. It never broadcasts or marks the action confirmed itself. A direct SDK without a service connection requires the application to durably retain the same identity before broadcast.
+
+The service persists the exact signed XDR and transaction hash before broadcast. It returns `202` with `state: "pending"` while confirmation is outstanding, or `200` with `state: "confirmed"` after ledger success. The response includes `statusUrl`, `paymentId` and `action`. A pending response is not a funding or delivery receipt.
+
+## Idempotency and interrupted requests
+
+Every authenticated mutation except session creation requires an `Idempotency-Key` of 16–128 non-space printable ASCII characters. Its scope is account, origin, method and normalized path. The service records the request hash and outcome before acknowledging it. Reusing a key with identical input returns the same operation; different input returns `409 IDEMPOTENCY_CONFLICT`.
+
+Pending and unknown operations retain their keys until reconciled. Terminal results retain the key for at least 24 hours. The transaction record and claim `workId` mapping remain for the payment-history retention period, so an expired short-lived response cache is not permission to create a second delivery claim. Recovery after a service failure checks these records before constructing a replacement transaction.
+
+Clients poll `statusUrl` after 2 seconds, then use 2, 4, 8 and at most 15 seconds between checks, honoring `Retry-After`. An `unknown` transaction must be reconciled against its original hash. `expired` is returned only when archival transaction lookup and validity bounds conclusively establish that it cannot later succeed; an RPC outage remains `unknown`. The service never replaces an unresolved payout automatically.
+
+## Errors and limits
+
+Errors use this shape; `requestId` is safe to include in a support report:
+
+```json
+{
+  "error": {
+    "code": "STATE_CHANGED",
+    "message": "The claim changed after preparation. Refresh state and prepare again.",
+    "retryable": false,
+    "requestId": "req_7e295b4f"
+  }
+}
+```
+
+| HTTP | Codes and handling |
+| --- | --- |
+| `400` | `INVALID_REQUEST`, `INVALID_CURSOR`; correct the input |
+| `401` | `SESSION_REQUIRED`, `SESSION_EXPIRED`; authenticate again |
+| `403` | `ACTION_FORBIDDEN`; session identity or requested role is not allowed |
+| `404` | `NOT_FOUND`; private material also uses this response for nonmembers to prevent disclosure |
+| `409` | `IDEMPOTENCY_CONFLICT`, `STATE_CHANGED`, `RETENTION_LOCKED`, `CHALLENGE_USED` |
+| `410` | `QUOTE_EXPIRED`, `PREPARATION_EXPIRED`, `CHALLENGE_EXPIRED` |
+| `413` / `415` | `PAYLOAD_TOO_LARGE` / `UNSUPPORTED_MEDIA_TYPE` |
+| `422` | `INVALID_TERMS`, `UNSUPPORTED_CAPABILITY`, `UNSUPPORTED_AUTH_MODE`, `INVALID_SIGNATURE`, `QUOTE_NOT_APPLICABLE`, `TRANSACTION_REJECTED`, `DELEGATION_LIMIT` |
+| `429` | `RATE_LIMITED`; honor `Retry-After` and keep the same mutation key |
+| `503` | `RPC_UNAVAILABLE`, `RESTORATION_UNAVAILABLE`, `SERVICE_UNAVAILABLE`; retry only as indicated, preserving operation identity |
+
+A submission error includes `transactionHash` when an identity has been created, so clients can still reconcile it. `retryable` permits repeating the same request and key, never blindly creating a new intent. Signed XDR, bearer tokens and evidence bodies are excluded from application logs.
+
+| Limit | Planned default |
+| --- | --- |
+| JSON request | 128 KiB total; signed XDR at most 64 KiB |
+| Material body | 10,000 UTF-8 bytes; text only |
+| Material records | 1,000 per payment, including retained revisions |
+| Public requests | 60/minute per IP |
+| Authenticated reads | 120/minute per account |
+| Authenticated mutations | 30/minute per account |
+| Quotes | 5/minute per account, within the mutation allowance |
+| Login challenges | 5/minute per account and per IP |
+
+The seller’s resource endpoints use the same error envelope, adding `ACCOUNT_REQUIRED`, `OFFER_PROOF_REQUIRED` and `PAYMENT_NOT_CONFIRMED` for their HTTP 402 responses.
+
+Rate limits use a rolling 60-second window. Responses report `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset` and, when throttled, `Retry-After`. Record and body limits are checked before accepting a new commitment; a service must not accept an onchain evidence hash and then discover that it cannot store the body.

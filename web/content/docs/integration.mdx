@@ -1,35 +1,82 @@
 ---
 title: x402 payment negotiation
-description: Connect protected payments to an API request, from the offer through delivery and settlement.
+description: Planned HTTP requirements, funded request proofs, delivery receipts and failure behavior.
 ---
-**Protected x402 negotiation is not fully implemented yet.** The flow below describes how the integration will work. The protected HTTP schema and compatibility rules will be published with the integration release.
+**Protected x402 negotiation is not fully implemented yet.** This page defines Nyquist402's proposed `nyquist-protected` scheme. It uses the established [x402 HTTP header transport](https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/http.md); the protected payloads below are a Nyquist402 design, not an assertion of upstream adoption. The [OpenAPI contract](/service-contract.openapi.json) defines the JSON objects.
 
-## Receive the payment offer
+## Receive a buyer-bound offer
 
-When an API route requires payment, the resource server will return HTTP 402 with its supported network, asset, escrow contract and protected-payment capability. The buyer or agent will choose a compatible route and inspect the agreement before signing.
+The protected client sends the buyer’s public account in `NYQUIST-ACCOUNT`, an initial ownership proof in `NYQUIST-OFFER-PROOF` and a unique delivery-operation identifier in `Idempotency-Key` when first calling the resource. A request without an account receives HTTP 402 with an `ACCOUNT_REQUIRED` body and no fundable offer; the client must choose its account before terms can be bound to it.
 
-A buyer requiring review and dispute resolution will reject a basic-only offer. Basic auth-capture and protected settlement have different authorization and finalization rules.
+The initial proof is base64 JSON with `account`, `nonce`, `expiresAt` and `signature`. It signs the SHA-256 digest of `nyquist402:offer-request:` followed by canonical JSON of `account`, `origin`, `method`, `path`, `bodyHash`, `workId`, `nonce` and `expiresAt`. It uses the same account-authority, nonce, expiry and canonical URL rules as the funded request proof below, but cannot authorize use of any funded payment. Missing proof returns `402 OFFER_PROOF_REQUIRED`; an invalid proof is rejected before quote registration.
 
-## Agree and fund
+The seller obtains applicable arbiter quotes and builds complete terms for that buyer. It returns HTTP 402 with `PAYMENT-REQUIRED`, containing the base64-encoded payment requirements. Its accepted entry has these fields:
 
-The buyer integration will validate delivery and pricing criteria, work budget, deadlines, arbiters, fallback and fee limits. Both parties will authorize the complete terms. The buyer will fund principal and any accepted protocol and arbitration reserves under the agreed contract version.
+| Field | Planned value and meaning |
+| --- | --- |
+| `scheme` | `nyquist-protected` |
+| `network` | Network identifier advertised by the facilitator |
+| `asset` | Payment token's Stellar contract address |
+| `payTo` | Seller account in the complete terms |
+| `amount` | Principal plus protocol reserve plus arbitration reserve, as one base-unit integer string |
+| `maxTimeoutSeconds` | Seconds until offer expiry; must not extend `fund_by` or quote validity |
+| `extra.protected.offerId` | Immutable seller-issued offer identifier |
+| `extra.protected.contractId` | Escrow contract for this agreement |
+| `extra.protected.terms` | Full payment terms, including fee fields and accepted quote IDs |
+| `extra.protected.paymentId` | Canonical identity computed from those terms, network and contract |
+| `extra.protected.agreementUrl` | HTTPS retrieval URL for the exact agreement bytes; never contains a bearer token |
+| `extra.protected.facilitator` | Verified service origin used for capability, preparation and submission requests |
+| `extra.protected.expiresAt` | Earliest funding or accepted quote expiry |
 
-The application will wait for funding confirmation before treating the budget as available. An offer, signature or queued transaction alone will not prove funding.
+The seller binds `offerId` to the HTTP method, origin, normalized path, request-body hash and work ID. For body hashing, use the exact bytes before HTTP content encoding; a missing body hashes as an empty byte string. A replay to another resource or different request does not inherit the offer. Private agreement retrieval requires the buyer or seller's authenticated session.
 
-## Invoke the API and record delivery
+## Validate and fund
 
-The consumer will call the resource with its payment context. The seller will meter the work, return a usage or delivery receipt and submit a claim for the corresponding amount. The client will compare that receipt with the accepted pricing criteria and claim.
+The client checks `GET /supported`, network and deployed contract identity, then compares the full terms and accepted quotes with its spending and arbitration policy. It retrieves the agreement bytes and verifies `terms.agreement`; computes the payment ID and exact total independently; and rejects an expired or incompatible offer before signing.
 
-Receipts and delivery bodies remain offchain. Their onchain commitments let participants verify that the material being reviewed matches the recorded claim; a hash does not prove delivery quality.
+Both buyer and seller authorize funding. The client follows [prepare, authorize and submit](/docs/reference/service-api#prepare-and-authorize-an-action). Funding is separate from delivering the resource: the seller begins work only after ledger-confirmed funding and a matching payment-state read. A signature or `202 pending` acknowledgment does not make the budget available.
 
-## Review and settle
+The planned scheme uses an onchain funding reference in the HTTP retry rather than placing a large transaction envelope in a header. Signed XDR travels in the facilitator's JSON body; the resource header remains bounded to 16 KiB after base64 encoding.
 
-The buyer can accept a recorded claim, or either party can dispute it before review closes. An undisputed claim becomes eligible for settlement after review. A dispute follows the evidence, ruling and fallback process defined by the funded agreement.
+## Prove who is invoking the resource
 
-Receiving an API response does not itself finalize payment. Each claim settles through the [payment lifecycle](/docs/protected/lifecycle).
+The client retries the original request with `PAYMENT-SIGNATURE`, a base64-encoded payment payload. It echoes the exact `accepted` requirements and supplies `payload: { offerId, paymentId, fundingTransaction, workId, requestProof }`.
 
-## Build against compatible interfaces
+`requestProof` has `account`, `nonce`, `expiresAt` and `signature`. The initial HTTP profile uses the buyer's ordinary Stellar account and an Ed25519 signature. The account must equal the funded payer. Before accepting the proof, the seller checks current account state no more than one ledger old: the master signer must be enabled and its weight must meet the medium threshold. Insufficient master authority or unsupported multisig returns `422 UNSUPPORTED_AUTH_MODE`; unavailable authority data returns `503`. Knowing a public payment ID or funding hash is not enough to invoke paid work.
 
-The integration release will define payment requirements, payloads, receipts, capability discovery and error responses. SDK and facilitator compatibility checks will identify the supported contract and schema before signing. See [SDK integration](/docs/sdk) and [facilitator execution](/docs/services/facilitator) for their responsibilities.
+The signature covers the SHA-256 digest of UTF-8 `nyquist402:resource-request:` followed by RFC 8785 canonical JSON containing `account`, `network`, `contractId`, `paymentId`, `offerId`, `origin`, uppercase `method`, normalized `path`, `bodyHash`, `workId`, `nonce` and `expiresAt`. The origin and path are the serialized `origin` and `pathname + search` from a WHATWG URL, with no fragment or user-info. Query order and percent-encoding are preserved as transmitted; the server performs no extra decoding or query sorting for signature comparison. A proxy rewrite that changes the signed target fails verification. A nonce is 32 lowercase hexadecimal characters; expiry is at most 300 seconds after signing. Resource clocks allow at most 60 seconds of skew.
 
-For the separate spending-hold flow, see [basic x402 integration](/docs/basic/integration).
+The seller validates the proof, funding reference and offer binding before executing. It records the nonce and work ID atomically with the work intent. A repeated identical work ID returns the existing result or job status; changing input under that ID returns `409 IDEMPOTENCY_CONFLICT`. Nonces remain blocked until expiry plus the skew allowance, and work-ID mappings remain with payment history. An expired proof can be refreshed for the same work ID without starting the job again.
+
+Contract-account HTTP proofs are outside the initial profile and fail with `422 UNSUPPORTED_AUTH_MODE`; the SDK must not substitute an ordinary account or weaken ownership checks. Transaction credential support is advertised separately under [signing](/docs/signing).
+
+## Meter work and commit delivery
+
+For each delivery, the seller records a receipt core containing `paymentId`, `agreementHash`, `workId`, positive `sequence`, `previousReceiptHash`, `usageUnits`, `unitPriceNumerator`, `unitPriceDenominator`, `amount`, `outputHash`, `startedAt` and `completedAt`. The first receipt uses `previousReceiptHash: null`; later deliveries chain to the preceding receipt ID.
+
+Usage and price values are nonnegative integer strings, with a positive denominator. A claimed delivery has a strictly positive amount. The agreed calculation is `ceil(usageUnits × unitPriceNumerator / unitPriceDenominator)`, bounded by available principal. The agreement must explicitly accept this meter and rounding rule. Receipts exclude protocol and arbitration charges, which are reconciled separately from escrow state.
+
+Serialize the receipt core using RFC 8785 canonical JSON and store those exact UTF-8 bytes as the delivery body. Its SHA-256 is both `receiptId` and the claim's `delivery_hash`. The seller signs the digest of `nyquist402:delivery-receipt:` followed by those canonical bytes. `claimId` and `claimTransaction` are attached after confirmation and are not part of the pre-claim commitment, avoiding a circular hash.
+
+The complete receipt envelope is `{ outcome, receiptId, core, seller, signature, claimId, claimTransaction }`, with `outcome: "claimed"` for a positive, confirmed claim. The resource response’s `PAYMENT-RESPONSE` carries a base64-encoded result with `success`, `network`, `transaction` and `payer`; `extensions["nyquist-protected"]` contains `paymentId`, `workId`, `state`, `receipt` and `statusUrl`. `success` confirms funding of this protected agreement, not immediate seller payout. Processing uses a null receipt and authenticated status URL; delivered or no-charge results carry the matching receipt. For a claimed delivery, the client checks the seller signature, receipt hash, agreement, usage calculation, claim commitment and transaction before presenting it as a recorded delivery. These checks do not judge whether the delivery satisfies its qualitative promise.
+
+`outputHash` covers the decoded resource body bytes before HTTP content encoding. Large or asynchronous work returns `202` with an authenticated job-status URL and `workId`; that acknowledgment is not a completed receipt. A positive-charge receipt is issued only after its claim confirms. If metering produces zero cost, no zero-amount claim is submitted: the seller returns `outcome: "no_charge"`, a signed core with `amount: "0"`, and null claim/transaction fields. The client checks signature, meter and output hash but does not present it as an onchain claim or open a review action. A partial job uses successive receipt sequences and claim work IDs derived as `workId/sequence`.
+
+## Review, errors and retries
+
+A resource response never bypasses the claim's review period. The buyer accepts or disputes the exact claim; undisputed expiry, a valid ruling or terminal fallback settles it under the funded agreement.
+
+| Condition | Resource behavior |
+| --- | --- |
+| Missing account or payment | `402`; advertise compatible requirements without starting work |
+| Malformed header or changed accepted requirements | `400`; no work and no new funding |
+| Unconfirmed or invalid funding | `402 PAYMENT_NOT_CONFIRMED`; preserve the payment/work IDs and reconcile the original hash |
+| Valid funding but invalid request ownership proof | `403 INVALID_SIGNATURE`; no work |
+| Existing work still running | `202`; return the same job identity |
+| Repeated work with changed body/path | `409 IDEMPOTENCY_CONFLICT` |
+| Service/RPC cannot establish funding state | `503`; do not charge again or start duplicate work |
+| Complete, confirmed delivery | Resource result and verifiable receipt; review remains open |
+
+A buyer client must not interpret a repeated 402 as permission to fund a second agreement automatically. It reconciles the existing payment and asks its spending policy before any new funding intent.
+
+For browser integrations, expose `PAYMENT-REQUIRED` and `PAYMENT-RESPONSE`; allow `PAYMENT-SIGNATURE`, `NYQUIST-ACCOUNT`, `NYQUIST-OFFER-PROOF`, `Idempotency-Key` and `Content-Type` for explicitly allowed origins. Evidence and session access retain their own authentication rules. The separate [basic auth-capture flow](/docs/basic/integration) does not gain protected review semantics through these headers.
