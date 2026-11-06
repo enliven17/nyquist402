@@ -59,8 +59,7 @@ export default function StatsPage() {
         </dl>
 
         <section className="st-card">
-          <h2>Transactions over time</h2>
-          <Activity points={data.activity.points} bin={data.activity.bin} />
+          <ActivityCard live={data.activity} firstAt={data.firstAt} />
         </section>
 
         <div className="st-grid">
@@ -149,17 +148,61 @@ function Breakdown({ rows }: { rows: { key: string; count: number; note: string 
   );
 }
 
+const RANGES = [{ label: "24H", span: 86400 }, { label: "7D", span: 7 * 86400 }, { label: "30D", span: 30 * 86400 }, { label: "All", span: null }] as const;
+type Series = Stats["activity"];
+const when = (at: number, opts: Intl.DateTimeFormatOptions) => new Date(at * 1000).toLocaleString("en-US", opts);
+
+/** The chart with range buttons and earlier/later paging; "All" follows the live 30-second refresh. */
+function ActivityCard({ live, firstAt }: { live: Series; firstAt: number | null }) {
+  const [span, setSpan] = useState<number | null>(null);
+  const [end, setEnd] = useState<number | null>(null); // null: ends now
+  const [series, setSeries] = useState<Series>();
+  const [loading, setLoading] = useState(false);
+  const now = Math.floor(Date.now() / 1000);
+  const to = end ?? now + 1, from = span === null ? (firstAt ?? now) : to - span;
+  useEffect(() => {
+    if (span === null) { setSeries(undefined); return; }
+    let live = true;
+    setLoading(true);
+    fetch(`/api/stats/activity?from=${from}&to=${to}`).then(r => r.json()).then(r => { if (live && r.ok) setSeries(r.activity); })
+      .catch(() => undefined).finally(() => live && setLoading(false));
+    return () => { live = false; };
+    // Refetch only when the window changes; `to` moves every render while `end` is null.
+  }, [span, end]);
+  const shown = span === null ? live : series;
+  const choose = (next: number | null) => { setSpan(next); setEnd(null); };
+  const earlier = span !== null && firstAt !== null && from > firstAt;
+  const later = span !== null && end !== null;
+  const total = shown?.points.reduce((a, p) => a + p.transactions, 0) ?? 0;
+  const fmt: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
+  return (
+    <section className="st-card">
+      <div className="st-chart-head">
+        <h2>Transactions over time</h2>
+        <div className="st-range">
+          {span !== null && <button type="button" disabled={!earlier} onClick={() => setEnd(to - span)} aria-label="Earlier">‹</button>}
+          {RANGES.map(r => <button type="button" key={r.label} aria-pressed={span === r.span} onClick={() => choose(r.span)}>{r.label}</button>)}
+          {span !== null && <button type="button" disabled={!later} onClick={() => setEnd(to + span >= now ? null : to + span)} aria-label="Later">›</button>}
+        </div>
+      </div>
+      <p className="st-muted st-note">{when(from, fmt)} – {end === null ? "now" : when(to, fmt)} · {total.toLocaleString("en-US")} transactions</p>
+      {shown ? <div className={loading ? "st-loading" : undefined}><Activity points={shown.points} bin={shown.bin} span={to - from} /></div>
+        : <div className="st-sk-bars">{Array.from({ length: 32 }, (_, i) => <Sk key={i} h={`${30 + ((i * 37) % 60)}%`} />)}</div>}
+    </section>
+  );
+}
+
 const W = 960, H = 220, PAD = { l: 36, r: 8, t: 12, b: 26 };
-function Activity({ points, bin }: { points: { at: number; transactions: number }[]; bin: number }) {
+function Activity({ points, bin, span }: { points: { at: number; transactions: number }[]; bin: number; span: number }) {
   const [hover, setHover] = useState<number>();
-  if (!points.length) return <p className="st-muted">No transactions yet.</p>;
+  if (!points.some(p => p.transactions)) return <p className="st-muted">No transactions in this range.</p>;
   const max = Math.max(1, ...points.map(p => p.transactions));
   const top = Math.ceil(max / 5) * 5 || 5;
   const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
   const step = iw / points.length, bw = Math.max(2, step - 2);
   const y = (v: number) => PAD.t + ih - (v / top) * ih;
-  const label = (at: number) => new Date(at * 1000).toLocaleString("en-US", bin >= 86400 ? { month: "short", day: "numeric" } : { hour: "2-digit", minute: "2-digit" });
-  const every = Math.ceil(points.length / 8);
+  const label = (at: number) => when(at, bin >= 86400 ? { month: "short", day: "numeric" } : span > 86400 ? { month: "short", day: "numeric", hour: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
+  const every = Math.ceil(points.length / (span > 86400 && bin < 86400 ? 6 : 8));
   const h = hover === undefined ? undefined : points[hover];
   return (
     <div className="st-chart">
@@ -183,7 +226,7 @@ function Activity({ points, bin }: { points: { at: number; transactions: number 
       </svg>
       {h && hover !== undefined && (
         <div className="st-tip" style={{ left: `${((PAD.l + (hover + 0.5) * step) / W) * 100}%` }}>
-          <b>{h.transactions}</b> transactions<span>{label(h.at)} – {label(h.at + bin)}</span>
+          <b>{h.transactions}</b> transactions<span>{when(h.at, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} – {when(h.at + bin, bin >= 86400 ? { month: "short", day: "numeric" } : { hour: "2-digit", minute: "2-digit" })}</span>
         </div>
       )}
     </div>
