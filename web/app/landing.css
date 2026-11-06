@@ -62,8 +62,9 @@
 .panel-row { position: relative; display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: center; padding: 22px 0; border-bottom: 1px solid #ffffff33; }
 .panel-label code { display: block; font-size: 15px; }
 .panel-label span { font-family: var(--font-mono), monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; }
-.bar { position: relative; height: 64px; display: flex; align-items: center; }
-.bar b { position: relative; font-weight: 400; font-size: clamp(13px, 1.2vw, 16px); padding-left: 18px; }
+/* Scoped: demo.css has its own .bar and every page stylesheet ships together. */
+.panel .bar { position: relative; height: 64px; display: flex; align-items: center; margin: 0; background: none; overflow: visible; }
+.panel .bar b { position: relative; font-weight: 400; font-size: clamp(13px, 1.2vw, 16px); padding-left: 18px; }
 .bar-fill { position: absolute; left: 0; top: 0; bottom: 0; transform-origin: left; }
 .bar-exact { width: 14%; background: #ffffff38; }
 .bar-ac { width: 100%; background: repeating-linear-gradient(90deg, #fff 0 2px, transparent 2px 10px); opacity: 0.22; }
