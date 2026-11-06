@@ -282,3 +282,37 @@ body:has(.docs-site) { padding-left: 240px; }
 .docs-site .bl-escrow { transform: scaleX(.001); }
 .docs-site .bl-seller { transform: scaleX(.4); }
 .docs-system { min-width: 760px !important; }
+
+/* Page motion. Navigation between docs pages is a full load with a view transition: the bars stay,
+   the old article fades out and the new one enters with the same stagger as the first open. */
+.docs-topbar { view-transition-name: docs-topbar; }
+.docs-article { view-transition-name: docs-article; }
+::view-transition-old(docs-article) { animation: docs-out 0.16s ease-in both; }
+::view-transition-new(docs-article) { animation: none; opacity: 1; }
+::view-transition-group(docs-article) { animation-duration: 0.2s; }
+@keyframes docs-out { to { opacity: 0; transform: translateX(-12px); } }
+
+.docs-breadcrumb, .docs-page-heading h1, .docs-page-heading p, .docs-scope-note,
+.docs-prose > *:nth-child(-n + 8), .docs-page > :not(.docs-article) {
+  animation: docs-in 0.55s cubic-bezier(.2, .8, .2, 1) both;
+}
+.docs-page-heading h1 { animation-delay: 0.05s; }
+.docs-page-heading p { animation-delay: 0.1s; }
+.docs-scope-note { animation-delay: 0.15s; }
+.docs-prose > :nth-child(1) { animation-delay: 0.2s; }
+.docs-prose > :nth-child(2) { animation-delay: 0.24s; }
+.docs-prose > :nth-child(3) { animation-delay: 0.28s; }
+.docs-prose > :nth-child(4) { animation-delay: 0.32s; }
+.docs-prose > :nth-child(5) { animation-delay: 0.36s; }
+.docs-prose > :nth-child(6) { animation-delay: 0.4s; }
+.docs-prose > :nth-child(7) { animation-delay: 0.44s; }
+.docs-prose > :nth-child(8) { animation-delay: 0.48s; }
+.docs-page > :not(.docs-article) { animation-name: docs-fade; animation-delay: 0.3s; }
+@keyframes docs-in { from { opacity: 0; transform: translateY(14px); } }
+@keyframes docs-fade { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .docs-breadcrumb, .docs-page-heading h1, .docs-page-heading p, .docs-scope-note,
+  .docs-prose > *, .docs-page > :not(.docs-article) { animation: none; }
+  ::view-transition-old(docs-article) { animation: none; }
+}

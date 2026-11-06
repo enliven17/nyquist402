@@ -120,3 +120,9 @@ pre {
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 }
+
+/* Skeleton placeholders while data or the app loads. */
+.sk { display: block; background: linear-gradient(90deg, #e7e7e1 0%, #efefea 40%, #e7e7e1 80%) 0 0 / 300% 100%; border-radius: 2px; animation: sk 1.4s ease-in-out infinite; }
+.sk-inline { display: inline-block; vertical-align: middle; }
+@keyframes sk { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .sk { animation: none; } }

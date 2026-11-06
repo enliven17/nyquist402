@@ -61,3 +61,5 @@
   .st-chart { overflow-x: auto; }
   .st-chart svg { min-width: 620px; }
 }
+.st-sk-bars { display: flex; align-items: flex-end; gap: 4px; height: 180px; padding-left: 36px; }
+.st-sk-bars .sk { flex: 1; }

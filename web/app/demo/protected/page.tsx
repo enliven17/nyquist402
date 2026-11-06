@@ -1,5 +1,6 @@
 import { post,signIn,clearSession } from "@/lib/protected/service";
 import { useEffect, useState } from "react";
+import { Sk } from "@/components/Skeleton";
 import * as wallet from "@/lib/wallet";
 import { Toast } from "@/components/Toast";
 import { USDC_FAUCET, USDC_ISSUER, USDC_CONTRACT } from "@/lib/usdc";
@@ -165,14 +166,15 @@ export default function ProtectedDemo() {
         <h2>Agree and fund</h2>
         <p>Use Stellar Testnet in your wallet. Add the USDC trustline, then choose Stellar Testnet at Circle’s faucet and paste your wallet address. Test XLM pays network fees.</p>
         {address && <><p className="muted">Your address: <code>{address}</code></p>
-        <p className="muted">USDC balance: {assetStatus?.balance??"Checking…"} · Trustline: {assetStatus ? assetStatus.trustline ? "Ready" : "Add before using the faucet" : "Checking…"}</p></>}
+        <p className="muted">USDC balance: {assetStatus?.balance ?? <Sk inline w={64} h={12} />} · Trustline: {assetStatus ? assetStatus.trustline ? "Ready" : "Add before using the faucet" : <Sk inline w={48} h={12} />}</p></>}
         <details><summary>USDC asset</summary><p>USDC · {USDC_ISSUER} · Stellar Testnet · 7 decimals</p></details>
+        {!p && <ul className="chips" aria-busy="true" aria-label="Loading session presets">{[70, 64, 72, 86, 74].map((w, i) => <li key={i}><Sk inline w={w} h={12} /></li>)}</ul>}
         {p && <ul className="chips" aria-label="Session presets">
           <li><b>{formatAmount(p.budget)}</b> budget</li><li><b>{p.review}s</b> review</li><li><b>{p.response}s</b> evidence</li><li><b>{p.custom}s</b> per arbiter</li><li><b>{Math.round(p.session / 60)} min</b> session</li>
         </ul>}
 
         <fieldset className="arbiter-pick"><legend>Arbiter <span className="free">{config?.fees && (config.fees.custom_fee!=="0" || config.fees.default_fee!=="0") ? "quoted testnet fees" : "free on testnet"}</span></legend>
-          <div className="arbiter-cards">{(config?.arbiters ?? []).map(a => <label key={a.address} className={chosen === a.address ? "on" : undefined}>
+          <div className="arbiter-cards">{!config && !error && [0, 1, 2].map(i => <label key={i} aria-hidden><Sk w="70%" h={14} /><Sk w={80} h={11} style={{ marginTop: 8 }} /></label>)}{(config?.arbiters ?? []).map(a => <label key={a.address} className={chosen === a.address ? "on" : undefined}>
             <input type="radio" name="arbiter" checked={chosen === a.address} onChange={() => { setPreferred(a.isDefault ? "" : a.address); setOffer(undefined); }} />
             <strong>{a.name}</strong><code>{a.address.slice(0, 4)}…{a.address.slice(-4)}</code>{a.isDefault && <em>backup for every case</em>}
           </label>)}</div>
@@ -219,6 +221,7 @@ export default function ProtectedDemo() {
         </div>}
       </div></div>
 
+      {paymentId && !snapshot && <div className="protected-claims" aria-busy="true" aria-label="Reading payment from the contract"><h2>Claims</h2>{[0, 1].map(i => <div key={i} style={{ padding: "16px 0", borderTop: "1px solid var(--line)" }}><Sk w="40%" h={14} /><Sk h={10} style={{ margin: "12px 0" }} /><Sk w="70%" h={11} /></div>)}</div>}
       {snapshot && <div className="protected-claims"><h2>Claims</h2>{snapshot.claims.length === 0 && <p className="muted">No claims yet.</p>}{snapshot.claims.filter(item=>role!=="arbiter" || item.claim.status==="Disputed").map(item => <ClaimPanel key={`${paymentId}:${item.id}`} {...item} terms={snapshot.terms} paymentId={paymentId} address={address} sellerControl={sellerControl} now={now} busy={!!busy} run={run} arbiters={config?.arbiters ?? []} arbitrate={arbitrate} capability={current?.capability} role={role} assetLabel={assetLabel} />)}
         {(offset > 0 || snapshot.nextOffset !== null) && <div className="acts"><button className="pill-btn sm" disabled={offset === 0} onClick={() => setOffset(n => Math.max(0, n - 20))}>Previous</button><button className="pill-btn sm" disabled={snapshot.nextOffset === null} onClick={() => setOffset(snapshot.nextOffset ?? offset)}>Next</button></div>}
       </div>}
