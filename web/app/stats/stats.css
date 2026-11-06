@@ -15,7 +15,7 @@
 .st-tiles b { display: block; font-size: clamp(2rem, 3.6vw, 2.9rem); font-weight: 300; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
 .st-tiles span { display: block; margin-top: 8px; font-size: 13px; color: var(--muted); }
 
-.st-card { border: 1px solid var(--line); background: var(--surface); padding: 22px 24px; margin-bottom: 24px; }
+.st-card, section.st-card:first-of-type { border: 1px solid var(--line); background: var(--surface); padding: 22px 24px; margin-bottom: 24px; }
 .st-card h2 { font-size: 15px; font-weight: 500; margin: 0 0 18px; }
 .st-card h2.st-sub { margin-top: 28px; }
 .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
