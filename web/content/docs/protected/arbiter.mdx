@@ -6,7 +6,7 @@ description: Access authorized cases, verify evidence and submit a ruling within
 
 An arbiter adapter connects the provider's quote and case-handling process to Nyquist402's funded terms. The default service and custom providers follow the same contract authority and allocation rules.
 
-Public arbitration-provider discovery is **not fully implemented yet**. Provider integrations will identify the ruling account, accepted fee recipient, applicable quote and supported case policy before funding. It must not introduce charges or authority after the parties have agreed the payment.
+Public arbitration-provider discovery is **not fully implemented yet**. The [discovery contract](/docs/services/discovery) defines the signed provider manifest, identity proof, price request, fee-cap checks and registration result. The [operating policy](/docs/services/operators#arbitration-operations) defines case intake, reviewer conflicts, internal reassignment and timeout behavior. A provider cannot introduce charges or new authority after funding.
 
 ## Read the assigned case
 

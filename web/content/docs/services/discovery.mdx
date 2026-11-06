@@ -1,0 +1,43 @@
+---
+title: Arbiter discovery & quotes
+description: Planned provider manifests, identity verification, pricing requests and case handoff.
+---
+**Provider discovery is not fully implemented yet.** This page defines the intended directory and quote flow. It provides compatible choices before funding; it is not an auction, reputation score or mechanism for replacing an arbiter after a dispute starts.
+
+## Discover a provider
+
+`GET /arbiters?limit=20` returns `providers` and `nextCursor`, ordered by ruling account. Each entry is a signed `ArbiterManifest` from the [API schema](/docs/reference/service-api). Clients filter by the payment's network, contract, asset, `claim-review` policy, review mode and accepted response/ruling durations.
+
+A manifest contains `account`, `operator`, `displayName`, `networks`, `contracts`, `assets`, `policies`, `reviewModes`, `quoteUrl`, `evidencePolicyUrl`, `conflictsPolicyUrl`, `minResponseSeconds`, `minRulingSeconds`, `pricing`, `publishedAt`, `expiresAt` and `proof`. The `pricing` list contains `{ asset, mode, minFee, maxFee }` entries. Mode is `free` or `quoted`, with nonnegative integer bounds in that asset’s base units; free entries require both bounds to be zero. These bounds are an estimate filter, not a binding funded fee.
+
+The directory admits a provider only after it authenticates the listed ordinary ruling account and supplies the signed manifest and HTTPS policy endpoints. The initial directory accepts ordinary Stellar account identities; an unsupported contract-account listing receives `422 UNSUPPORTED_AUTH_MODE`. This directory restriction does not redefine which addresses the escrow itself can authorize.
+
+## Verify the listing
+
+`proof` contains `algorithm: "ed25519"` and a base64 signature. The signing payload is the SHA-256 digest of UTF-8 `nyquist402:arbiter-manifest:` followed by the RFC 8785 canonical JSON of the manifest with `proof` omitted. Verify using the Ed25519 public key decoded from `account`.
+
+A manifest expires no later than 24 hours after `publishedAt`; clients reject future timestamps more than 60 seconds ahead and expired records. Directory responses can be cached for at most 300 seconds, bounded by the manifest's own expiry. A changed quote URL or policy requires a newly signed manifest. The directory never accepts a self-declared account field as identity proof. Admission also checks the current ordinary account master signer and medium threshold; a disabled or insufficient master key cannot publish or refresh a listing.
+
+Listing identity does not establish fairness or service quality. Before signing, parties inspect the named operator, review mode, evidence policy and conflicts policy. No ecosystem provider is listed as a partner without its own authenticated entry.
+
+## Request a binding fee quote
+
+The buyer or seller sends the proposed full terms to `POST /quotes`, with both quote references null and the agreement body matching `terms.agreement`. The service selects only the mutually named custom arbiter and pinned default; it does not choose another account based on price.
+
+Before fetching a provider URL, the service requires HTTPS, rejects redirects and private/reserved destination IPs, and validates DNS resolution and TLS hostname on every connection. For each nonzero arbitration fee it sends `POST` to the verified provider's `quoteUrl` with `{ scope, terms, feeCap, requestedValidUntil }`. The provider verifies the terms and policy, then either returns a signed onchain `register_quote` transaction or a quote already registered onchain. Its response is `{ quoteId, quote, signedRegistrationXdr }` or `{ quoteId, quote, registrationTransaction }`, where `quote` has `scope`, `arbiter`, `fee`, `valid_until` and `salt`.
+
+Provider requests carry an idempotency key derived from scope, arbiter and the exact fee. Before relaying a signed registration, the aggregator verifies that it contains only the expected `register_quote` call and authorized provider/network fee source, with no unrelated token movements. Provider quote endpoints apply a default limit of 5 requests per minute per IP and 1,000 onchain registrations per provider per UTC day. Exhaustion returns `429 RATE_LIMITED` and `Retry-After` before another registration is created. The provider pays registration network fees from its own configured budget; the aggregator cannot use buyer principal or fee reserves for that transaction. The aggregator confirms registration, reads the quote from the payment contract, checks the provider identity, scope, exact fee and validity through `fund_by`, and fills the matching quote reference. It does not return a fundable offer while registration is pending. A provider timeout after 10 seconds returns `503 SERVICE_UNAVAILABLE` with the same operation identity; retries reconcile a returned registration hash before requesting a replacement quote.
+
+`feeCap` is the already accepted per-case cap. A price exceeding `custom_fee`, `default_fee`, `case_fee_cap` or the funded capacity returns `422 QUOTE_NOT_APPLICABLE`; the service may not silently increase any amount. Terms containing a duration below the provider's advertised minimum are rejected before registration. A zero-cost provider can omit registration and uses a null quote reference.
+
+## Accept the complete offer
+
+`POST /quotes` returns `terms`, `paymentId`, `totalFunding`, `expiresAt` and the verified quote records. Expiry is the earliest of `fund_by` and the accepted quote expiries. The client recomputes the payment ID and funding total, compares the full terms with the request and collects buyer and seller authorization.
+
+Changing any scoped term requires new applicable quotes. A provider listing or directory response cannot replace the contract's authenticated fee quote. Neither quote discovery nor requesting an offer reserves funds or proves that the seller accepted the final agreement.
+
+## Case assignment and handoff
+
+After a dispute, the provider authenticates its ruling account and reads the assigned claim through the evidence service. It verifies body hashes and revision, screens conflicts, and assigns its reviewer under the [operating policy](/docs/services/operators#arbitration-operations). Notifications are advisory; workers poll authoritative claim state every 5 seconds so losing a notification cannot erase an assignment.
+
+At custom timeout, the default reads the same retained case and current revision. Access follows the new assignment without copying evidence into public URLs. Provider changes, staffing changes and missed service targets cannot reset deadlines or authorize a different ruling account. The original terminal fallback remains executable after the final window.

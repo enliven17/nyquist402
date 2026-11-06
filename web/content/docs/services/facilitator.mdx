@@ -1,31 +1,41 @@
 ---
 title: Facilitator & execution
-description: Verify payment compatibility, relay authorized actions and track settlement through confirmation.
+description: Planned discovery, verification, submission, status tracking and deadline execution.
 ---
-## Facilitator API
+**The public facilitator API and managed execution are not fully implemented yet.** The [public API contract](/docs/reference/service-api) and [OpenAPI schemas](/service-contract.openapi.json) define how they will work; the endpoint descriptions below are target behavior.
 
-**The public facilitator API is not fully implemented yet.** It will expose supported payment capabilities, verify payloads, submit authorized transactions and report their outcomes. Capability discovery will identify supported networks, contracts, policies and x402 schemas.
+## Discover and pin capabilities
 
-Verification will reject incompatible terms with a machine-readable reason before submission. A submission response will identify the transaction and distinguish pending, confirmed and failed outcomes. API URLs and request schemas will be published with the service release.
+`GET /supported` identifies the service origin, network/passphrase, contract and code hash, token and decimals, pinned default arbiter, supported credentials, policy names and limits. Clients compare this record with the seller's requirements before preparing signatures. A service advertising only basic capture cannot satisfy protected review and arbitration.
 
-A facilitator submits authorized actions. It cannot change an agreement, replace its arbiter or choose an award.
+Capabilities can be cached for 300 seconds. A funded payment retains its original scope even if a subsequent capability record changes. The record does not grant a relay permission to sign for a buyer, seller or arbiter.
 
-## Transaction lifecycle
+## Verify without broadcasting
 
-A transaction moves from preparation and signing to submission and confirmation. The payment service records the transaction identity before broadcast so a disconnect cannot erase the information needed to check its outcome.
+`POST /verify` checks complete terms and a canonical payment ID against either signed funding XDR or an existing funding transaction hash. It returns `valid`, `fundingStatus`, `checkedAtLedger` and, on rejection, a machine-readable reason. It makes no transfer and does not treat a prepared or merely submitted transaction as funding.
 
-If a response is lost, reconcile the original hash with the ledger before retrying. Repeated requests, worker retries and late confirmation must resolve to the same economic result rather than create a second claim or payout.
+Verification includes exact token movements, required signatures and invocation trees, accepted quote applicability and economic limits. A proof of successful funding is checked against the deployed payment state. Unavailable chain data produces a retryable service error instead of an optimistic valid result.
+
+## Submit an authorized action
+
+The client obtains a prepared action, completes any additional authorizations and signs the source envelope. `POST /settle` accepts its `preparationId` and `signedXdr`, under a wallet session and `Idempotency-Key`. It verifies that the signed body is the prepared body, persists the transaction hash and exact XDR, and only then broadcasts.
+
+A transaction still awaiting confirmation returns `202 pending` and a `statusUrl`; confirmed success returns `200 confirmed`. `GET /transactions/{hash}` exposes the outcome without leaking private material or the signed envelope. A submitted dispute remains a dispute, and submitted funding remains funding: the endpoint name never implies immediate seller payment.
+
+## Retry and recover safely
+
+An identical idempotency key and request resolve to the same operation. A changed request under that key returns a conflict. A crash between broadcast and response is recovered by checking the original hash. While its outcome is unknown, workers may rebroadcast the same valid XDR but may not create a replacement payout.
+
+Clients poll after 2 seconds and back off to a maximum 15 seconds, honoring `Retry-After`. A conclusively failed or expired transaction can lead to fresh preparation only after current state is reconciled. An RPC outage or a missing index result is not proof that a transaction expired. See the exact [transaction and error rules](/docs/reference/service-api#idempotency-and-interrupted-requests).
 
 ## Deadline execution
 
-The contract does not wake itself when a deadline passes. An eligible caller must submit a transaction for undisputed settlement or terminal fallback. Before submitting, the executor reads current state and checks the action's deadline and eligibility.
+Workers check due actions every 5 seconds. They use a 30-second renewable lease on each claim/action, persist job identity before broadcast and re-read eligibility before submission. Only contract-eligible undisputed settlement or terminal fallback is submitted automatically. Acceptance, disputes, evidence and merits rulings require their appropriate role authority.
 
-**Managed deadline execution is not fully implemented yet.** It will monitor eligible actions, retain jobs across interruptions and reconcile pending submissions before retrying. Execution status will distinguish a waiting deadline, an eligible action, a pending transaction and a confirmed result.
+The managed target is first broadcast within 30 seconds at p95 when chain/RPC and the fee budget are available. This is a submission target, not a confirmation promise or a power to extend deadlines. Waiting deadlines, eligible work, leased work, pending transactions, unknown outcomes, confirmed actions and blocked jobs are distinct visible states. [Operations](/docs/services/operators) defines monitoring and incident response.
 
-A race with buyer acceptance or another executor cannot create a duplicate payout because the contract rechecks the claim's state.
+## Outages and direct execution
 
-## Direct actions and outages
+Parties may prepare and submit their permitted actions directly against the funded contract. Eligible callers may finalize undisputed claims and fallback without relay approval. Service unavailability cannot add a new veto to the funded agreement.
 
-Parties can submit their authorized lifecycle actions directly. Eligible public callers can submit settlement and fallback without facilitator approval. A relay outage does not give the service a veto over acceptance, disputes, rulings or return of unused funds.
-
-Use the payment's original network and contract, then prepare and sign the action through the [TypeScript client](/docs/testnet/sdk). Query the original transaction hash before retrying an uncertain submission.
+Before direct submission, reconcile any pending hash and preserve the original network, deployment and terms. Evidence delivery remains separately authenticated and follows its [retention policy](/docs/services/evidence#retention-and-confidentiality).

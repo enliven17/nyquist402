@@ -12,19 +12,19 @@ Protected escrow supports separate fee reserves and arbiter quotes. Every funded
 
 A seller will advertise protected payment requirements in its HTTP 402 response. Buyer and agent integrations will verify the supported network, contract, agreement, fees and arbitration policy before signing. After funding, the payment context will connect API usage to delivery claims and receipts.
 
-The protected wire schema and compatibility rules still need to be finalized. The [payment negotiation guide](/docs/integration) explains the sequence; basic auth-capture remains a separate capability.
+The [payment negotiation contract](/docs/integration) defines offer fields, funding references, buyer request proofs, delivery receipts, error behavior and retries. The [OpenAPI schema](/service-contract.openapi.json) defines their payloads. Implementation and compatibility verification remain work to complete. Basic auth-capture remains a separate capability.
 
 ## SDK distribution — not fully implemented yet
 
-The TypeScript client model covers term validation, payment identity, state reads and preparation, signing and submission of lifecycle actions. An installable SDK release will package this workflow with supported-version declarations and integration examples. The [client reference](/docs/testnet/sdk) explains the methods and the [signing example](/docs/testnet/signing) explains authorization.
+The TypeScript client model covers term validation, payment identity, state reads and preparation, signing and submission of lifecycle actions. The planned `@nyquist402/sdk` [package surface](/docs/sdk#package-surface) defines browser/server entry points, service sessions, protected fetch, receipt verification and error behavior. The [client reference](/docs/testnet/sdk) explains the methods and the [signing example](/docs/testnet/signing) explains authorization.
 
 ## Public facilitator API — not fully implemented yet
 
-The facilitator will expose capability discovery, payment verification, authorized submission and transaction status. Integrators will receive a transaction identity and confirmation state so interrupted requests can be reconciled before retrying. Published endpoint and schema documentation will define the public API. See [facilitator and execution](/docs/services/facilitator).
+The facilitator will expose capability discovery, payment verification, authorized submission and transaction status. Integrators will receive a transaction identity and confirmation state so interrupted requests can be reconciled before retrying. The [public service contract](/docs/reference/service-api) defines endpoints, request/response objects, authentication, idempotency, rate limits and transaction states. See [facilitator and execution](/docs/services/facilitator).
 
 ## Managed service operations — not fully implemented yet
 
-Evidence delivery and history support the payment lifecycle. Managed operation will add published retention and deletion policies, availability guarantees, access auditing and recovery procedures. Deadline execution will monitor eligible claims and submit settlement or fallback transactions while tracking their outcomes. See [evidence access](/docs/services/evidence) and [service operations](/docs/services/operators).
+Evidence delivery and history support the payment lifecycle. The planned defaults include 90-day post-closure material retention, 365-day metadata/access audits, 99.9% monthly API availability and a 60-minute disaster recovery target. These are proposed service policies and acceptance targets, not claims about the current testnet service. Deadline execution will monitor eligible claims and submit settlement or fallback transactions while tracking their outcomes. See [evidence access](/docs/services/evidence) and [service operations](/docs/services/operators).
 
 ## Automatic storage recovery — not fully implemented yet
 
@@ -32,4 +32,4 @@ Storage maintenance will keep required contract and payment records active. When
 
 ## Mainnet service — not fully implemented yet
 
-The service is in testnet. Mainnet activation requires independent security review, verified deployment configuration and operational recovery checks. Mainnet network details and service terms will be published when that release is ready.
+The service is in testnet. Mainnet activation requires independent security review, verified deployment configuration and operational recovery checks. The [activation policy](/docs/services/operators#mainnet-activation) requires deployment/code-hash checks, a restoration exercise and 14 days of measured performance before the capability record may advertise mainnet. Clients pin that record and never infer support from the testnet origin.

@@ -22,11 +22,13 @@ export const docGroups = [
   ] },
   { title: 'Services & operations', pages: [
     { slug: 'services/facilitator', title: 'Facilitator & execution' },
+    { slug: 'services/discovery', title: 'Arbiter discovery & quotes' },
     { slug: 'services/evidence', title: 'Evidence delivery & access' },
     { slug: 'protected/recovery', title: 'History & recovery' },
     { slug: 'services/operators', title: 'Service operations' },
   ] },
   { title: 'Reference', pages: [
+    { slug: 'reference/service-api', title: 'Public service API' },
     { slug: 'reference/terms', title: 'Terms & compatibility' },
     { slug: 'reference/contract', title: 'Contract operations' },
     { slug: 'reference/security', title: 'Security model' },
