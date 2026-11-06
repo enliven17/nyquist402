@@ -12,12 +12,14 @@ import SiteNav from "@/components/SiteNav";
 import Home from "@/app/page";
 import Demo from "@/app/demo/page";
 import Docs from "@/app/docs/page";
+import Stats from "@/app/stats/page";
 
 // Every navigation is a full document load (plain links), which keeps cross-document view transitions.
 const routes: Record<string, [title: string, page: () => React.ReactNode]> = {
   "/": ["Nyquist402 · Protected API payments on Stellar", Home],
   "/demo": ["Demo · Nyquist402", Demo],
   "/docs": ["Docs · Nyquist402", Docs],
+  "/stats": ["Stats · Nyquist402", Stats],
 };
 if (window.location.pathname.replace(/\/$/, "") === "/demo/protected") window.location.replace("/demo" + window.location.search + window.location.hash);
 const path = window.location.pathname.replace(/\/$/, "") || "/";

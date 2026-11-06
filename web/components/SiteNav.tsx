@@ -21,6 +21,7 @@ const siteGroups: [string, Item[]][] = [
     "Demo",
     [
       { label: "Demo", href: "/demo" },
+      { label: "Stats", href: "/stats" },
     ],
   ],
   [
