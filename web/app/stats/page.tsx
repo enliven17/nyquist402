@@ -229,12 +229,12 @@ function ActivityCard({ live, firstAt }: { live: Series; firstAt: number | null 
   );
 }
 
-const W = 960, H = 220, PAD = { l: 36, r: 8, t: 12, b: 26 };
+const W = 960, H = 220, PAD = { l: 44, r: 8, t: 12, b: 26 };
 function Activity({ points, bin, span }: { points: { at: number; transactions: number }[]; bin: number; span: number }) {
   const [hover, setHover] = useState<number>();
   if (!points.some(p => p.transactions)) return <p className="st-muted">No transactions in this range.</p>;
   const max = Math.max(1, ...points.map(p => p.transactions));
-  const top = Math.ceil(max / 5) * 5 || 5;
+  const top = max <= 10 ? Math.max(2, Math.ceil(max / 2) * 2) : Math.ceil(max / 10) * 10; // even, so the midline is whole
   const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
   const step = iw / points.length, bw = Math.max(2, step - 2);
   const y = (v: number) => PAD.t + ih - (v / top) * ih;
