@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { appPath } from '@/lib/site';
 import { searchDocs } from '@/lib/docs/search';
 import type { SearchEntry } from '@/lib/docs/navigation';
 
@@ -7,7 +8,7 @@ function SearchIcon() {
 }
 
 export default function DocsShell({ entries, children }: { entries: SearchEntry[]; children: ReactNode }) {
-  const path = window.location.pathname;
+  const path = appPath();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null);

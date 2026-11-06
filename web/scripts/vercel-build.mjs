@@ -17,6 +17,9 @@ writeFileSync(`${fn}/.vc-config.json`, JSON.stringify({ runtime: "nodejs22.x", h
 writeFileSync(`${out}/config.json`, JSON.stringify({
   version: 3,
   routes: [
+    // nyquist.xyz/docs and /status live on their own subdomains (lib/site.ts maps paths client-side).
+    { src: "/docs(?:/(.*))?", has: [{ type: "host", value: "nyquist.xyz" }], status: 308, headers: { Location: "https://docs.nyquist.xyz/$1" } },
+    { src: "/status/?", has: [{ type: "host", value: "nyquist.xyz" }], status: 308, headers: { Location: "https://status.nyquist.xyz/" } },
     { src: "/assets/(.*)", headers: { "cache-control": "public, max-age=31536000, immutable" }, continue: true },
     { handle: "filesystem" },
     { src: "/api(?:/.*)?", dest: "/api" },
