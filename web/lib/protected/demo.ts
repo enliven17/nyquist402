@@ -20,15 +20,25 @@ function env(name: string): string {
 export function protectedClient(): ProtectedEscrowClient {
   return new ProtectedEscrowClient({ ...resolveProtectedDeployment(process.env), networkPassphrase: Networks.TESTNET, rpcUrl: "https://soroban-testnet.stellar.org" });
 }
-export async function config(): Promise<DemoConfig> {
+// Deployment reads change only on redeploy; cache them so every quote and page load skips three network round trips.
+let cachedConfig: { at: number; value: Promise<DemoConfig> } | undefined;
+export function config(): Promise<DemoConfig> {
+  if (!cachedConfig || Date.now() - cachedConfig.at > 60_000) {
+    const value = readConfig();
+    cachedConfig = { at: Date.now(), value };
+    value.catch(() => { cachedConfig = undefined; });
+  }
+  return cachedConfig.value;
+}
+async function readConfig(): Promise<DemoConfig> {
   const client = protectedClient();
   const seller = Keypair.fromSecret(env("DEMO_MERCHANT_SECRET")).publicKey();
   const token = USDC_CONTRACT; assertAddress(token, true);
   const sellerArbiter = process.env.DEMO_SELLER_ARBITER || null;
   if (sellerArbiter) assertAddress(sellerArbiter);
-  const defaultArbiter = await client.defaultArbiter();
   const { version } = resolveProtectedDeployment(process.env);
-  if (Number(await client.read("version")) !== version) throw new Error("Configured escrow does not support the required protected payment schema");
+  const [defaultArbiter, deployed] = await Promise.all([client.defaultArbiter(), client.read("version")]);
+  if (Number(deployed) !== version) throw new Error("Configured escrow does not support the required protected payment schema");
   const fees = {
     protocol_reserve: process.env.DEMO_PROTOCOL_RESERVE ?? "0",
     arbitration_reserve: process.env.DEMO_ARBITRATION_RESERVE ?? "0",
