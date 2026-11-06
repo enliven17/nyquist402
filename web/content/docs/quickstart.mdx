@@ -1,41 +1,44 @@
 ---
-title: Protected demo guide
-description: Fund a test budget, record a delivery, and verify its settlement in the protected demo.
+title: Unified testnet demo
+description: Explore one protected USDC payment as buyer, seller and arbiter.
 ---
-## What you need
+## Prepare your wallet
 
-Run the [configured local app](/docs/setup) and use a supported Stellar wallet on **Testnet**, with test XLM for network fees. The protected demo uses DEMOUSD and a 10.00 budget. This walkthrough does not require a real API service.
+Use a supported Stellar wallet on **Testnet** with test XLM for reserves and transaction fees.
+Open [/demo](/demo), connect your wallet, and sign the service sign-in challenge. The challenge authenticates access to private history and evidence; it is never submitted to the network.
 
-<Steps>
+Choose **Add USDC trustline**, review and sign that transaction, then open [Circle's faucet](https://faucet.circle.com/). Select **USDC / Stellar Testnet** and paste the connected wallet address. Complete any faucet verification yourself, then return to the demo; the balance refreshes automatically.
 
-### Agree and fund
+The asset is USDC issued by `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, as listed in [Circle's official addresses](https://developers.circle.com/stablecoins/usdc-contract-addresses). Stellar USDC uses **7 decimals**. The app never creates an issuer or mints a demo currency.
 
-Open the [protected demo](/demo/protected) and select **Connect testnet wallet**. Use **Get 10 DEMOUSD**, choose an available free demo arbiter, and read the service agreement and fallback share. Select **Review terms** to see the exact budget, deadlines and arbiter before signing. Then sign and fund the payment.
+## Buyer: agree and fund
 
-The ledger should show 10.00 available and no claim reservations. Keep the payment ID.
+Choose the **Buyer** view. Review the agreement, budget, selected arbiter, deadlines, fallback and any separate fee reserves. Select **Review terms**, then sign the exact total. The existing v1 deployment is fee-free; fee-capable v2 requires its own configured deployment.
 
-### Record a delivery
+A default 10 USDC work budget starts with 10 available and none reserved. Keep the payment ID. A saved offer or pending transaction is not proof of funding.
 
-Enter a 3.00 delivery and a description under **Record a delivery**. Select **Seller records claim**. The demo provides seller controls for this payment; a production seller uses its own signer.
+## Seller: record a delivery
 
-The ledger should now show 7.00 available and 3.00 reserved. Recording a claim does not pay the seller.
+Switch to **Seller**. Record a 3 USDC delivery with its description. The body is stored privately before its hash is submitted. The ledger shows 7 available and 3 reserved; recording a claim does not pay the seller.
 
-### Review and pay
+Demo seller controls are delegated only to the holder of this payment's capability. Production sellers use their own signer.
 
-Find the claim and select **Accept and pay** with the buyer wallet. Once confirmed, the reserved 3.00 is paid to the seller and the available balance stays at 7.00.
+## Buyer: accept or dispute
 
-### Verify the result
+Switch to **Buyer** and accept the exact 3 USDC claim. Once confirmed, 3 is paid and 7 remains available.
 
-Follow the transaction link in Activity to Stellar Expert. Read the payment again or reload the page: the contract remains the authority for balances and claim status.
+For a dispute, record a second 4 USDC delivery in Seller view. In Buyer view, enter evidence and dispute before review closes. Both sides can respond until the evidence deadline; previous body versions are retained.
 
-</Steps>
+## Arbiter: review and rule
 
-## Dispute a delivery
+Choose **Arbiter**. Load private case material and compare the bodies with the current onchain commitments and revision. After evidence closes, the currently assigned arbiter can issue a bounded award. Demo-operated arbiter buttons require a payment-party sign-in and the payment capability; an external arbiter signs with its own wallet.
 
-Record a second claim for 4.00. Before review closes, save your evidence text and select **Buyer disputes**. The 4.00 remains reserved. After the evidence period, the currently selected demo arbiter can submit a ruling through the displayed arbitration controls.
+Custom timeout passes authority to the pinned default; final timeout permits the agreed fallback.
 
-After session expiry, **Reclaim unused** returns only the available 3.00, even if the 4.00 dispute remains open. For the intended fee-capable lifecycle, see [payment lifecycle](/docs/protected/lifecycle).
+## Return unused funds and recover
 
-## If something blocks you
+After session expiry, the buyer can reclaim the unused 3 USDC while the disputed 4 remains reserved. Eligible direct actions remain available when the optional worker is disabled.
 
-A configuration error means the demo server needs [setup](/docs/setup). A disabled action may mean the connected wallet has the wrong role or a deadline has not arrived. For delayed confirmations, check the transaction hash before preparing another action; see [recovery](/docs/protected/recovery).
+Reconnect and sign in to recover server-side history from another browser. Importing a payment ID permits public state reads but grants no private evidence or signing authority. Reconcile pending transaction hashes before retrying.
+
+The old `/demo/protected` address redirects to `/demo`. Basic auth-capture remains a separate technical reference, not another demo screen.

@@ -1,33 +1,27 @@
 ---
 title: Implementation status
-description: Availability of the documented protocol, integrations and operated services.
+description: What is executable source, what is deployed and what still requires release work.
 ---
-## Documentation scope
+## Available application source
 
-The main protocol and service guides describe the intended technical system. The current testnet section documents executable code. The distinction applies to each contract version and deployment; a design description is not evidence that a public service is running.
-
-## Current testnet
-
-| Component | Available implementation |
+| Component | Current implementation |
 | --- | --- |
-| Protected escrow | Joint terms, claim reservations, review, bilateral disputes, evidence commitments, bounded rulings, timeouts and unused-fund reclaim |
-| Local protected SDK | Typed reads/actions, signing validation and transaction submission |
-| Protected demo | Wallet funding, claims, evidence commitments, recovery by ID and free demo arbiters |
-| Basic auth-capture | Separate escrow and vendored x402 integrations |
+| Unified demo | One `/demo` with buyer/seller/arbiter views; legacy protected URL redirects |
+| Payment asset | Official Circle Stellar testnet USDC; trustline preparation and external faucet |
+| v1 protected contract | Existing fee-free testnet deployment; independent claim review/disputes/fallback |
+| v2 protected contract | Separate source: scoped authenticated quotes, separate reserves, per-case caps, fee earning/returns |
+| Local SDK | v1/v2 term encoding, exact funding signatures, quote validation and typed lifecycle |
+| Local case service | Wallet-authenticated private evidence, retained versions and SQLite history |
+| Transaction recovery | Durable hashes before wallet broadcast and confirmation reconciliation |
+| Deadline execution | Optional local settlement/fallback worker with durable per-claim jobs |
+| Basic auth-capture | Separate historical contract/integration reference |
 
-These contracts are unaudited and run on testnet. Protected settlement currently charges no protocol or arbitration fee. Demo browser history is not a durable payment/case service.
+## Release boundary
 
-## Target capabilities not yet released
+V2 source is **not** an upgrade to the recorded v1 deployment. It needs a separately reviewed build, deployment, matching configuration and network verification. The demo defaults to fee-free v1 until that happens.
 
-| Component | Intended capability |
-| --- | --- |
-| Fee-capable protected contract | Accepted quotes, separate reserves, claim fee capacity, fee caps and earned/unearned fee accounting |
-| Public SDK and protected x402 binding | Versioned installable integration, capability checks and usage/delivery receipt handling |
-| Public facilitator | Supported/verify/settle APIs, confirmation tracking and self-hosted operation |
-| Payment/case services | Durable history, private evidence delivery, recovery and deadline jobs |
-| Role interfaces | Complete buyer, seller and arbiter workflows over those services |
-| Mainnet release | Reviewed deployment, monitored operations and recovery tooling |
+This repository does not claim a published protected npm package, standardized upstream protected x402 wire extension, managed public facilitator, production evidence service, independent audit or mainnet readiness. Integration/service design pages describe those broader responsibilities. Local code and tests do not establish that a hosted service is operating.
 
-## Run the available code
+## Verification and remaining operations
 
-Use [testnet setup](/docs/setup), the [protected demo guide](/docs/quickstart), [local SDK](/docs/testnet/sdk) and [local signing example](/docs/testnet/signing). Future endpoint URLs, package identifiers, fee schedules and wire schemas must come from their published release artifacts.
+Use [setup](/docs/setup), [the unified walkthrough](/docs/quickstart) and [local SDK](/docs/testnet/sdk). Operators still need managed backups/retention, availability monitoring, key management, archive restoration and release review. A testnet reset or an archived record requires explicit reconciliation; it does not change the original agreement.

@@ -8,6 +8,7 @@ export function authorizeDemoAction(
 ): boolean {
   const delegate = () => { verifyCapability(token, scope, secret); return true; };
   switch (action.type) {
+    case "register_quote": throw new Error("Use the arbiter SDK to publish its authenticated fee quote");
     case "authorize":
       if (source !== parties.payer) throw new Error("Only the buyer can fund these terms");
       return delegate();

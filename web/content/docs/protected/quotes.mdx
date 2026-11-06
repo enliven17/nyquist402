@@ -27,6 +27,10 @@ Both parties accept the arbitration terms; the buyer authorizes the funded fee a
 
 The agreement must account for default handling when a custom arbiter times out. Handoff preserves evidence access, the current revision and existing deadlines. It must not create a new fee obligation outside the buyer's accepted limit.
 
-## Format and release compatibility
+## Local v2 quote encoding
 
-The quote envelope, signature encoding, replay protection and funded commitment will be defined by the fee-capable release. The bindings above describe required validation, not a published JSON schema or callable quote API. Integrations must use the versioned schema shipped with that release.
+V2 provides `register_quote(FeeQuote)`, authenticated by the named arbiter. The quote contains `scope`, `arbiter`, `fee`, `valid_until` and `salt`; its ID is the SHA-256 of its canonical Soroban XDR. Its scope hashes the network, deployment and complete v2 payment terms with both quote IDs cleared, under the domain `nyquist402:quote-scope:v2`.
+
+Funding references the accepted quote IDs. The contract verifies authority, scope, exact fee and validity through the funding deadline. Changing parties, budget, policy, token, deployment or payment salt invalidates applicability. Registration is a separate arbiter-signed transaction; it is not a trust assertion from the facilitator. Zero-cost arbitration can omit a quote.
+
+The public HTTP quote envelope is not a released upstream x402 specification. Use the local SDK/source for this version and preserve v1 compatibility.

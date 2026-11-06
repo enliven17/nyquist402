@@ -1,82 +1,68 @@
 # Nyquist402
 
-Refundable x402 payments on Stellar. Soroban escrow for the x402 [`auth-capture`](https://github.com/x402-foundation/x402/blob/main/specs/schemes/auth-capture/scheme_auth_capture.md) scheme on Stellar.
+Protected API payments on Stellar: agree a budget, record delivery claims, review the work and resolve disputes under terms accepted before funding.
 
-A payer authorizes a maximum amount once. The resource server can then capture part or all of it, void the remainder, and refund captured funds within a deadline. If the hold is never captured, the payer reclaims it after the capture deadline.
+## One USDC demo
 
-## Status
+`/demo` provides Buyer, Seller and Arbiter views over one payment. `/demo/protected` redirects there. The demo uses Circle's official **Stellar testnet USDC**, not an issued demo token. Add the USDC trustline, then visit [Circle's faucet](https://faucet.circle.com/) and select **Stellar Testnet**.
 
-Work in progress. Not audited.
+Issuer: `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`. Source: [Circle contract addresses](https://developers.circle.com/stablecoins/usdc-contract-addresses). Stellar USDC amounts use **seven decimals**. Test XLM is still needed for reserves and fees.
 
-| Contract | Testnet |
-| --- | --- |
-| `AuthCaptureEscrow` | `CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI` |
-| `ProtectedEscrow` | `CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW` |
+## Run locally
 
-`ProtectedEscrow` default arbiter on testnet: `GDNHZLVUYH5AHUBQWMSB3BK7ZYCSCOZRQQT7CJT3REDJGRK2SI7ZV67B`.
-
-## Layout
-
-```
-contracts/auth-capture-escrow/   Soroban contract
-contracts/protected-escrow/     Protected settlement contract (testnet)
-web/                             Landing page and testnet demo
-```
-
-## Contract
-
-| Function | Authorized by | Effect |
-| --- | --- | --- |
-| `authorize(payment_info)` | operator, payer | Moves `max_amount` into escrow as a hold |
-| `charge(payment_info, amount, fee_amount, fee_receiver)` | operator, payer, consent | Pays `amount` and returns the rest to the payer |
-| `capture(payment_info, amount, fee_amount, fee_receiver, void_remainder)` | operator, consent | Pays `amount` from the hold; optionally releases the rest |
-| `void(payment_info)` | operator, consent | Returns the remaining hold to the payer |
-| `refund(payment_info, amount, funder)` | operator, consent, funder | Moves `amount` from `funder` to the payer |
-| `reclaim(payment_info)` | payer | Returns the hold after `authorization_expiry` |
-
-The payer authorizes `[payment_info]` only, with the token transfer into the escrow as a sub-invocation. The consent address is `receiver_authorizer`, or `receiver` when unset, and authorizes the exact call arguments.
-
-## Protected settlement contract
-
-[`contracts/protected-escrow`](contracts/protected-escrow/README.md) implements a separate, versioned contract with per-claim reservations. Both parties approve the funding terms and arbiter policy. Each seller claim has an independent review period; either party can dispute it, and the agreed arbiter (or pinned project default) can allocate only that claim's funds.
-
-After the session expires, `reclaim` returns only unused funds. Claims under review or dispute stay reserved. For example, after 300 units are paid and 400 are disputed from a 1,000-unit deposit, reclaim returns only the unused 300 units.
-
-The contract also implements evidence commitments, custom-to-default arbiter deadline escalation and permissionless execution of a jointly signed timeout-allocation policy. It charges zero arbitration fees in this version. The local [TypeScript SDK and protected demo](web/lib/protected/README.md) now expose that lifecycle at `/demo/protected`. The basic `/demo` and vendored x402 packages retain their original behavior. It is deployed on testnet and not audited. Configure `DEMO_PROTECTED_ESCROW` explicitly with the protected address listed above. Hosted arbitration, fee support, pre-claim cases, upstream x402 integration and a formal audit remain roadmap work.
-
-## Build
-
-The workspace pins Rust 1.91.1 with `rust-toolchain.toml`: Soroban SDK 29.0.1 needs at least Rust 1.91, and Stellar CLI rejects the 1.91.0 compiler for contract builds. It includes the `wasm32v1-none` target, rustfmt and Clippy. `make build` additionally uses stellar-cli 25.2 or later.
-
-```bash
-make build
-make test
-```
-
-Soroban SDK 29 requires Stellar CLI's spec-shaking build step. Use `make build` / `stellar contract build`; a plain `cargo build --target wasm32v1-none` is not a deployable-contract build for this SDK.
-
-## Demo
-
-`web/` includes a testnet payment-lifecycle demo at `/demo`: a payer authorizes a budget, and the server captures, voids, or refunds it. Capture amounts are controlled by the demo; an actual metered API is still planned. The demo uses the basic `@x402/stellar` auth-capture mechanism from the x402 fork, packed into `web/vendor/`.
-
-```bash
-cd web
-pnpm install
-pnpm setup-demo   # once: funds accounts, issues DEMOUSD; preserves existing credentials
-pnpm dev          # http://localhost:3000/demo (Vite + React; the demo API runs inside the dev server)
-```
-
-Production: `pnpm build && pnpm start` serves the built client and the API from one Node process (Hono). Set `PORT` to change the port.
-
-For the protected flow, add the settings from [`web/.env.example`](web/.env.example), then open `/demo/protected`. The [local SDK guide](web/lib/protected/README.md) covers signing, claims/disputes, arbiter actions, restart recovery and the optional live testnet script. Browser/imported payment IDs grant no signing authority.
+Node 24 and pnpm are required.
 
 ```sh
+cd web
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Keep existing funded credentials in `web/.env.local`; configure settings from [web/.env.example](web/.env.example). The new demo pins the official USDC asset independently of historical DEMO_TOKEN settings.
+
+`node scripts/setup-usdc.mjs` inspects recipient trustlines without changing accounts. Its explicit `--apply` mode adds missing testnet trustlines. `pnpm setup-demo` is only for a new environment and refuses to overwrite existing keys; it creates accounts/trustlines, never an issuer or token mint.
+
+## Versions and availability
+
+| Component | Status |
+| --- | --- |
+| Protected escrow v1 | Fee-free testnet deployment: `CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW` |
+| Protected escrow v2 | Separate [fee-capable source](contracts/protected-escrow-v2/README.md); requires separate deployment |
+| TypeScript SDK | Local v1/v2 source; not an npm release or upstream protected x402 extension |
+| Case/history service | Wallet-authenticated private SQLite storage and retained evidence versions |
+| Deadline execution | Optional local worker with durable transaction/job reconciliation |
+| Basic auth-capture | Historical separate contract/integration reference; no second demo |
+
+No audit or mainnet readiness is claimed. V2 is never silently substituted for a funded v1 payment.
+
+## Data, signing and recovery
+
+The local service authenticates ordinary wallets using a signed, never-broadcast challenge. It checks private case access against onchain parties and the current arbiter. Demo seller/arbiter controls additionally require the exact payment delegation. A payment ID grants no signing authority.
+
+Evidence and delivery bodies are retained privately in `web/.nyquist-data` (or DEMO_DATA_DIR) and checked against onchain hashes. Keep this directory out of Git and static hosting; operators must define backups/retention.
+
+Transaction hashes are persisted before wallet broadcast. Production startup reconciles pending hashes. Optional settlement/fallback submission uses DEMO_WORKER_ENABLED and an explicitly configured funded signer. Unknown submissions reuse their exact signed transaction while valid; they do not create replacement payouts.
+
+See [local SDK](web/lib/protected/README.md), [current docs](web/content/docs/roadmap.mdx), [setup](web/content/docs/setup.mdx) and [unified walkthrough](web/content/docs/quickstart.mdx).
+
+## Verify
+
+```sh
+cargo test --workspace --locked
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --locked -- -D warnings
+stellar contract build
 cd web
 pnpm test
 pnpm typecheck
 pnpm build
+pnpm start
 ```
 
-## License
+The optional existing live testnet script creates funded payments; do not run it unless those test allocations are intended.
 
-MIT
+## Basic integration history
+
+The separate basic contract is `CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI`. Vendored x402 basic integration and contracts remain available as reference. The [basic proposal](https://github.com/x402-foundation/x402/pull/4124) does not establish a released protected x402 binding.
+
+MIT license.

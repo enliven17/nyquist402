@@ -30,3 +30,10 @@ A claim cannot consume another claim's principal or fee allocation. Expiry canno
 Current reads include `payment_terms`, `payment_state`, `claim_state`, `case_arbiter`, `default_arbiter` and `payment_hash`. The fee-capable version must also expose the state needed to reconcile its reserves and liabilities; exact read signatures are release-specific.
 
 Claims and disputes must be recorded before their applicable closing deadlines. A ruling requires current authority and revision after evidence closes. At the final deadline, fallback becomes eligible. Every transition requires a transaction and a finalized claim cannot pay twice.
+
+
+## Local application implementation
+
+The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
+
+Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.

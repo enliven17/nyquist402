@@ -38,3 +38,10 @@ This schema has no funded protocol/arbitration reserves. Existing amounts use in
 ## Compatibility rules
 
 Basic auth-capture, fee-free protected escrow and the intended fee-capable version are separate capabilities. Preserve each existing payment's original terms, contract and network. A supported-version declaration and compatibility checks must accompany the public SDK release.
+
+
+## Local v2 fields
+
+V2 preserves the lifecycle fields and adds `protocol_reserve`, `arbitration_reserve`, `protocol_bps`, `protocol_recipient`, `custom_fee`, `default_fee`, `case_fee_cap`, `custom_quote` and `default_quote`. The TypeScript SDK groups these under `terms.fees` and flattens them for canonical onchain encoding. Their presence selects the v2 payment identity domain; v1 encoding is unchanged.
+
+Reserves are additional to `max_amount`. The payer's token transfer authorization covers their exact sum. A per-case cap and the funded arbitration reserve jointly bound fee exposure.

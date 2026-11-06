@@ -1,9 +1,10 @@
+import { PROTECTED_V2_CONTRACT } from "@/lib/deployment";
 import { useEffect, useRef, useState } from "react";
 import { docGroups } from "@/lib/docs/navigation";
 import { Logo } from "@/components/Logo";
 import "./site-nav.css";
 
-const ESCROW = "CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI";
+const ESCROW = PROTECTED_V2_CONTRACT;
 
 type Item = { label: string; href: string; external?: boolean };
 const siteGroups: [string, Item[]][] = [
@@ -17,17 +18,15 @@ const siteGroups: [string, Item[]][] = [
     ],
   ],
   [
-    "Demos",
+    "Demo",
     [
-      { label: "Basic demo", href: "/demo" },
-      { label: "Protected demo", href: "/demo/protected" },
+      { label: "Demo", href: "/demo" },
     ],
   ],
   [
     "Developers",
     [
       { label: "Docs", href: "/docs" },
-      { label: "Spec PR #4124", href: "https://github.com/x402-foundation/x402/pull/4124", external: true },
       { label: "GitHub", href: "https://github.com/enliven17/nyquist402", external: true },
     ],
   ],
@@ -40,7 +39,7 @@ export default function SiteNav() {
   const path = typeof window === "undefined" ? "/" : window.location.pathname.replace(/\/$/, "") || "/";
   const isDocs = path === "/docs" || path.startsWith("/docs/");
   const groups: [string, Item[]][] = isDocs
-    ? [["Nyquist402", [{ label: "Website", href: "/" }, { label: "Protected demo", href: "/demo/protected" }]], ...docGroups.map(group => [group.title, group.pages.map(page => ({ label: page.title, href: page.slug ? `/docs/${page.slug}` : '/docs' }))] as [string, Item[]])]
+    ? [["Nyquist402", [{ label: "Website", href: "/" }, { label: "Demo", href: "/demo" }]], ...docGroups.map(group => [group.title, group.pages.map(page => ({ label: page.title, href: page.slug ? `/docs/${page.slug}` : '/docs' }))] as [string, Item[]])]
     : siteGroups;
   const [section, setSection] = useState<string>();
   const [copied, setCopied] = useState(false);

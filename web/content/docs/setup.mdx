@@ -1,10 +1,10 @@
 ---
 title: Local setup & deployments
-description: Run the React website and its API, then connect the demos to the recorded testnet contracts.
+description: Run the unified Stellar testnet USDC demo and its private local services.
 ---
 ## Run the website
 
-Use Node 22.18+ or Node 24 and pnpm. From the repository root:
+Use Node 24 (including its built-in SQLite support) and pnpm. From the repository root:
 
 ```sh
 cd web
@@ -12,26 +12,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open `http://localhost:3000/docs`. Vite serves the React website and the Hono demo API in development. Documentation and the illustrative lifecycle work without funded demo accounts.
-
-## Configure the payment demos
-
-Follow `web/.env.example` and the protected SDK README. For a new demo environment, `pnpm setup-demo` creates testnet accounts and DEMOUSD. It allocates test assets and should be run intentionally. Keep existing funded credentials when configuring an existing environment.
-
-Protected settlement requires `DEMO_PROTECTED_ESCROW` and a stable `DEMO_SESSION_SECRET` of at least 32 characters. The server must also have the basic demo account/token settings. Optional `DEMO_ARBITER_SECRETS` configures the free demo arbiter roster; `DEMO_SELLER_ARBITER` sets a seller preference. Keep secret keys and capabilities private. Restart the server after changing configuration.
-
-The app verifies the configured protected deployment and reads its default arbiter before offering terms. It does not substitute the basic contract when configuration is missing.
-
-## Recorded testnet deployments
-
-| Contract | Address |
-| --- | --- |
-| Basic auth-capture | [CCB3W554…HCCI](https://stellar.expert/explorer/testnet/contract/CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI) |
-| Protected escrow | [CCQLNKUM…XKCEW](https://stellar.expert/explorer/testnet/contract/CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW) |
-
-These are separate deployments. No mainnet release is documented here. Read the current default arbiter from the protected contract rather than treating a demo roster as a universal authority.
-
-## Build and serve
+Open `http://localhost:3000/demo` or `/docs`. The website uses Vite and Hono. A production run uses:
 
 ```sh
 pnpm typecheck
@@ -40,4 +21,38 @@ pnpm build
 pnpm start
 ```
 
-The production Hono server serves the built website and demo API. Environment settings remain necessary for payment operations.
+## Existing configuration
+
+Keep the funded keys in `web/.env.local`. Configure `DEMO_MERCHANT_SECRET`, `DEMO_PROTECTED_ESCROW` and a stable `DEMO_SESSION_SECRET` of at least 32 characters. Optional `DEMO_ARBITER_SECRETS` contains the demo's testnet arbiter keys. Never publish these values.
+
+The unified demo pins official Circle testnet USDC independently of a historical `DEMO_TOKEN` value. Existing v1 payments retain their original token and terms.
+
+Inspect recipient trustlines without changing accounts:
+
+```sh
+node scripts/setup-usdc.mjs
+```
+
+An operator who intends to add those testnet account trustlines can run `node scripts/setup-usdc.mjs --apply`. This preserves keys and creates no issuer or token. For a new environment, `pnpm setup-demo` creates testnet accounts and USDC trustlines; it refuses to overwrite existing credentials.
+
+Wallet users add their own trustline in the demo, then obtain USDC manually from [Circle's faucet](https://faucet.circle.com/) using **Stellar Testnet**. Test XLM for reserves/fees is separate.
+
+## Deployment versions
+
+| Version | Configuration |
+| --- | --- |
+| Existing fee-free v1 | `DEMO_PROTECTED_VERSION=1`, protected address `CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW` |
+| Fee-capable v2 source | `contracts/protected-escrow-v2`; build/review/deploy separately, then set its address and `DEMO_PROTECTED_VERSION=2` |
+| Historical basic | Separate contract `CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI`; no second demo |
+
+The recorded v1 address cannot process v2 terms. The application verifies the configured payment identity; version mismatches fail visibly. No v2 deployment address or mainnet availability is claimed.
+
+V2 fee settings are `DEMO_PROTOCOL_RESERVE`, `DEMO_ARBITRATION_RESERVE`, `DEMO_PROTOCOL_BPS`, `DEMO_PROTOCOL_RECIPIENT`, `DEMO_CASE_FEE_CAP`, `DEMO_CUSTOM_FEE` and `DEMO_DEFAULT_FEE`. Amounts use seven-decimal USDC base units. Defaults are zero; no commercial pricing is implied. Paid demo arbiters must be configured signers so their exact scoped quotes can be registered onchain before funding.
+
+## Private data and deadlines
+
+`DEMO_DATA_DIR` defaults to `.nyquist-data`. SQLite stores agreements, immutable body versions, transaction hashes and worker job records. Keep the directory private, back it up, and never serve it as static content. It is ignored by Git. This local service does not promise managed hosting or a retention SLA; the operator must preserve data through the full case lifetime and define deletion/backups.
+
+`pnpm start` reconciles pending transaction hashes every 15 seconds. Set `DEMO_WORKER_ENABLED=true` only with an intentionally configured funded testnet `DEMO_FACILITATOR_SECRET` to submit eligible settlement/fallback actions. A durable unknown job is reconciled rather than replaced; investigate its hash after interruption. Direct wallet actions remain available.
+
+Restart after changing configuration. Automatic Soroban archive restoration remains separate operational work.

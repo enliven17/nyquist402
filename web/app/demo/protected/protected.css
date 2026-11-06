@@ -83,3 +83,8 @@
 .arbiter-desk { border-left: 2px solid var(--accent); padding-left: 14px; }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
 @media (prefers-reduced-motion: reduce) { .protected-offer, .protected-claim { animation: none; } .pbar i { transition: none; } }
+
+.demo-roles { display:flex; gap:8px; flex-wrap:wrap; margin:24px 0 12px; }
+.protected-demo [hidden] { display:none!important; }
+
+.demo-setup-note { border:1px solid #d7bd7f; background:#fbf4e5; padding:16px; border-radius:8px; line-height:1.6; }

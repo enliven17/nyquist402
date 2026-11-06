@@ -33,4 +33,4 @@ Basic auth-capture remains a separate payment flow: the seller captures the actu
 
 ## Release availability
 
-The existing protected contract and local SDK implement the fee-free claim lifecycle on testnet. The fee-capable contract, public integration and operated services described in the design sections are not released. See [implementation status](/docs/roadmap) for the exact boundary and [testnet setup](/docs/setup) for executable instructions.
+The existing v1 deployment provides the fee-free claim lifecycle. Separate v2 contract source implements fee reserves and authenticated quotes; the unified app adds local private evidence/history and optional deadline execution. V2 still needs a separate deployment, and no managed public service or upstream protected integration is claimed. See [implementation status](/docs/roadmap) for the exact boundary and [testnet setup](/docs/setup) for executable instructions.

@@ -49,4 +49,11 @@ Read methods are `defaultArbiter`, `terms`, `state`, `claimState` and `arbiter`.
 
 ## Exact amounts
 
-Token amounts are integer strings in base units. Seven-decimal DEMOUSD represents 3.00 as `"30000000"`. Do not use JavaScript floating point for token arithmetic. Hashes and payment IDs are 32-byte values represented as hex strings.
+Token amounts are integer strings in base units. Seven-decimal USDC represents 3.00 as `"30000000"`. Do not use JavaScript floating point for token arithmetic. Hashes and payment IDs are 32-byte values represented as hex strings.
+
+
+## Local application implementation
+
+The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
+
+Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.

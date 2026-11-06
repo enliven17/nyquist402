@@ -11,3 +11,6 @@ out/
 
 # Local planning documents
 roadmap.md
+
+# Private evidence, sessions and transaction history
+.nyquist-data/

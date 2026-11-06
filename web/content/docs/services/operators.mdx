@@ -27,3 +27,10 @@ Document service restart, database and evidence backup restoration, archived-sta
 ## Mainnet release boundary
 
 Mainnet activation depends on reviewed contracts and security-relevant SDK/service code, verified deployment configuration and recovery tooling. The intended review scope includes allocation, signing, quote checks, evidence access and restoration. See [implementation status](/docs/roadmap) for current availability.
+
+
+## Local application implementation
+
+The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
+
+Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.

@@ -1,16 +1,22 @@
+import { post } from "@/lib/protected/service";
 import { useState } from "react";
 import { claimActions, formatAmount, parseAmount } from "@/lib/protected/flow";
 import { hashText } from "@/lib/protected/codec";
 import type { Claim, DemoArbiter, PaymentTerms, ProtectedAction } from "@/lib/protected/types";
 
-export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sellerControl, now, busy, run, arbiters, arbitrate }: {
+export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sellerControl, now, busy, run, arbiters, arbitrate, capability, role, assetLabel }: {
   id: number; claim: Claim; arbiter: string | null; terms: PaymentTerms; paymentId: string;
   address?: string; sellerControl: boolean; now: number; busy: boolean;
   run: (label: string, action: ProtectedAction) => Promise<void>;
+  assetLabel:string;
+  role: "buyer"|"seller"|"arbiter";
+  capability?: string;
   arbiters: DemoArbiter[];
   arbitrate: (claimId: number, sellerAmount: string, name: string) => Promise<void>;
 }) {
   const [evidence, setEvidence] = useState("");
+  const [caseRecords,setCaseRecords] = useState<{hash:string;body:string;party:string;kind:string}[]>([]);
+  const [caseError,setCaseError] = useState("");
   const [award, setAward] = useState("");
   const allowed = claimActions(claim, now);
   const buyer = address === terms.payer;
@@ -28,12 +34,13 @@ export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sell
   const deadline = (value: number) => `${new Date(value * 1000).toLocaleTimeString()} (${Math.max(0, value - now)}s left)`;
   async function evidenceAction(party: string, type: "dispute" | "submit_evidence") {
     if (!evidence.trim()) return;
+    const saved = await post({operation:"case_write",paymentId,claimId:id,party,kind:"evidence",body:evidence,capability});
     await run(`${type === "dispute" ? "Dispute" : "Evidence"} · claim ${id}`, {
-      type, paymentId, claimId: id, party, evidence: await hashText(evidence),
+      type, paymentId, claimId: id, party, evidence: saved.hash,
     });
   }
   return <article className="protected-claim">
-    <header><h3>Claim {id} <span className={`status status-${claim.status.toLowerCase()}`}>{claim.status}</span></h3><strong>{formatAmount(claim.amount)} DEMOUSD</strong></header>
+    <header><h3>Claim {id} <span className={`status status-${claim.status.toLowerCase()}`}>{claim.status}</span></h3><strong>{formatAmount(claim.amount)} {assetLabel}</strong></header>
     {window && <div className="countdown" aria-label={`${window.label}: ${Math.max(0, window.end - now)} seconds left`}>
       <div className="kv"><span>{window.label}</span><span>{Math.max(0, window.end - now)}s</span></div>
       <div className="bar time"><i style={{ width: `${Math.min(100, Math.max(0, ((window.end - now) / window.span) * 100))}%` }} /></div>
@@ -50,23 +57,35 @@ export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sell
       </>}
       {claim.buyer_evidence && <div><dt>Buyer evidence hash</dt><dd><code>{claim.buyer_evidence}</code></dd></div>}
       {claim.seller_evidence && <div><dt>Seller evidence hash</dt><dd><code>{claim.seller_evidence}</code></dd></div>}
-      {claim.status === "Settled" && <div><dt>Final seller award</dt><dd>{formatAmount(claim.seller_award)} DEMOUSD</dd></div>}
+      {claim.status === "Settled" && <div><dt>Final seller award</dt><dd>{formatAmount(claim.seller_award)} USDC</dd></div>}
     </dl>
+    <details><summary>Delivery &amp; case evidence</summary>
+      <button className="pill-btn sm" disabled={busy} onClick={() => void post({operation:"case_read",paymentId,claimId:id,capability}).then(async result => {
+        const records=[];
+        for (const record of result.records) {
+          if (await hashText(record.body) !== record.hash) throw new Error("Evidence integrity check failed");
+          records.push(record);
+        }
+        setCaseRecords(records);setCaseError("");
+      }).catch(e=>setCaseError(String(e)))}>Load private case material</button>
+      {caseError && <p role="alert">{caseError}</p>}
+      {caseRecords.map((r,index)=><article key={index}><small>{r.kind} · {r.party === terms.payer ? "Buyer" : "Seller"} · {[claim.delivery,claim.buyer_evidence,claim.seller_evidence].includes(r.hash) ? "Current onchain commitment" : "Earlier revision or pending submission"}</small><p style={{whiteSpace:"pre-wrap"}}>{r.body}</p></article>)}
+    </details>
     {claim.status !== "Settled" && <div className="acts">
-      <button className="pill-btn" disabled={disabled || !buyer || !allowed.accept} onClick={() => void run(`Accept · claim ${id}`, { type: "accept", paymentId, claimId: id, commitment: claim.commitment })}>Accept and pay</button>
+      <button className="pill-btn" disabled={disabled || role!=="buyer" || !buyer || !allowed.accept} onClick={() => void run(`Accept · claim ${id}`, { type: "accept", paymentId, claimId: id, commitment: claim.commitment })}>Accept and pay</button>
       <button className="pill-btn" disabled={disabled || !allowed.settle} onClick={() => void run(`Settle · claim ${id}`, { type: "settle", paymentId, claimId: id })}>Settle after review</button>
       <button className="pill-btn" disabled={disabled || !allowed.fallback} onClick={() => void run(`Fallback · claim ${id}`, { type: "finalize_fallback", paymentId, claimId: id })}>Apply agreed fallback</button>
     </div>}
     {(allowed.dispute || allowed.evidence) && (buyer || sellerControl) && <div className="protected-form">
       <label>Evidence text<textarea value={evidence} maxLength={10000} onChange={e => setEvidence(e.target.value)} placeholder="Describe the issue or response. Save a copy before submitting." /></label>
-      <p className="muted">Only a hash is submitted. Keep the text and share it with the other party and arbiter through your agreed channel.</p>
+      <p className="muted">Evidence is saved privately before its hash is submitted. Only payment participants and the current arbiter can retrieve it.</p>
       <div className="acts">
-        <button className="pill-btn" disabled={disabled || !buyer || !evidence.trim()} onClick={() => void evidenceAction(terms.payer, allowed.dispute ? "dispute" : "submit_evidence")}>{allowed.dispute ? "Buyer disputes" : "Buyer responds"}</button>
-        <button className="pill-btn" disabled={disabled || !sellerControl || !evidence.trim()} onClick={() => void evidenceAction(terms.seller, allowed.dispute ? "dispute" : "submit_evidence")}>{allowed.dispute ? "Seller disputes" : "Seller responds"}</button>
+        <button className="pill-btn" disabled={disabled || role!=="buyer" || !buyer || !evidence.trim()} onClick={() => void evidenceAction(terms.payer, allowed.dispute ? "dispute" : "submit_evidence").catch(e=>setCaseError(String(e)))}>{allowed.dispute ? "Buyer disputes" : "Buyer responds"}</button>
+        <button className="pill-btn" disabled={disabled || role!=="seller" || !sellerControl || !evidence.trim()} onClick={() => void evidenceAction(terms.seller, allowed.dispute ? "dispute" : "submit_evidence").catch(e=>setCaseError(String(e)))}>{allowed.dispute ? "Seller disputes" : "Seller responds"}</button>
       </div>
     </div>}
-    {desk && claim.status === "Disputed" && <div className="protected-form arbiter-desk">
-      <p><strong>{desk.name}</strong> <span className="free">free</span></p>
+    {role==="arbiter" && desk && claim.status === "Disputed" && <div className="protected-form arbiter-desk">
+      <p><strong>{desk.name}</strong> <span className="free">{terms.fees ? formatAmount(arbiter===terms.default_arbiter?terms.fees.default_fee:terms.fees.custom_fee)+" USDC per valid ruling" : "free"}</span></p>
       {allowed.rule ? <>
         <p className="muted">Decide the split after reading both sides. The remainder returns to the buyer.</p>
         <div className="acts">
@@ -77,8 +96,8 @@ export function ClaimPanel({ id, claim, arbiter, terms, paymentId, address, sell
         </div>
       </> : <p className="muted">Rules once the evidence window closes ({Math.max(0, claim.response_until - now)}s).</p>}
     </div>}
-    {canRule && !desk && <div className="protected-form">
-      <label>Seller award (DEMOUSD)<input inputMode="decimal" value={award} onChange={e => setAward(e.target.value)} placeholder={`0 to ${formatAmount(claim.amount)}`} /></label>
+    {role==="arbiter" && canRule && !desk && <div className="protected-form">
+      <label>Seller award ({assetLabel})<input inputMode="decimal" value={award} onChange={e => setAward(e.target.value)} placeholder={`0 to ${formatAmount(claim.amount)}`} /></label>
       <button className="pill-btn accent" disabled={disabled || !award} onClick={() => {
         try {
           const sellerAmount = parseAmount(award);
