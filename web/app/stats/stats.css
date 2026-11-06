@@ -1,0 +1,63 @@
+.st { max-width: 1120px; margin: 0 auto; padding: 56px 24px 96px; }
+.st-head h1 { font-size: clamp(2.25rem, 4.6vw, 3.75rem); font-weight: 300; letter-spacing: -0.04em; line-height: 1; margin: 0 0 14px; }
+.st-head p { color: var(--muted); margin: 0; }
+.st-meta { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px !important; font-family: var(--font-mono), monospace; font-size: 12px; }
+.st-meta a { color: var(--accent); text-decoration: none; }
+.st-muted { color: var(--muted); }
+.st-error { color: #b42318; }
+
+.st-tiles { display: grid; grid-template-columns: repeat(3, 1fr); margin: 40px 0 24px; border: 1px solid var(--line); background: var(--surface); }
+.st-tiles > div { padding: 22px 24px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.st-tiles > div:nth-child(3n) { border-right: 0; }
+.st-tiles > div:nth-last-child(-n + 3) { border-bottom: 0; }
+.st-tiles dt { font-family: var(--font-mono), monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.st-tiles dd { margin: 10px 0 0; }
+.st-tiles b { display: block; font-size: clamp(2rem, 3.6vw, 2.9rem); font-weight: 300; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.st-tiles span { display: block; margin-top: 8px; font-size: 13px; color: var(--muted); }
+
+.st-card { border: 1px solid var(--line); background: var(--surface); padding: 22px 24px; margin-bottom: 24px; }
+.st-card h2 { font-size: 15px; font-weight: 500; margin: 0 0 18px; }
+.st-card h2.st-sub { margin-top: 28px; }
+.st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.st-grid .st-card { margin-bottom: 24px; }
+
+.st-chart { position: relative; }
+.st-chart svg { display: block; width: 100%; height: auto; }
+.st-grid-line { stroke: var(--line); stroke-width: 1; }
+.st-axis { font-family: var(--font-mono), monospace; font-size: 11px; fill: var(--muted); }
+.st-mark { fill: var(--accent); opacity: 0.85; }
+.st-mark.on { opacity: 1; }
+.st-tip { position: absolute; top: 0; transform: translateX(-50%); pointer-events: none; background: var(--ink); color: #fff; padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+.st-tip span { display: block; color: #b9bcc4; font-family: var(--font-mono), monospace; font-size: 11px; }
+
+.st-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.st-bar-label { display: flex; justify-content: space-between; font-size: 14px; }
+.st-bar-label b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.st-bar { height: 8px; margin: 6px 0; background: var(--paper); }
+.st-bar i { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0; }
+.st-bars small { color: var(--muted); font-size: 12px; }
+
+.st-arbiters { list-style: none; margin: 0; padding: 0; }
+.st-arbiters li { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.st-arbiters a { font-family: var(--font-mono), monospace; color: var(--text); }
+.st-arbiters span { color: var(--muted); }
+
+.st-table { overflow-x: auto; }
+.st-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.st-table th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 0 12px 10px 0; border-bottom: 1px solid var(--line); }
+.st-table td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.st-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.st-table a { color: var(--accent); text-decoration: none; }
+.st-table code { font-family: var(--font-mono), monospace; font-size: 12px; }
+
+@media (max-width: 760px) {
+  .st { padding-top: 32px; }
+  .st-tiles { grid-template-columns: 1fr 1fr; }
+  .st-tiles > div { border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line) !important; }
+  .st-tiles > div:nth-child(2n) { border-right: 0 !important; }
+  .st-grid { grid-template-columns: 1fr; gap: 0; }
+}
+@media (max-width: 760px) {
+  .st-chart { overflow-x: auto; }
+  .st-chart svg { min-width: 620px; }
+}
