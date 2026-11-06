@@ -7,7 +7,7 @@
   <a href="https://nyquist402.xyz">Website</a> ·
   <a href="https://docs.nyquist402.xyz">Docs</a> ·
   <a href="https://nyquist402.xyz/demo">Testnet demo</a> ·
-  <a href="https://nyquist402.xyz/stats">Onchain stats</a> ·
+  <a href="https://nyquist402.xyz/#stats">Onchain stats</a> ·
   <a href="https://status.nyquist402.xyz">Status</a>
 </p>
 
@@ -57,7 +57,7 @@ The contract controls fund allocation. Principal, protocol-fee reserves and arbi
 | Token | Circle testnet USDC, issuer `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, seven decimals |
 | Continuous testing | Every 15 minutes a new testnet wallet funds and settles one of nine scenarios through the public API: accept, multiple claims, review expiry, default arbiter ruling, buyer-chosen arbiters, seller dispute, signed fallback and reclaim after the deadline |
 | Monitoring | [status.nyquist402.xyz](https://status.nyquist402.xyz) checks the site, API, sign-in, contract, RPC and Horizon every 5 minutes |
-| Onchain history | [nyquist402.xyz/stats](https://nyquist402.xyz/stats) reports payments, settled amounts, outcomes and every contract event |
+| Onchain history | [nyquist402.xyz](https://nyquist402.xyz/#stats) reports payments, settled amounts, outcomes and every contract event |
 
 To try it yourself, open the [demo](https://nyquist402.xyz/demo). It has Buyer, Seller and Arbiter views for one payment. Connect a Stellar testnet wallet with test XLM, add the USDC trustline and get USDC from [Circle's faucet](https://faucet.circle.com/) on **Stellar Testnet**.
 

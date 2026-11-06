@@ -53,6 +53,9 @@ export default function Motion() {
         );
       });
       ScrollTrigger.refresh();
+      // Pinned sections change the layout after load, so the browser's own jump to /#section misses.
+      const target = window.location.hash.length > 1 ? document.getElementById(decodeURIComponent(window.location.hash.slice(1))) : null;
+      if (target) lenis?.scrollTo(target, { immediate: true, force: true });
     }));
 
     gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {

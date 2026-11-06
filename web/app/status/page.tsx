@@ -81,7 +81,7 @@ export default function StatusPage() {
             </table></div>
           )}
         </section>
-        <p className="sp-muted">Payment run details and onchain totals are on the <a href="/stats">stats page</a>.</p>
+        <p className="sp-muted">Payment run details and onchain totals are on the <a href="/#stats">home page</a>.</p>
       </>}
     </main>
   );

@@ -18,10 +18,20 @@ const EVENTS: Record<string, string> = {
   payment_funded: "Funded", claim_recorded: "Claim", case_updated: "Dispute / evidence", claim_finalized: "Settled", funds_returned: "Returned",
 };
 
-export default function StatsPage() {
+/** Live onchain stats, a section of the home page. Loads once it scrolls near the viewport. */
+export default function StatsSection() {
   const [data, setData] = useState<Stats>();
   const [error, setError] = useState<string>();
+  const [near, setNear] = useState(false);
+  const root = useRef<HTMLElement>(null);
   useEffect(() => {
+    const el = root.current; if (!el) return;
+    if (window.location.hash === "#stats") { setNear(true); return; }
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setNear(true); io.disconnect(); } }, { rootMargin: "800px 0px" });
+    io.observe(el); return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!near) return;
     let live = true;
     const load = () => fetch("/api/stats").then(r => r.json()).then(r => {
       if (!live) return;
@@ -30,13 +40,14 @@ export default function StatsPage() {
     load();
     const timer = setInterval(load, 30_000);
     return () => { live = false; clearInterval(timer); };
-  }, []);
+  }, [near]);
 
   return (
-    <main className="st">
+    <section className="st" id="stats" data-section ref={root}>
+     <div className="wrap">
       <header className="st-head">
-        <h1>Onchain stats</h1>
-        <p>Read from the protected escrow's events on Stellar testnet. Refreshes every 30 seconds.</p>
+        <h2 className="h-lg" data-split>Live on<br />Stellar testnet.</h2>
+        <p>Every number below is read from the protected escrow's contract events and refreshes every 30 seconds.</p>
         {!data && !error && <p className="st-meta"><Sk w={320} h={12} /></p>}
         {data && <p className="st-meta">
           <a href={`${EXPERT}/contract/${data.contractId}`} target="_blank" rel="noreferrer">{short(data.contractId)} ↗</a>
@@ -58,16 +69,14 @@ export default function StatsPage() {
           <Tile label="Disputed claims" value={data.disputes.toLocaleString("en-US")} note={`of ${data.claims} claims`} />
         </dl>
 
-        <section className="st-card">
-          <ActivityCard live={data.activity} firstAt={data.firstAt} />
-        </section>
+        <ActivityCard live={data.activity} firstAt={data.firstAt} />
 
         <div className="st-grid">
-          <section className="st-card">
+          <div className="st-card">
             <h2>How claims settled</h2>
             <Breakdown rows={data.outcomes.map(o => ({ key: o.reason, count: o.count, note: `${usdc(o.seller)} to seller · ${usdc(o.buyer)} to buyer` }))} />
-          </section>
-          <section className="st-card">
+          </div>
+          <div className="st-card">
             <h2>Unused funds returned</h2>
             <Breakdown rows={data.returns.map(r => ({ key: r.reason, count: r.count, note: `${usdc(r.amount)} USDC` }))} />
             <h2 className="st-sub">Arbiter per payment</h2>
@@ -76,12 +85,12 @@ export default function StatsPage() {
                 <li key={a.address}><a href={`${EXPERT}/account/${a.address}`} target="_blank" rel="noreferrer">{short(a.address)}</a><span>{a.payments} payments</span></li>
               ))}
             </ul>
-          </section>
+          </div>
         </div>
 
         {data.scheduled && <ScheduledRuns s={data.scheduled} />}
 
-        <section className="st-card">
+        <div className="st-card">
           <h2>Latest events</h2>
           <div className="st-table st-events">
             <table>
@@ -99,9 +108,10 @@ export default function StatsPage() {
               </tbody>
             </table>
           </div>
-        </section>
+        </div>
       </>}
-    </main>
+     </div>
+    </section>
   );
 }
 
@@ -113,26 +123,26 @@ function Loading() {
           <div key={i}><dt><Sk w={110} h={10} /></dt><dd><Sk w={90} h={40} style={{ margin: "12px 0 10px" }} /><Sk w={80} h={11} /></dd></div>
         ))}
       </dl>
-      <section className="st-card"><Sk w={160} h={14} style={{ marginBottom: 22 }} />
+      <div className="st-card"><Sk w={160} h={14} style={{ marginBottom: 22 }} />
         <div className="st-sk-bars">{Array.from({ length: 32 }, (_, i) => <Sk key={i} h={`${30 + ((i * 37) % 60)}%`} />)}</div>
-      </section>
+      </div>
       <div className="st-grid">
         {[0, 1].map(c => (
-          <section className="st-card" key={c}><Sk w={150} h={14} style={{ marginBottom: 22 }} />
+          <div className="st-card" key={c}><Sk w={150} h={14} style={{ marginBottom: 22 }} />
             {Array.from({ length: 4 }, (_, i) => <div key={i} style={{ marginBottom: 18 }}><Sk w="60%" h={12} /><Sk h={8} style={{ margin: "8px 0" }} /><Sk w={140} h={10} /></div>)}
-          </section>
+          </div>
         ))}
       </div>
-      <section className="st-card"><Sk w={120} h={14} style={{ marginBottom: 22 }} />
+      <div className="st-card"><Sk w={120} h={14} style={{ marginBottom: 22 }} />
         {Array.from({ length: 8 }, (_, i) => <Sk key={i} h={14} style={{ margin: "0 0 18px" }} />)}
-      </section>
+      </div>
     </div>
   );
 }
 
 function ScheduledRuns({ s }: { s: Scheduled }) {
   return (
-    <section className="st-card">
+    <div className="st-card">
       <h2>Scheduled scenario runs</h2>
       <p className="st-muted st-note">Every 15 minutes a fresh testnet wallet is funded and runs one payment scenario end to end through this site's API. {s.passed} of {s.runs} runs passed across {s.wallets} wallets.</p>
       <div className="st-table">
@@ -161,7 +171,7 @@ function ScheduledRuns({ s }: { s: Scheduled }) {
           </tbody>
         </table>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -213,7 +223,7 @@ function ActivityCard({ live, firstAt }: { live: Series; firstAt: number | null 
   const total = shown?.points.reduce((a, p) => a + p.transactions, 0) ?? 0;
   const fmt: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
   return (
-    <section className="st-card">
+    <div className="st-card">
       <div className="st-chart-head">
         <h2>Transactions over time</h2>
         <div className="st-range">
@@ -225,7 +235,7 @@ function ActivityCard({ live, firstAt }: { live: Series; firstAt: number | null 
       <p className="st-muted st-note">{when(from, fmt)} – {end === null ? "now" : when(to, fmt)} · {total.toLocaleString("en-US")} transactions</p>
       {shown ? <div className={loading ? "st-loading" : undefined}><Activity points={shown.points} bin={shown.bin} span={to - from} /></div>
         : <div className="st-sk-bars">{Array.from({ length: 32 }, (_, i) => <Sk key={i} h={`${30 + ((i * 37) % 60)}%`} />)}</div>}
-    </section>
+    </div>
   );
 }
 

@@ -12,6 +12,7 @@ const siteGroups: [string, Item[]][] = [
   [
     "Product",
     [
+      { label: "Stats", href: "/#stats" },
       { label: "How it works", href: "/#s3" },
       { label: "Use cases", href: "/#s4" },
       { label: "Get started", href: "/#s6" },
@@ -22,8 +23,6 @@ const siteGroups: [string, Item[]][] = [
     "Demo",
     [
       { label: "Demo", href: "/demo" },
-      { label: "Stats", href: "/stats" },
-      { label: "Status", href: "/status" },
     ],
   ],
   [
@@ -117,7 +116,7 @@ export default function SiteNav() {
 
         <details className="side-menu" ref={menu}>
           <summary>Menu</summary>
-          <div className="side-menu-panel">{links}</div>
+          <div className="side-menu-panel">{links}{!isDocs && <a className="side-status-link" href="/status"><span className="live" />Status<i aria-hidden>→</i></a>}</div>
         </details>
 
         <div className="side-foot">
@@ -127,6 +126,7 @@ export default function SiteNav() {
               <span>Escrow</span>
               <code>{copied ? "copied" : `${ESCROW.slice(0, 6)}…${ESCROW.slice(-4)}`}</code>
             </button>}
+            {!isDocs && <a className="side-status-link" href="/status" aria-current={path === "/status" ? "page" : undefined}><span>Status</span><i aria-hidden>→</i></a>}
           </div>
         </div>
       </div>
