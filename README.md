@@ -4,11 +4,11 @@
 </picture>
 
 <p align="center">
-  <a href="https://nyquist.xyz">Website</a> ·
-  <a href="https://docs.nyquist.xyz">Docs</a> ·
-  <a href="https://nyquist.xyz/demo">Testnet demo</a> ·
-  <a href="https://nyquist.xyz/stats">Onchain stats</a> ·
-  <a href="https://status.nyquist.xyz">Status</a>
+  <a href="https://nyquist402.xyz">Website</a> ·
+  <a href="https://docs.nyquist402.xyz">Docs</a> ·
+  <a href="https://nyquist402.xyz/demo">Testnet demo</a> ·
+  <a href="https://nyquist402.xyz/stats">Onchain stats</a> ·
+  <a href="https://status.nyquist402.xyz">Status</a>
 </p>
 
 <p align="center">
@@ -56,25 +56,25 @@ The contract controls fund allocation. Principal, protocol-fee reserves and arbi
 | Protected escrow | [`CBX657PJAHLHBNVZASBJPRJFKWKYAGFCKMEE5A57I3ZNPWO5RPKPOMEH`](https://stellar.expert/explorer/testnet/contract/CBX657PJAHLHBNVZASBJPRJFKWKYAGFCKMEE5A57I3ZNPWO5RPKPOMEH) |
 | Token | Circle testnet USDC, issuer `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`, seven decimals |
 | Continuous testing | Every 15 minutes a new testnet wallet funds and settles one of nine scenarios through the public API: accept, multiple claims, review expiry, default arbiter ruling, buyer-chosen arbiters, seller dispute, signed fallback and reclaim after the deadline |
-| Monitoring | [status.nyquist.xyz](https://status.nyquist.xyz) checks the site, API, sign-in, contract, RPC and Horizon every 5 minutes |
-| Onchain history | [nyquist.xyz/stats](https://nyquist.xyz/stats) reports payments, settled amounts, outcomes and every contract event |
+| Monitoring | [status.nyquist402.xyz](https://status.nyquist402.xyz) checks the site, API, sign-in, contract, RPC and Horizon every 5 minutes |
+| Onchain history | [nyquist402.xyz/stats](https://nyquist402.xyz/stats) reports payments, settled amounts, outcomes and every contract event |
 
-To try it yourself, open the [demo](https://nyquist.xyz/demo). It has Buyer, Seller and Arbiter views for one payment. Connect a Stellar testnet wallet with test XLM, add the USDC trustline and get USDC from [Circle's faucet](https://faucet.circle.com/) on **Stellar Testnet**.
+To try it yourself, open the [demo](https://nyquist402.xyz/demo). It has Buyer, Seller and Arbiter views for one payment. Connect a Stellar testnet wallet with test XLM, add the USDC trustline and get USDC from [Circle's faucet](https://faucet.circle.com/) on **Stellar Testnet**.
 
 ## Documentation
 
 | You want to… | Start here |
 | --- | --- |
-| Try the flow end to end | [Demo walkthrough](https://docs.nyquist.xyz/quickstart) |
-| Pay for work as a buyer or agent | [Buyer workflow](https://docs.nyquist.xyz/protected/buyer) |
-| Accept protected payments for your API | [Seller workflow](https://docs.nyquist.xyz/protected/seller) and [SDK integration](https://docs.nyquist.xyz/sdk) |
-| Connect it to x402 negotiation | [Payment negotiation](https://docs.nyquist.xyz/integration) |
-| Handle arbitration cases | [Arbiter workflow](https://docs.nyquist.xyz/protected/arbiter) |
-| Understand budgets, fees and settlement | [Payment lifecycle](https://docs.nyquist.xyz/protected/lifecycle) and [fee reserves](https://docs.nyquist.xyz/protected/fees) |
-| Retrieve evidence or recover a payment | [Evidence access](https://docs.nyquist.xyz/services/evidence) and [history and recovery](https://docs.nyquist.xyz/protected/recovery) |
-| Review trust boundaries | [Architecture](https://docs.nyquist.xyz/architecture) and [security model](https://docs.nyquist.xyz/reference/security) |
+| Try the flow end to end | [Demo walkthrough](https://docs.nyquist402.xyz/quickstart) |
+| Pay for work as a buyer or agent | [Buyer workflow](https://docs.nyquist402.xyz/protected/buyer) |
+| Accept protected payments for your API | [Seller workflow](https://docs.nyquist402.xyz/protected/seller) and [SDK integration](https://docs.nyquist402.xyz/sdk) |
+| Connect it to x402 negotiation | [Payment negotiation](https://docs.nyquist402.xyz/integration) |
+| Handle arbitration cases | [Arbiter workflow](https://docs.nyquist402.xyz/protected/arbiter) |
+| Understand budgets, fees and settlement | [Payment lifecycle](https://docs.nyquist402.xyz/protected/lifecycle) and [fee reserves](https://docs.nyquist402.xyz/protected/fees) |
+| Retrieve evidence or recover a payment | [Evidence access](https://docs.nyquist402.xyz/services/evidence) and [history and recovery](https://docs.nyquist402.xyz/protected/recovery) |
+| Review trust boundaries | [Architecture](https://docs.nyquist402.xyz/architecture) and [security model](https://docs.nyquist402.xyz/reference/security) |
 
-Payments that only need a spending ceiling and capture of the actual cost can use [basic auth-capture](https://docs.nyquist.xyz/basic), a separate flow without claim review.
+Payments that only need a spending ceiling and capture of the actual cost can use [basic auth-capture](https://docs.nyquist402.xyz/basic), a separate flow without claim review.
 
 ## Repository
 
@@ -108,7 +108,7 @@ Local runs keep private service data in `web/.nyquist-data` (or `DEMO_DATA_DIR`)
 
 ## Hosting
 
-The site runs on Vercel. `scripts/vercel-build.mjs` bundles the API into one Node function next to the static client. `nyquist.xyz` serves the site, and `docs.` and `status.` serve those pages at their roots ([`web/lib/site.ts`](web/lib/site.ts)).
+The site runs on Vercel. `scripts/vercel-build.mjs` bundles the API into one Node function next to the static client. `nyquist402.xyz` serves the site, and `docs.` and `status.` serve those pages at their roots ([`web/lib/site.ts`](web/lib/site.ts)).
 
 Hosted instances keep service data in Convex instead of SQLite. Set `CONVEX_URL`, `CONVEX_STORE_KEY` and `VITE_CONVEX_URL` on Vercel, then set the same `CONVEX_STORE_KEY` and `SITE_URL` on the Convex deployment. Deploy the Convex functions with `npx convex deploy` from `web`; Git pushes deploy only the Vercel side.
 
@@ -133,7 +133,7 @@ pnpm build
 
 ## Project status
 
-The protected escrow, demo, payment API and SDK client run on Stellar testnet. Protected x402 negotiation, SDK package distribution, the public facilitator API, managed service guarantees and automatic storage recovery are **not fully implemented yet**. The [service roadmap](https://docs.nyquist.xyz/roadmap) explains how they will work. The contracts are unaudited, and mainnet service is not available yet.
+The protected escrow, demo, payment API and SDK client run on Stellar testnet. Protected x402 negotiation, SDK package distribution, the public facilitator API, managed service guarantees and automatic storage recovery are **not fully implemented yet**. The [service roadmap](https://docs.nyquist402.xyz/roadmap) explains how they will work. The contracts are unaudited, and mainnet service is not available yet.
 
 ## License
 
