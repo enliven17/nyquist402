@@ -10,7 +10,8 @@
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
 
 [data-split] { opacity: 0; }
-.split-line { padding-bottom: 0.06em; }
+/* Room for descenders (g, y, p) inside the clipping mask, without changing line spacing. */
+.split-line-mask { padding-bottom: 0.2em; margin-bottom: -0.2em; }
 
 .h-xl { font-size: clamp(3rem, 8.4vw, 8.75rem); line-height: 0.94; letter-spacing: -0.045em; }
 .h-lg { font-size: clamp(2.25rem, 5.2vw, 4.75rem); line-height: 1; letter-spacing: -0.035em; }
