@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { appPath } from '@/lib/site';
 import { source } from '@/lib/docs/source';
 import { docPages, type SearchEntry } from '@/lib/docs/navigation';
 import { resolveDocSlug } from '@/lib/docs/search';
@@ -22,7 +23,7 @@ const entries: SearchEntry[] = orderedPages.flatMap(page => {
 });
 
 export default function Docs() {
-  const slug = resolveDocSlug(window.location.pathname) ?? '';
+  const slug = resolveDocSlug(appPath()) ?? '';
   const page = source.getPage(slug ? slug.split('/') : []);
   useEffect(() => {
     document.title = `${page?.data.title ?? 'Page not found'} · Nyquist402 Docs`;

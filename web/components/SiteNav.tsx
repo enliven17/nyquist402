@@ -1,4 +1,5 @@
 import { PROTECTED_CONTRACT } from "@/lib/deployment";
+import { appPath } from "@/lib/site";
 import { useEffect, useRef, useState } from "react";
 import { docGroups } from "@/lib/docs/navigation";
 import { Logo } from "@/components/Logo";
@@ -38,7 +39,7 @@ const sections = siteGroups[0][1].map(i => i.href.slice(2));
 /** One navigation for every page: a left sidebar on wide screens, a top bar with a menu below. */
 export default function SiteNav() {
   // Each page is a full document load, so the path is fixed for the life of this component.
-  const path = typeof window === "undefined" ? "/" : window.location.pathname.replace(/\/$/, "") || "/";
+  const path = typeof window === "undefined" ? "/" : appPath();
   const isDocs = path === "/docs" || path.startsWith("/docs/");
   const groups: [string, Item[]][] = isDocs
     ? [["Nyquist402", [{ label: "Website", href: "/" }, { label: "Demo", href: "/demo" }]], ...docGroups.map(group => [group.title, group.pages.map(page => ({ label: page.title, href: page.slug ? `/docs/${page.slug}` : '/docs' }))] as [string, Item[]])]

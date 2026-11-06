@@ -9,6 +9,7 @@ import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
 import "@/app/globals.css";
 import SiteNav from "@/components/SiteNav";
+import { appPath, routeLinks } from "@/lib/site";
 import Home from "@/app/page";
 import Demo from "@/app/demo/page";
 import Docs from "@/app/docs/page";
@@ -24,7 +25,8 @@ const routes: Record<string, [title: string, page: () => React.ReactNode]> = {
   "/status": ["Status · Nyquist402", Status],
 };
 if (window.location.pathname.replace(/\/$/, "") === "/demo/protected") window.location.replace("/demo" + window.location.search + window.location.hash);
-const path = window.location.pathname.replace(/\/$/, "") || "/";
+routeLinks();
+const path = appPath();
 const [title, Page] = (resolveDocSlug(path) !== undefined ? ["Docs · Nyquist402", Docs] as const : routes[path]) ?? ["Not found · Nyquist402", () => <main style={{ padding: "120px 24px" }}><h1>Not found</h1><p><a href="/">Back home</a></p></main>];
 document.title = title;
 
