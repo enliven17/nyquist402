@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Stats } from "../../server/stats";
+import type { Scheduled, Stats } from "../../server/stats";
 import { Sk } from "@/components/Skeleton";
 import "./stats.css";
 
@@ -80,6 +80,8 @@ export default function StatsPage() {
           </section>
         </div>
 
+        {data.scheduled && <ScheduledRuns s={data.scheduled} />}
+
         <section className="st-card">
           <h2>Latest events</h2>
           <div className="st-table">
@@ -126,6 +128,41 @@ function Loading() {
         {Array.from({ length: 8 }, (_, i) => <Sk key={i} h={14} style={{ margin: "0 0 18px" }} />)}
       </section>
     </div>
+  );
+}
+
+function ScheduledRuns({ s }: { s: Scheduled }) {
+  return (
+    <section className="st-card">
+      <h2>Scheduled scenario runs</h2>
+      <p className="st-muted st-note">Every 15 minutes a fresh testnet wallet is funded and runs one payment scenario end to end through this site's API. {s.passed} of {s.runs} runs passed across {s.wallets} wallets.</p>
+      <div className="st-table">
+        <table>
+          <thead><tr><th>Scenario</th><th className="num">Passed</th><th className="num">Runs</th><th className="num">Transactions</th></tr></thead>
+          <tbody>
+            {s.scenarios.map(r => (
+              <tr key={r.name}><td>{r.name}</td><td className="num">{r.passed}</td><td className="num">{r.runs}</td><td className="num">{r.txs}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h2 className="st-sub">Latest runs</h2>
+      <div className="st-table">
+        <table>
+          <thead><tr><th>Run</th><th>Scenario</th><th>Result</th><th className="num">Transactions</th><th className="num">Duration</th><th>Time</th><th>Payment</th></tr></thead>
+          <tbody>
+            {s.latest.map(r => (
+              <tr key={r.seq}>
+                <td>#{r.seq + 1}</td><td>{r.name}</td>
+                <td title={r.error}>{r.ok ? "Passed" : "Failed"}</td>
+                <td className="num">{r.txs}</td><td className="num">{Math.round(r.ms / 1000)}s</td><td>{ago(r.at)}</td>
+                <td>{r.paymentId ? <code>{short(r.paymentId)}</code> : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 

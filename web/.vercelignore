@@ -1,0 +1,7 @@
+.env
+.env.*
+.nyquist-data
+dist
+node_modules
+.vercel
+convex/_generated

@@ -42,6 +42,15 @@ Preserve existing funded keys and keep secrets out of Git. For a new environment
 
 Keep private service data in `web/.nyquist-data` (or `DEMO_DATA_DIR`) out of Git and static hosting. Wallet sign-in controls private history and evidence access; transaction signatures separately control fund movements. See the [client guide](web/lib/protected/README.md) for integration and verification details.
 
+## Hosting
+
+The site runs on Vercel. `scripts/vercel-build.mjs` bundles the API into one Node function next to the static client. Hosted instances keep service data in Convex (`web/convex`) instead of SQLite. Set `CONVEX_URL` and `CONVEX_STORE_KEY` on Vercel, and set the same `CONVEX_STORE_KEY` on the Convex deployment. Deploy the Convex functions with `npx convex deploy` from `web`.
+
+Convex also runs two crons:
+
+- Every 5 minutes it copies new escrow contract events into its own tables, which keep them after RPC's seven-day retention. The `/stats` page reads from there.
+- Every 15 minutes it runs one payment scenario against the hosted API (`SITE_URL`) with a new testnet wallet. Scenarios rotate; `/stats` lists the results.
+
 ## Verify
 
 ```sh

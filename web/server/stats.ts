@@ -1,4 +1,6 @@
 import { rpc, scValToNative } from "@stellar/stellar-sdk";
+import { ConvexHttpClient } from "convex/browser";
+import { anyApi } from "convex/server";
 import { PROTECTED_CONTRACT, PROTECTED_DEPLOY_TX } from "../lib/deployment.ts";
 
 const server = new rpc.Server("https://soroban-testnet.stellar.org");
@@ -16,6 +18,13 @@ export type Stats = {
   arbiters: { address: string; payments: number }[];
   activity: { bin: number; points: { at: number; transactions: number }[] };
   recent: { kind: string; at: number; tx: string; paymentId: string; amount: string | null }[];
+  scheduled: Scheduled | null;
+};
+/** Results of the scheduled scenario runs (convex/tester.ts), when the Convex backend is configured. */
+export type Scheduled = {
+  runs: number; passed: number; wallets: number;
+  scenarios: { name: string; runs: number; passed: number; txs: number }[];
+  latest: { seq: number; name: string; ok: boolean; txs: number; ms: number; at: number; paymentId?: string; error?: string }[];
 };
 
 let cache: { at: number; value: Promise<Stats> } | undefined;
@@ -53,6 +62,12 @@ async function events(): Promise<{ list: Event[]; latestLedger: number }> {
 const sum = (xs: unknown[]) => xs.reduce<bigint>((a, x) => a + BigInt(x as bigint), 0n).toString();
 
 async function build(): Promise<Stats> {
+  // Hosted: Convex keeps every event (convex/events.ts); RPC alone only reaches back about seven days.
+  if (process.env.CONVEX_URL) {
+    const convex = new ConvexHttpClient(process.env.CONVEX_URL);
+    const [chain, scheduled] = await Promise.all([convex.query(anyApi.events.stats, {}), convex.query(anyApi.tester.summary, {}).catch(() => null)]);
+    return { contractId: PROTECTED_CONTRACT, ...chain, scheduled };
+  }
   const { list, latestLedger } = await events();
   const of = (kind: string) => list.filter(e => e.kind === kind);
   const funded = of("payment_funded"), claims = of("claim_recorded"), cases = of("case_updated");
@@ -102,5 +117,6 @@ async function build(): Promise<Stats> {
       .map(({ k, ...r }) => ({ address: k, ...r })).sort((a, b) => b.payments - a.payments),
     activity: { bin, points },
     recent: list.slice(-20).reverse().map(e => ({ kind: e.kind, at: e.at, tx: e.tx, paymentId: e.paymentId, amount: amountOf(e) })),
+    scheduled: null,
   };
 }

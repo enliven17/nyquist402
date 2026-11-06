@@ -2,7 +2,7 @@ import { challenge,authenticate,accountFromRequest } from "../auth";
 import { material,trackTransaction } from "../cases";
 import { Networks } from "@stellar/stellar-sdk";
 import { issueCapability } from "@/lib/protected/capability";
-import { history,activity } from "../store";
+import { history,activity,setTransactionStatus } from "../store";
 import { protectedClient } from "@/lib/protected/demo";
 import { trustline, submitTrustline, usdcStatus } from "../usdc";
 import { readProtectedRequest } from "@/lib/protected/request";
@@ -30,11 +30,11 @@ export async function POST(req: Request) {
     const origin = req.headers.get("origin");
     if (origin && origin !== new URL(req.url).origin) return response({ ok: false, error: "Cross-origin action rejected" }, 403);
     const body = await readProtectedRequest(req);
-    if (body.operation === "auth_challenge") return response({ ok:true,...challenge(body.address) });
+    if (body.operation === "auth_challenge") return response({ ok:true,...await challenge(body.address) });
     if (body.operation === "auth_verify") return response({ ok:true,...await authenticate(body.id,body.xdr) });
     if (body.operation === "history") {
       const account=accountFromRequest(req),client=protectedClient();
-      const records=history(client.contractId,account) as {paymentId:string;agreement:string}[];
+      const records=await history(client.contractId,account);
       return response({ok:true,records:records.map(r=>({...r,capability:issueCapability({network:Networks.TESTNET,contractId:client.contractId,paymentId:r.paymentId},process.env.DEMO_SESSION_SECRET??"")}))});
     }
     if (body.operation === "case_read" || body.operation === "case_write") return response({ ok:true,...await material(accountFromRequest(req),body) });
@@ -43,7 +43,13 @@ export async function POST(req: Request) {
       const account=accountFromRequest(req);
       const { caseAccess } = await import("../cases");
       await caseAccess(account,body.paymentId,0,body.capability);
-      return response({ok:true,records:activity(protectedClient().contractId,body.paymentId as string)});
+      const client=protectedClient(),records=await activity(client.contractId,body.paymentId as string);
+      // Hosted instances have no background worker, so settle pending statuses as they are read.
+      await Promise.all(records.filter(r=>r.status==="pending").slice(0,10).map(async r=>{
+        const tx=await client.server.getTransaction(r.tx);
+        if(tx.status==="SUCCESS"||tx.status==="FAILED"){r.status=tx.status.toLowerCase();await setTransactionStatus(r.tx,r.status);}
+      }));
+      return response({ok:true,records});
     }
     if (body.operation === "usdc_status") return response({ok:true,...await usdcStatus(body.address)});
     if (body.operation === "trustline") return response({ ok: true, ...await trustline(body.address) });

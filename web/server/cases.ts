@@ -21,7 +21,7 @@ export async function material(account: string, body: Record<string,unknown>) {
   const {client,terms,claim,sellerControl} = await caseAccess(account,body.paymentId,body.claimId,body.capability);
   if (body.operation === "case_read") {
     const state = await client.claimState(body.paymentId as string,claim);
-    const records = store.bodies(client.contractId,body.paymentId as string,claim);
+    const records = await store.bodies(client.contractId,body.paymentId as string,claim);
     return { records, commitments: { delivery: state.delivery,buyer: state.buyer_evidence,seller: state.seller_evidence,revision:state.revision } };
   }
   const party = body.party;
@@ -62,6 +62,6 @@ export async function trackTransaction(account: string, body: Record<string,unkn
     if (![terms.payer,terms.seller,arbiter].includes(account)) throw new Error("Not a payment participant");
   }
   const hash = tx.hash().toString("hex");
-  store.track(hash,client.contractId,body.paymentId,account,action);
+  await store.track(hash,client.contractId,body.paymentId,account,action);
   return { tx:hash };
 }

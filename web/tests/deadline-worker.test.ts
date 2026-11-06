@@ -38,7 +38,7 @@ test("interrupted deadline jobs reuse the original signed transaction and never 
     submit:async()=>{submitted++;throw new Error("confirmation interrupted");},
   } as unknown as ProtectedEscrowClient;
   try{
-    store.rememberPayment(contract,paymentId,"buyer","seller","agreement");
+    await store.rememberPayment(contract,paymentId,"buyer","seller","agreement");
     await deadlineTick(client);
     assert.equal(prepared,1);assert.equal(submitted,1);
     assert.equal((store.db().prepare("SELECT COUNT(*) AS n FROM worker_jobs").get() as {n:number}).n,1);
@@ -48,6 +48,6 @@ test("interrupted deadline jobs reuse the original signed transaction and never 
     await deadlineTick(client);await deadlineTick(client);
     assert.equal(prepared,1);assert.equal(submitted,1);
     assert.equal((store.db().prepare("SELECT status FROM worker_jobs").get() as {status:string}).status,"success");
-    assert.equal(store.activity(contract,paymentId).length,1);
+    assert.equal((await store.activity(contract,paymentId)).length,1);
   }finally{store.db().close();rmSync(directory,{recursive:true,force:true});}
 });

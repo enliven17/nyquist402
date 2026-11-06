@@ -63,3 +63,4 @@
 }
 .st-sk-bars { display: flex; align-items: flex-end; gap: 4px; height: 180px; padding-left: 36px; }
 .st-sk-bars .sk { flex: 1; }
+.st-note { margin: -8px 0 18px; font-size: 13px; }
