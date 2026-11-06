@@ -35,7 +35,8 @@ export function formatAmount(text: string): string {
   return `${whole}.${fraction.padEnd(2, "0")}`;
 }
 export async function validateQuote(q: Quote, c: DemoConfig, input: QuoteInput, now: number): Promise<void> {
-  if (q.protocol !== (c.version === 2 ? "nyquist402:protected:v2" : CAPABILITY)) throw new Error("Route does not offer the required protected version");
+  if (q.protocol !== ((c.version ?? 2) === 2 ? "nyquist402:protected:v2" : CAPABILITY)) throw new Error("Route does not offer the required protected payment capability");
+  if ((c.version ?? 2) === 2 && (!c.fees || !q.terms.fees)) throw new Error("Protected payment fee terms are required, including for zero-fee offers");
   validateTerms(q.terms, { contractId: c.contractId, defaultArbiter: c.defaultArbiter, now });
   const t = q.terms;
   const expectedFees = c.fees ? {...c.fees,custom_fee: (!t.buyer_arbiter || t.buyer_arbiter === c.defaultArbiter) ? "0" : c.fees.custom_fee, custom_quote:null,default_quote:null} : undefined;

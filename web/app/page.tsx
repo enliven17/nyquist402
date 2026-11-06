@@ -1,4 +1,4 @@
-import { PROTECTED_V2_CONTRACT } from "@/lib/deployment";
+import { PROTECTED_CONTRACT } from "@/lib/deployment";
 import "./landing.css";
 import { Logo, Mark } from "@/components/Logo";
 import HeroFigure from "@/components/landing/HeroFigure";
@@ -8,7 +8,7 @@ import Motion from "@/components/landing/Motion";
 const REPO_URL = "https://github.com/enliven17/nyquist402";
 const SPEC_PR = "https://github.com/x402-foundation/x402/pull/4124";
 const ISSUE_URL = "https://github.com/x402-foundation/x402/issues/4122";
-const ESCROW = PROTECTED_V2_CONTRACT;
+const ESCROW = PROTECTED_CONTRACT;
 const ESCROW_URL = `https://stellar.expert/explorer/testnet/contract/${ESCROW}`;
 
 
@@ -48,7 +48,7 @@ const faq = [
   ["How does protected settlement work?", "The buyer funds an agreed budget. The seller records delivery claims; each claim has its own review and dispute process."],
   ["What happens if an arbiter does not respond?", "Authority passes to the pinned default. After its window ends, an eligible caller can apply the fallback both parties signed."],
   ["Does the demo mint its own token?", "No. It uses Circle’s official Stellar testnet USDC. Add the trustline and use Circle’s faucet; test XLM pays network fees."],
-  ["Is it audited or on mainnet?", "The protected v2 contract is deployed on Stellar Testnet. It is unaudited; this demo uses test USDC and no mainnet funds."],
+  ["Is it audited or on mainnet?", "The protected contract is deployed on Stellar Testnet. It is unaudited; this demo uses test USDC and no mainnet funds."],
 ];
 
 export default function Home() {
@@ -175,7 +175,7 @@ export default function Home() {
                 ["Arbiter", "Read the current evidence and sign a bounded award within your assigned ruling window."],
               ].map(([role, code]) => (
                 <article className="start-card" key={role} data-reveal>
-                  <div className="start-head"><h3>{role}</h3><span className="t-cap">local protected SDK</span></div>
+                  <div className="start-head"><h3>{role}</h3><span className="t-cap">protected payments</span></div>
                   <p>{code}</p>
                 </article>
               ))}

@@ -1,27 +1,35 @@
 ---
-title: Implementation status
-description: What is executable source, what is deployed and what still requires release work.
+title: Service roadmap
+description: Features being completed and how they will fit into the protected payment flow.
 ---
-## Available application source
+## Protected payments
 
-| Component | Current implementation |
-| --- | --- |
-| Unified demo | One `/demo` with buyer/seller/arbiter views; legacy protected URL redirects |
-| Payment asset | Official Circle Stellar testnet USDC; trustline preparation and external faucet |
-| v1 protected contract | Existing fee-free testnet deployment; independent claim review/disputes/fallback |
-| v2 protected contract | Separate source: scoped authenticated quotes, separate reserves, per-case caps, fee earning/returns |
-| Local SDK | v1/v2 term encoding, exact funding signatures, quote validation and typed lifecycle |
-| Local case service | Wallet-authenticated private evidence, retained versions and SQLite history |
-| Transaction recovery | Durable hashes before wallet broadcast and confirmation reconciliation |
-| Deadline execution | Optional local settlement/fallback worker with durable per-claim jobs |
-| Basic auth-capture | Separate historical contract/integration reference |
+Nyquist402's payment model covers agreed budgets, independent delivery claims, buyer review, disputes, bounded rulings and return of unused funds. The testnet demo lets you explore these steps with USDC, private case material and payment history.
 
-## Release boundary
+Protected escrow supports separate fee reserves and arbiter quotes. Every funded payment stays bound to its accepted agreement and deployment. See [terms and compatibility](/docs/reference/terms).
 
-V2 source is **not** an upgrade to the recorded v1 deployment. It needs a separately reviewed build, deployment, matching configuration and network verification. The demo defaults to fee-free v1 until that happens.
+## Protected x402 integration — not fully implemented yet
 
-This repository does not claim a published protected npm package, standardized upstream protected x402 wire extension, managed public facilitator, production evidence service, independent audit or mainnet readiness. Integration/service design pages describe those broader responsibilities. Local code and tests do not establish that a hosted service is operating.
+A seller will advertise protected payment requirements in its HTTP 402 response. Buyer and agent integrations will verify the supported network, contract, agreement, fees and arbitration policy before signing. After funding, the payment context will connect API usage to delivery claims and receipts.
 
-## Verification and remaining operations
+The protected wire schema and compatibility rules still need to be finalized. The [payment negotiation guide](/docs/integration) explains the sequence; basic auth-capture remains a separate capability.
 
-Use [setup](/docs/setup), [the unified walkthrough](/docs/quickstart) and [local SDK](/docs/testnet/sdk). Operators still need managed backups/retention, availability monitoring, key management, archive restoration and release review. A testnet reset or an archived record requires explicit reconciliation; it does not change the original agreement.
+## SDK distribution — not fully implemented yet
+
+The TypeScript client model covers term validation, payment identity, state reads and preparation, signing and submission of lifecycle actions. An installable SDK release will package this workflow with supported-version declarations and integration examples. The [client reference](/docs/testnet/sdk) explains the methods and the [signing example](/docs/testnet/signing) explains authorization.
+
+## Public facilitator API — not fully implemented yet
+
+The facilitator will expose capability discovery, payment verification, authorized submission and transaction status. Integrators will receive a transaction identity and confirmation state so interrupted requests can be reconciled before retrying. Published endpoint and schema documentation will define the public API. See [facilitator and execution](/docs/services/facilitator).
+
+## Managed service operations — not fully implemented yet
+
+Evidence delivery and history support the payment lifecycle. Managed operation will add published retention and deletion policies, availability guarantees, access auditing and recovery procedures. Deadline execution will monitor eligible claims and submit settlement or fallback transactions while tracking their outcomes. See [evidence access](/docs/services/evidence) and [service operations](/docs/services/operators).
+
+## Automatic storage recovery — not fully implemented yet
+
+Storage maintenance will keep required contract and payment records active. When Soroban archives an entry, recovery tooling will restore it before retrying the original action, preserving its terms, evidence revision and transaction history. See [history and recovery](/docs/protected/recovery).
+
+## Mainnet service — not fully implemented yet
+
+The service is in testnet. Mainnet activation requires independent security review, verified deployment configuration and operational recovery checks. Mainnet network details and service terms will be published when that release is ready.

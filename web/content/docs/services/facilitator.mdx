@@ -1,32 +1,31 @@
 ---
 title: Facilitator & execution
-description: Relay responsibilities, confirmation tracking and permissionless finalization.
+description: Verify payment compatibility, relay authorized actions and track settlement through confirmation.
 ---
-## Public facilitator
+## Facilitator API
 
-The intended facilitator exposes supported capabilities, payment verification and settlement submission, with versioned OpenAPI documentation and a self-hosted release. Capability discovery identifies networks, contracts, policies and supported x402 bindings.
+**The public facilitator API is not fully implemented yet.** It will expose supported payment capabilities, verify payloads, submit authorized transactions and report their outcomes. Capability discovery will identify supported networks, contracts, policies and x402 schemas.
 
-Verification must reject incompatible protected terms and return a machine-readable reason. Submission tracks the resulting transaction rather than reporting a signed or queued payload as a confirmed success. Endpoint payloads and deployment URLs must come from the released API specification; the current demo adapter is not that public API.
+Verification will reject incompatible terms with a machine-readable reason before submission. A submission response will identify the transaction and distinguish pending, confirmed and failed outcomes. API URLs and request schemas will be published with the service release.
+
+A facilitator submits authorized actions. It cannot change an agreement, replace its arbiter or choose an award.
 
 ## Transaction lifecycle
 
-Persist the action intent and transaction identity before confirmation tracking can be interrupted. Return the hash and status for pending transactions. After a crash, reconcile the original submission with the ledger before retrying; do not rebuild a second claim or payout merely because the first response was lost.
+A transaction moves from preparation and signing to submission and confirmation. The payment service records the transaction identity before broadcast so a disconnect cannot erase the information needed to check its outcome.
 
-Idempotency and reconciliation must cover repeated requests, timeouts, worker retries and confirmation received after a client disconnect.
+If a response is lost, reconcile the original hash with the ledger before retrying. Repeated requests, worker retries and late confirmation must resolve to the same economic result rather than create a second claim or payout.
 
-## Deadline workers
+## Deadline execution
 
-Workers identify eligible undisputed settlements, escalation-related actions and terminal fallback execution from authoritative deadlines. Before submitting, re-read state and revalidate eligibility. A race with buyer acceptance or another worker must resolve without a duplicate payout.
+The contract does not wake itself when a deadline passes. An eligible caller must submit a transaction for undisputed settlement or terminal fallback. Before submitting, the executor reads current state and checks the action's deadline and eligibility.
 
-The contract does not wake itself at a deadline. Service scheduling provides liveness; contract checks enforce authority and safety.
+**Managed deadline execution is not fully implemented yet.** It will monitor eligible actions, retain jobs across interruptions and reconcile pending submissions before retrying. Execution status will distinguish a waiting deadline, an eligible action, a pending transaction and a confirmed result.
+
+A race with buyer acceptance or another executor cannot create a duplicate payout because the contract rechecks the claim's state.
 
 ## Direct actions and outages
 
-Parties and eligible public callers can submit lifecycle actions directly without facilitator approval. Publish the contract/network information and direct-action tooling needed to do so. A relay outage must not become a new veto over valid acceptance, disputes, rulings or fallback.
+Parties can submit their authorized lifecycle actions directly. Eligible public callers can submit settlement and fallback without facilitator approval. A relay outage does not give the service a veto over acceptance, disputes, rulings or return of unused funds.
 
-
-## Local application implementation
-
-The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
-
-Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.
+Use the payment's original network and contract, then prepare and sign the action through the [TypeScript client](/docs/testnet/sdk). Query the original transaction hash before retrying an uncertain submission.

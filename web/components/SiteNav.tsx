@@ -1,10 +1,10 @@
-import { PROTECTED_V2_CONTRACT } from "@/lib/deployment";
+import { PROTECTED_CONTRACT } from "@/lib/deployment";
 import { useEffect, useRef, useState } from "react";
 import { docGroups } from "@/lib/docs/navigation";
 import { Logo } from "@/components/Logo";
 import "./site-nav.css";
 
-const ESCROW = PROTECTED_V2_CONTRACT;
+const ESCROW = PROTECTED_CONTRACT;
 
 type Item = { label: string; href: string; external?: boolean };
 const siteGroups: [string, Item[]][] = [

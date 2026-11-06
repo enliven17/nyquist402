@@ -1,47 +1,51 @@
 ---
 title: Terms & compatibility
-description: How agreement, fees, deployment and policy are bound across contract versions.
+description: The parties, work budget, fee limits and arbitration policy bound into each payment.
 ---
-## Intended agreement model
+## The funded agreement
+
+Buyer and seller authorize the complete agreement before funding. The agreement binds the parties, payment asset, work budget, deadlines, arbiter selection, fallback and fee limits to one network and escrow contract.
 
 | Scope | Bound information |
 | --- | --- |
 | Identity | Buyer, seller, asset, network, deployment and payment uniqueness |
 | Work | Agreement commitment, pricing/delivery criteria and principal budget |
 | Timing | Funding/session limits, claim review, evidence response and ruling windows |
-| Arbitration | Custom preferences, pinned default, accepted quote applicability and terminal fallback |
-| Fees | Separate protocol/arbitration reserves, earning/return rules and per-case/total caps |
-| Version | Contract, schema, x402 binding and supported policy capabilities |
+| Arbitration | Custom preferences, pinned default, accepted quotes and terminal fallback |
+| Fees | Protocol and arbitration reserves, fee rates, recipients and per-case caps |
 
-The fee-capable schema must bind this economic policy into the authorized payment. Quote identifiers/signatures, fee commitments and replay checks require a versioned encoding; the table is not a finalized list of wire field names.
+Protected HTTP negotiation is **not fully implemented yet**. Its wire schema will identify the contract and agreement format so the integration can verify compatibility before requesting signatures.
 
-## Payment identity
-
-Canonical encoding and payment identity must bind the full agreement to its network and contract. Changes affecting allocation or authorization cannot silently reinterpret an existing payment hash. Clients must reject unsupported required capabilities before signing.
-
-## Existing fee-free schema
-
-The current testnet `PaymentTerms` includes:
+## Payment terms
 
 | Fields | Meaning |
 | --- | --- |
 | `payer`, `seller`, `token` | Parties and payment asset |
-| `agreement`, `max_amount`, `salt` | Agreement hash, base-unit budget and 32-byte uniqueness value |
+| `agreement`, `max_amount`, `salt` | Agreement hash, base-unit work budget and 32-byte uniqueness value |
 | `fund_by`, `delivery_deadline` | Funding and session deadlines |
 | `buyer_arbiter`, `seller_arbiter`, `default_arbiter` | Custom preferences and pinned default |
 | `review_seconds`, `response_seconds` | Review and evidence durations |
 | `arbiter_seconds`, `default_seconds` | Ruling durations |
 | `fallback_seller_bps` | Agreed terminal seller share in basis points |
+| `protocol_reserve`, `arbitration_reserve` | Separately funded fee balances, additional to the work budget |
+| `protocol_bps`, `protocol_recipient` | Accepted protocol fee rate and recipient |
+| `custom_fee`, `default_fee`, `case_fee_cap` | Accepted arbitration charges and per-case maximum |
+| `custom_quote`, `default_quote` | Applicable authenticated arbiter quote references |
 
-This schema has no funded protocol/arbitration reserves. Existing amounts use integer base-unit strings. Hashes are 32-byte values represented as hex; times use Unix seconds and duration fields use seconds.
+The TypeScript client groups fee fields under `terms.fees` and flattens them for canonical onchain encoding. Amounts are integer base-unit strings. Hashes are 32-byte values represented as hex; deadlines use Unix seconds and durations use seconds.
 
-## Compatibility rules
+## Total funding and fee limits
 
-Basic auth-capture, fee-free protected escrow and the intended fee-capable version are separate capabilities. Preserve each existing payment's original terms, contract and network. A supported-version declaration and compatibility checks must accompany the public SDK release.
+The payer authorizes principal plus protocol reserve plus arbitration reserve. Fee reserves do not reduce the work budget. The per-case cap and total funded arbitration reserve jointly bound arbitration exposure.
 
+Zero-fee offers use the same agreement structure with zero charges and reserves. A zero-cost arbiter can omit its quote reference. See [funding and fee reserves](/docs/protected/fees) and [quotes](/docs/protected/quotes).
 
-## Local v2 fields
+## Payment identity
 
-V2 preserves the lifecycle fields and adds `protocol_reserve`, `arbitration_reserve`, `protocol_bps`, `protocol_recipient`, `custom_fee`, `default_fee`, `case_fee_cap`, `custom_quote` and `default_quote`. The TypeScript SDK groups these under `terms.fees` and flattens them for canonical onchain encoding. Their presence selects the v2 payment identity domain; v1 encoding is unchanged.
+Canonical encoding binds the full terms to the network and contract. Changing parties, work budget, fees, deadlines or arbitration terms changes the payment identity. A signature for one agreement cannot authorize a different one.
 
-Reserves are additional to `max_amount`. The payer's token transfer authorization covers their exact sum. A per-case cap and the funded arbitration reserve jointly bound fee exposure.
+## Compatibility checks
+
+The client verifies the selected network, contract and supported agreement format before signing. A funded payment keeps its original terms and deployment through settlement and recovery. Service defaults cannot change an existing agreement.
+
+Basic auth-capture is a separate capability. An integration requiring protected review and arbitration must reject a basic-only offer rather than silently downgrade its payment.

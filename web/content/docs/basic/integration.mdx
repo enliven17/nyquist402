@@ -2,9 +2,9 @@
 title: x402 integration
 description: Wire the basic auth-capture scheme into a resource server, client and facilitator.
 ---
-## Use the forked packages
+## Integration model
 
-The app vendors the x402 fork under `web/vendor`. Install this repository's locked dependencies, or follow the [auth-capture fork](https://github.com/enliven17/x402/tree/feat/stellar-auth-capture). The snippets below assume your surrounding application supplies its accounts, keys and facilitator client.
+The seller resource server, buyer client and facilitator each register the `auth-capture` scheme for the same Stellar network. The examples use the [Stellar auth-capture integration](https://github.com/enliven17/x402/tree/feat/stellar-auth-capture) APIs and assume your application supplies its accounts, signing authority and facilitator client. Match the scheme implementation across all three participants.
 
 These examples apply to **basic auth-capture**. The protected SDK is a [separate integration](/docs/testnet/sdk).
 

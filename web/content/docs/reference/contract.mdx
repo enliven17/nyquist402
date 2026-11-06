@@ -1,10 +1,10 @@
 ---
 title: Contract operations
-description: Existing protected operations and the required behavior of the intended fee-capable contract.
+description: Protected escrow operations, required signers and their effects on claims and balances.
 ---
 ## Core lifecycle operations
 
-The current protected contract exposes the following operations. They establish the lifecycle that the fee-capable version must preserve; future argument schemas must be read from that version's release specification.
+Protected escrow uses the following lifecycle operations. The payment’s contract version determines its term encoding and whether it includes fee reserves.
 
 | Operation | Authority | Effect |
 | --- | --- | --- |
@@ -21,19 +21,14 @@ The current protected contract exposes the following operations. They establish 
 
 ## Fee-capable behavior
 
-The new contract must validate accepted quotes, collect separate reserves, allocate fee capacity to claims, enforce per-case/total caps, pay earned fees once and return unearned funds. All settlement, cancellation and direct-action paths must follow those rules.
+Protected escrow validates accepted quotes, collects separate reserves, allocates fee capacity to claims, enforces per-case and total caps, pays earned fees once and returns unearned funds. All settlement, cancellation and direct-action paths must follow those rules.
 
 A claim cannot consume another claim's principal or fee allocation. Expiry cannot release capacity needed by a pending case. There is no unrestricted protected `capture` operation that bypasses review or arbitration.
 
 ## Reads and finality
 
-Current reads include `payment_terms`, `payment_state`, `claim_state`, `case_arbiter`, `default_arbiter` and `payment_hash`. The fee-capable version must also expose the state needed to reconcile its reserves and liabilities; exact read signatures are release-specific.
+Read operations include `payment_terms`, `payment_state`, `claim_state`, `case_arbiter`, `default_arbiter` and `payment_hash`. Additional operations are `version`, `fee_quote` and `quote_scope`, plus the arbiter-authorized `register_quote` mutation. Versioned payment and claim state includes the fee balances needed for reconciliation.
+
+Use the canonical [term encoding](/docs/reference/terms) and [quote encoding](/docs/protected/quotes#quote-encoding) when preparing signatures.
 
 Claims and disputes must be recorded before their applicable closing deadlines. A ruling requires current authority and revision after evidence closes. At the final deadline, fallback becomes eligible. Every transition requires a transaction and a finalized claim cannot pay twice.
-
-
-## Local application implementation
-
-The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
-
-Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.

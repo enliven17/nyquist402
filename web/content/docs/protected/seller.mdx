@@ -4,7 +4,7 @@ description: Publish protected offers, provide verifiable delivery receipts and 
 ---
 ## Advertise supported terms
 
-The resource server advertises its protected capability, network, deployment, asset and delivery/pricing criteria through x402 negotiation. Agree the buyer's exact budget, review policy, arbiter selection, accepted quote references and fallback before funding.
+**Protected x402 offer negotiation is not fully implemented yet.** The resource server will advertise its protected capability, network, deployment, asset and delivery/pricing criteria in its HTTP 402 response. Agree the buyer's exact budget, review policy, arbiter selection, accepted quote references and fallback before funding.
 
 A seller must not substitute basic settlement when a buyer required protection.
 
@@ -26,4 +26,4 @@ Track accepted claims, undisputed settlement, arbitration awards and unused-fund
 
 ## Signing policy
 
-Production sellers control their own signing credentials and permitted actions. Payment-scoped seller controls in the current demo are demonstration delegation, not the intended production authentication model. See [signing](/docs/signing).
+The seller controls its signing credentials and authorizes only the permitted action for the agreed payment. Relaying a transaction does not grant the facilitator seller authority. See [signing](/docs/signing) for the required signatures and the [demo walkthrough](/docs/quickstart) for its payment-scoped demonstration controls.

@@ -1,4 +1,4 @@
-/** Target service boundaries. The ledger remains authoritative; services do not gain allocation authority. */
+/** Service boundaries. The ledger remains authoritative; services do not gain allocation authority. */
 export default function SystemArchitecture() {
   return <div className="docs-diagram" role="region" tabIndex={0} aria-label="System architecture diagram; scroll horizontally to read all components">
     <svg viewBox="0 0 960 520" className="dg docs-system" role="img" aria-labelledby="system-title system-description">
@@ -25,7 +25,7 @@ export default function SystemArchitecture() {
       <g stroke="var(--muted)" fill="none" markerEnd="url(#system-arrow)">
         <path d="M164 108v40M480 108v40M796 108v40M164 214v54M480 214v54M796 214v54M164 346v64M796 346v64M480 410v-62" />
       </g>
-      <text x="480" y="25" fill="var(--muted)" fontFamily="var(--font-mono)" fontSize="11" textAnchor="middle">TARGET ARCHITECTURE</text>
+      <text x="480" y="25" fill="var(--muted)" fontFamily="var(--font-mono)" fontSize="11" textAnchor="middle">SERVICE ARCHITECTURE</text>
       <text x="480" y="385" fill="var(--muted)" fontFamily="var(--font-mono)" fontSize="11" textAnchor="middle">Contract state is authoritative; service records are reconciled against it.</text>
     </svg>
   </div>;
