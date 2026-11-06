@@ -1,35 +1,78 @@
 ---
 title: SDK integration
-description: Validate agreements, prepare authorized actions and track protected payments from your application.
+description: Planned package interfaces for protected HTTP requests, signing, receipts and recovery.
 ---
-## Connect your application
+**SDK distribution and the protected HTTP adapter are not fully implemented yet.** The planned package identifier is `@nyquist402/sdk`; imports below describe the target package API and are not an instruction to install an already released package. The core contract client methods are documented in the [TypeScript reference](/docs/testnet/sdk).
 
-The SDK connects buyer and agent clients, seller APIs and arbitration integrations to protected escrow. Configure the contract, RPC endpoint and network passphrase for the payment version you support. Verify these values before asking anyone to sign.
+## Package surface
 
-**SDK distribution is not fully implemented yet.** The installable release will provide versioned packages and supported-network declarations. The [TypeScript client reference](/docs/testnet/sdk) describes the integration methods; package installation instructions will accompany the release.
+| Export | Planned responsibility |
+| --- | --- |
+| `ProtectedEscrowClient` | Canonical payment identity, state reads, preparation, exact authorization and direct transaction submission |
+| `createServiceClient({ origin, wallet, fetch })` | Capability checks, wallet sessions, quotes, private material access, relay submission and transaction polling |
+| `createProtectedFetch({ service, wallet, policy, fetch })` | Buyer-bound HTTP offers, request ownership proofs, funding, work-ID retries and receipt verification |
+| `verifyDeliveryReceipt(receipt, output, terms)` | Verify seller identity, receipt/claim commitments, metering and the response body hash |
+| `fundingTotal(terms)` | Exact principal plus both reserve amounts as an integer string |
+| `ProtectedPaymentError` | Structured `code`, `retryable`, `requestId`, `paymentId` and optional `transactionHash` |
 
-## Validate before funding
+The package targets modern browsers and Node 24. Browser, server and shared entry points are separate: `@nyquist402/sdk/client`, `/server` and `/types`. Server signing helpers and private keys never enter a browser bundle. Published package versions use semantic versioning, while the service capability record identifies the supported contract and schema; package numbering never changes a funded payment.
 
-Check the complete agreement: delivery criteria, principal budget, asset, deadlines, arbiter selection, fallback allocation and accepted fee quotes. Present the work budget, protocol reserve and arbitration reserve separately. Compute the payment identity from the canonical terms, network and contract.
+## Create a service client
 
-A required capability must be supported by every participating integration. Reject an incompatible offer before signing; an agent requiring protected review must not accept a basic-only payment.
+```ts
+import { createServiceClient } from '@nyquist402/sdk/client';
 
-## Prepare, sign and submit
+const service = createServiceClient({ origin: serviceOrigin, wallet, fetch });
+const capabilities = await service.supported();
+await service.signIn();
+const offer = await service.quote({ terms, agreement });
+```
 
-1. Call `prepare` with the transaction source and the exact lifecycle action.
-2. Collect any additional role authorizations requested for that call.
-3. Ask the transaction source's wallet to sign the prepared envelope.
-4. Call `submit` with the prepared transaction and signed XDR.
-5. Track confirmation and read the resulting payment or claim state.
+`wallet` supplies `account`, `signTransaction(xdr)` and, for the initial HTTP profile, `signDigest(digest)`. The SDK validates the exact bytes passed to each method and verifies the returned signature or envelope. It never asks a wallet to approve an uninspected arbitrary invocation tree.
 
-Preparation simulates the action and validates its authorization tree. Each role signs only its permitted call; the transaction source signs the envelope and pays network fees. Submission rejects a wallet response that changes the prepared transaction body. See [signing and authorization](/docs/signing).
+`signIn` obtains a 300-second challenge, signs it and exchanges it for a 1,800-second account/origin/network-scoped session. Browser tokens remain in memory. Expiry clears the session and raises `SESSION_EXPIRED`; the client does not silently request a wallet signature without the application's sign-in policy.
 
-## Read and reconcile state
+## Prepare, authorize and submit
 
-Use `terms`, `state`, `claimState` and `arbiter` to retrieve the agreement, balances, claim status and current ruling authority. Read fresh state when preparing acceptance, evidence, a ruling or a deadline action: another transaction may have advanced the payment since the last read.
+1. Compare the seller's offer and `/supported` scope, then validate the full agreement, quotes and exact funding total.
+2. Call `prepare` with the source and typed action. Validate the returned required authorization entries before additional role signatures are collected.
+3. Re-simulate completed additional authorizations in enforcement mode. Only then ask the source wallet to sign the envelope.
+4. Submit using a stable idempotency key, preserving `preparationId`, payment ID and transaction hash before waiting.
+5. Poll the original operation until confirmation, failure or an explicitly unresolved outcome. Read fresh contract state before continuing.
 
-Keep the payment ID and any submitted transaction hash. If confirmation is delayed, query the original transaction before building another action. The [history service](/docs/protected/recovery) supports continuity across sessions; onchain state remains authoritative for funds and finality.
+The direct `ProtectedEscrowClient.submit` waits for confirmed success and raises a pending error containing the hash if its confirmation budget is exhausted. The relay client `service.submit` returns the service's pending/confirmed operation object; `service.wait(hash, { timeoutMs })` waits up to 60 seconds by default, then returns `unknown` or `pending` with the original identity. Neither path automatically constructs a replacement transaction.
 
-## Handle archived records
+## Protected fetch and delivery receipts
 
-Automatic restoration is **not fully implemented yet**. The client reports when a call needs archived state restored. Recovery tooling will restore the required records and then prepare the original action again, without changing its agreement or duplicating its effect.
+```ts
+import { createProtectedFetch } from '@nyquist402/sdk/client';
+
+const protectedFetch = createProtectedFetch({ service, wallet, policy, fetch });
+const result = await protectedFetch(resourceUrl, {
+  method: 'POST',
+  body: requestBytes,
+  workId,
+});
+await result.verifyReceipt();
+```
+
+The policy object has these required fields, also defined by `FundingPolicy` in the [schema](/service-contract.openapi.json):
+
+| Field | Exact check |
+| --- | --- |
+| `allowedNetworks`, `allowedContracts`, `allowedAssets` | Offer values must be in each allowlist |
+| `allowedArbiters` | Both selected and pinned-default identities must be allowed |
+| `maxPrincipal`, `maxProtocolReserve`, `maxArbitrationReserve`, `maxCaseFee` | Each base-unit amount must remain within its separate limit |
+| `reviewSeconds`, `responseSeconds`, `rulingSeconds` | `{ min, max }` ranges; both custom/default ruling windows must fit the ruling range |
+| `fallbackSellerBps` | Explicit `{ min, max }` accepted fallback range within 0–10,000 |
+| `fundingMode` | `prompt` requires `approveFunding(offer)` to return true for each new agreement; `automatic` permits only offers passing every declared bound |
+
+`approveFunding` is an application callback, supplied separately from the serializable policy object. Missing limits, fallback consent or a required approval callback stop funding. Retries do not authorize additional budgets. Numeric ranges with `min > max` are invalid, even if each number independently fits its type.
+
+The adapter binds the offer and signed request proof to origin, method, path, body hash and work ID; verifies confirmed funding; and checks the returned receipt against the output bytes and recorded claim. The [HTTP payment profile](/docs/integration) defines every field and retry condition. A changed work request requires a new work ID and spending-policy decision.
+
+## Error and recovery contract
+
+The SDK preserves the service [error codes](/docs/reference/service-api#errors-and-limits) without converting a pending transaction into a generic failure. `STATE_CHANGED` requires a state read and fresh preparation; `SESSION_EXPIRED` requires sign-in; `QUOTE_EXPIRED` requires a fresh applicable quote; `INVALID_SIGNATURE` is never automatically retried with a broader permission set.
+
+Automatic storage restoration is **not fully implemented yet**. The planned `client.restore(preparedRequirement, { feeBudget, signer })` follows the [restoration procedure](/docs/protected/recovery#automatic-restoration), returns its transaction identity and requires the original action to be prepared again. Restoration and the business action have separate signatures and outcomes.

@@ -1,35 +1,62 @@
 ---
 title: Service operations
-description: Network compatibility, role authority and continuity across execution, evidence and recovery.
+description: Planned availability targets, monitoring, key controls and recovery procedures.
 ---
-## Network and payment compatibility
+**Managed operations are not fully implemented yet.** The numbers below are proposed launch defaults and acceptance targets for the managed service. They define the intended operating policy; they are not measurements or guarantees of the current testnet demo.
 
-Every payment identifies its network, escrow contract and agreement version. Clients and services check that identity before accepting funding or submitting lifecycle actions. Zero-fee offers use the same protected settlement rules; the accepted agreement determines the charges.
+## Service targets
 
-Service releases will publish supported networks, contract addresses, code hashes, SDK versions and API schemas. The [testnet setup guide](/docs/setup) lists the test network and escrow versions used for evaluation.
+| Measure | Planned target | Measurement |
+| --- | --- | --- |
+| API availability | 99.9% per UTC calendar month | Eligible requests completing without a service-caused error; planned maintenance counts as downtime |
+| State and evidence reads | p95 under 2 seconds | Authenticated request arrival to full response for records within documented limits |
+| Mutation acknowledgment | p95 under 5 seconds | Valid request to a durable operation identity or explicit rejection; not blockchain confirmation |
+| Due-action submission | p95 within 30 seconds | Contract eligibility to first broadcast when ledger/RPC are healthy and the configured fee budget is available |
+| Index freshness | At most 3 ledgers behind | Current network ledger minus the last completely indexed ledger |
+| Incident acknowledgment | Within 15 minutes, 24/7 | Critical alert delivery to an identified operator acknowledging ownership |
+| Durable-data recovery point | At most 5 minutes | Maximum acknowledged metadata/evidence loss in a disaster restoration exercise |
+| Service recovery time | Within 60 minutes | Disaster declared to a reconciled service accepting normal traffic |
 
-## Role authority and keys
+Availability excludes client-caused 4xx responses. Rate limiting within the documented allowance, failed authorization due to a service defect and dependency failures that prevent an eligible request all count against availability. Execution latency is reported separately during network outages; deadlines and private evidence obligations do not pause. Blockchain confirmation time and arbiters' merits decisions are not controlled by an API latency target.
 
-Keep transaction submission, seller authorization and arbiter ruling authority separate. A facilitator may pay network fees and relay a signed call; that does not let it spend the work budget or decide a case.
+Three-region synthetic probes run every minute. The monthly report includes request success rates, p50/p95/p99 latency, index lag, overdue actions, incidents and recovery results; it reports both overall and dependency-attributed failures. A five-minute availability failure, index lag above 3 ledgers for 60 seconds, or an eligible action waiting 30 seconds pages the on-call operator.
 
-Sellers control authorization for their claims. Arbiters sign only cases assigned to them and only within the accepted ruling window. Key rotation or service recovery cannot substitute a different arbiter for one pinned to an existing agreement.
+## Network and release compatibility
 
-The arbitration service's operating policy will define assignment, conflicts of interest, escalation and audit procedures.
+`GET /supported` identifies the network, escrow, code hash, asset, default arbiter and supported credential/capability names. The client verifies the contract identity and pins the agreement before signing. Changes to service defaults cannot alter funded terms. See the [public API contract](/docs/reference/service-api) and [testnet setup](/docs/setup).
 
-## Monitor the payment lifecycle
+New service releases are additive within the advertised schema. A breaking request or receipt format uses a new explicitly negotiated schema identifier and is rejected by incompatible clients; no request is silently reinterpreted. Private evidence retrieval and direct-action recovery remain available through the full retention period for funded agreements.
 
-Monitor pending transactions, eligible actions awaiting execution, case deadlines and evidence retrieval. Reconcile payment history with onchain state and track principal, reserved fees, earned fees and returns separately.
+## Signing authority and key controls
 
-An interface must distinguish delayed indexing, pending confirmation and a failed transaction. Evidence retrieval failures must remain visible to participants reviewing a case.
+Keep relay submission, seller authorization, arbiter ruling and backup access separate. Managed signing keys stay in a hardware-backed signing service; application processes receive permitted signing operations rather than exported private keys. Each signing request records the payment, action, revision and approving role without logging the signature payload or evidence body.
 
-## Recover interrupted work
+Production deployments require two operators to approve key-policy changes and backup-key recovery. A relay key can be rotated without changing the contract's role identities. An arbiter identity pinned to a funded agreement is never replaced by an operational key change; if its signing authority cannot be recovered, the original escalation and fallback windows apply.
 
-Recover the original transaction identity and reconcile its result before resuming a job. Restore private case records with their access permissions and body versions. A restored service must preserve payment terms, deadlines, evidence revisions and finalized outcomes.
+## Execution and reconciliation
 
-If Soroban archives required state, restore that state before preparing the action again. Restoring a contract entry cannot recover a missing offchain evidence body; the two recovery paths have different responsibilities.
+Workers scan due actions every 5 seconds and take a durable lease keyed by network, contract, payment, claim and action. A lease expires after 30 seconds and is renewed every 10 seconds while a worker is active. The job record outlives the lease and stores the exact signed XDR and hash before broadcast.
 
-## Managed operations — not fully implemented yet
+A replacement worker first reconciles that transaction. It may rebroadcast the same still-valid XDR; it cannot generate a competing payout because a lease expired. After conclusive failure or expiry, it refreshes the claim and prepares only an action still eligible under the funded agreement. State checks happen again at contract execution.
 
-The managed service will publish availability and execution-latency targets, evidence retention and deletion policies, access auditing, backup recovery procedures and incident guidance. Automatic storage maintenance and restoration are also being completed.
+Unknown outcomes alert after 60 seconds and remain visible until resolved. Insufficient fee budget, unavailable RPC, archived state and missed eligibility windows each have a distinct job status and alert reason. The worker never shortens a review window or converts an active dispute into an undisputed settlement.
 
-Mainnet activation will follow independent security review and deployment verification. See the [service roadmap](/docs/roadmap) for these remaining capabilities and [direct-action recovery](/docs/protected/recovery) for the contract path during a service outage.
+## Backups and restoration
+
+Acknowledged evidence writes must reach two independent storage copies before success is returned. Metadata is replicated continuously and checkpointed at least every 5 minutes. Encrypted daily snapshots and point-in-time logs are retained for 30 days in a separate failure domain. Access to backups is logged and restricted to the recovery role.
+
+Run a restoration exercise monthly. Restore metadata and immutable bodies, verify their hashes, rebuild chain-derived state from the last durable checkpoint, and reconcile every pending transaction before enabling submission. A degraded service exposes its last checked ledger and blocks new financial mutations until reconciliation completes.
+
+Every incident has one owner. The public status record is updated within 30 minutes of confirmation and at least every 30 minutes while material user impact continues. A post-incident report is published within 5 business days and identifies impact, recovery actions and prevention work without exposing private case data.
+
+## Arbitration operations
+
+The Nyquist402 default is a project-operated arbitration service. Its [signed provider manifest](/docs/services/discovery) identifies its operator, ruling account, scope, fees, evidence policy and response commitments. Directory listing is identity and compatibility information, not a claim of impartiality or endorsement.
+
+A case is assigned to an eligible reviewer after conflict screening and evidence access checks. Reviewers must recuse for a direct financial, employment or personal relationship with either party; the conflict and reassignment are recorded. Reassignment is internal to the same pinned ruling identity and cannot extend a contract deadline or create a new arbiter.
+
+If a conflict cannot be resolved within the assigned window, the provider does not invent a ruling or change the agreement. It reports inability to handle the case and allows the pre-agreed escalation or fallback. Late provider responses and completed rulings are not appeals against finalized outcomes.
+
+## Mainnet activation
+
+Mainnet activation requires independent review of allocation, signing, quotes, evidence access and recovery; deployment/code-hash verification; a successful restoration exercise; and 14 consecutive days of measured target performance. Any critical or high-severity review finding blocks activation until remediation is verified. The service capability record advertises a network only after these checks; no client may infer mainnet support from testnet availability.

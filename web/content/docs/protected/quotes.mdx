@@ -35,4 +35,6 @@ Funding references the accepted quote IDs. The contract verifies authority, scop
 
 ## Quote discovery — not fully implemented yet
 
-Arbitration integrations will expose published pricing and direct quotes through the protected payment negotiation flow. The client will check each returned quote against the agreed terms before signing; receiving a quote through a facilitator will not replace arbiter authentication. Public HTTP schemas will be defined with the [protected x402 integration](/docs/integration).
+The planned [provider discovery contract](/docs/services/discovery) defines signed manifests, compatible policy filtering, quote requests, registration confirmation and evidence handoff. Providers expose `quoteUrl`; the payment service accepts complete proposed terms at `POST /quotes` and returns a fundable offer only after applicable quote registrations confirm.
+
+The [public API schemas](/docs/reference/service-api) define the requests and returned quote records. Directory signatures establish listing identity; the contract’s registered quote establishes the accepted fee. The client checks both before funding, including its fee cap and funding deadline.

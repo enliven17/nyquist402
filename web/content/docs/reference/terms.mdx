@@ -14,7 +14,7 @@ Buyer and seller authorize the complete agreement before funding. The agreement 
 | Arbitration | Custom preferences, pinned default, accepted quotes and terminal fallback |
 | Fees | Protocol and arbitration reserves, fee rates, recipients and per-case caps |
 
-Protected HTTP negotiation is **not fully implemented yet**. Its wire schema will identify the contract and agreement format so the integration can verify compatibility before requesting signatures.
+Protected HTTP negotiation is **not fully implemented yet**. The [HTTP payment profile](/docs/integration) and [OpenAPI contract](/service-contract.openapi.json) define the exact requirements, payment context and receipt objects. The client checks the advertised contract, full terms and schema before requesting signatures.
 
 ## Payment terms
 

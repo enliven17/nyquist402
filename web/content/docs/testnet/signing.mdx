@@ -38,8 +38,8 @@ This Node signing example assumes funded `buyer` and `seller` keypairs, agreed `
 
 ## Supported credentials
 
-The client supports supported Stellar address authorization credentials. Custom account authentication is re-simulated in enforcement mode before envelope signing.
+The client supports Stellar address authorization credentials. Custom account authentication is re-simulated in enforcement mode before envelope signing.
 
-Delegated CAP-71 support is **not fully implemented yet**. Delegated credential trees are rejected until their expanded authority can be validated before signing.
+Delegated credentials are **not fully implemented yet**. The [delegated authorization contract](/docs/signing#delegated-authorization) defines capability checks, exact invocation binding, tree limits, signer validation and enforcement simulation; unsupported credentials are rejected before signing.
 
 The protected demo charges network fees to the connected wallet in test XLM. A relay may sponsor transaction fees under its own policy, but sponsorship never replaces the buyer, seller or arbiter authorization required by a call.

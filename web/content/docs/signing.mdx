@@ -31,6 +31,19 @@ Authenticated service requests establish account identity and case membership. K
 
 ## Current credential support
 
-The client supports supported Stellar address authorization credentials. Custom account authentication is re-simulated in enforcement mode before envelope signing.
+The client supports Stellar address authorization credentials. Custom account authentication is re-simulated in enforcement mode before envelope signing.
 
-Delegated CAP-71 credential support is **not fully implemented yet**. These credential trees are rejected; support will require validation of the full delegated authority before a signature is requested. See the [transaction signing example](/docs/testnet/signing).
+## Delegated authorization
+
+**Delegated credential support is not fully implemented yet.** The planned signing adapter follows [Stellar’s authentication delegation specification](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0071-01.md): delegated signers share the top-level authorization payload and invocation context, and nested delegate lists are ordered and duplicate-free. Nyquist402 adds the following validation policy before it enables this capability.
+
+1. Check the advertised `stellar-delegated-auth` capability and the network protocol support. If either is absent, return `UNSUPPORTED_CAPABILITY` before collecting a signature.
+2. Decode the top-level address, nonce, expiration ledger and full invocation tree. Match the tree to the exact requested escrow action and permitted token movements. A delegate cannot add transfers, change recipients or substitute a deployment.
+3. Traverse the delegate tree. Require canonical address ordering and no duplicate siblings; reject an ancestor cycle. The SDK limit is 8 delegate levels and 32 total delegated signer entries. Exceeding either limit returns `DELEGATION_LIMIT` rather than silently dropping entries.
+4. Build the address-bound authorization payload using Stellar’s XDR encoder and network binding. The top-level address, nonce, ledger expiry and exact call context remain bound across every nested signer. Collect signatures through the wallet adapter; never re-encode a different payload after signing.
+5. Re-simulate the completed entries in enforcement mode so each account’s authentication logic verifies its permitted delegates and resources. Local signature verification alone does not prove that an account authorizes a delegate. Reject missing, stale, invalid or unrelated signer authority.
+6. Present the final escrow action, asset movements, top-level role and all delegates before source-envelope signing. Submission verifies that the wallet did not change the prepared transaction body.
+
+A preparation lasts at most 120 seconds. Authorization expiry is bounded by the prepared ledger window and action deadline; expiry requires fresh preparation and signatures, not changing an old payload in place. The maximum signed XDR is 64 KiB.
+
+Delegation is authority for one exact prepared transaction, not a permanent right to act as seller, arbiter or payer. Revoke or change account policy through the account’s own controls; subsequent enforcement simulation and execution use the current policy. Service sessions and HTTP request proofs have separate credential profiles and reject unsupported identities explicitly. Transaction delegation never grants private evidence access by itself.

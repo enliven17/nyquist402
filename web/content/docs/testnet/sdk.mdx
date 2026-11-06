@@ -6,7 +6,7 @@ description: Configure a protected payment client, read state and prepare signed
 
 Create a `ProtectedEscrowClient` for the payment’s escrow contract, RPC and network passphrase. The client prepares lifecycle actions, validates authorization and reads payment and claim state.
 
-**SDK distribution is not fully implemented yet.** An installable release will provide the client and its versioned exports. The examples below describe its TypeScript API and assume your integration supplies the `ProtectedEscrowClient` constructor, payment identifiers and wallet adapter.
+**SDK distribution is not fully implemented yet.** The planned `@nyquist402/sdk` [package contract](/docs/sdk#package-surface) defines its entry points and service/HTTP adapters. The examples below describe the core client API and assume the `ProtectedEscrowClient` constructor, payment identifiers and wallet adapter; they are not a claim that a package is already released.
 
 ```ts
 import { Networks } from '@stellar/stellar-sdk';
