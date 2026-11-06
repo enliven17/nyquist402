@@ -1,3 +1,4 @@
+import { PROTECTED_V2_CONTRACT } from "@/lib/deployment";
 import "./landing.css";
 import { Logo, Mark } from "@/components/Logo";
 import HeroFigure from "@/components/landing/HeroFigure";
@@ -7,29 +8,29 @@ import Motion from "@/components/landing/Motion";
 const REPO_URL = "https://github.com/enliven17/nyquist402";
 const SPEC_PR = "https://github.com/x402-foundation/x402/pull/4124";
 const ISSUE_URL = "https://github.com/x402-foundation/x402/issues/4122";
-const ESCROW = "CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI";
+const ESCROW = PROTECTED_V2_CONTRACT;
 const ESCROW_URL = `https://stellar.expert/explorer/testnet/contract/${ESCROW}`;
 
 
 const features = [
   {
-    title: "Consent, enforced onchain",
-    text: "The contract checks the seller's signature on every capture, void and refund.",
+    title: "Agreements, enforced onchain",
+    text: "Both parties sign the budget, review policy, arbiter and terminal fallback.",
     icon: "M8 32h32M14 32V18h20v14M20 18v-5a4 4 0 0 1 8 0v5",
   },
   {
-    title: "Replay protection from the protocol",
-    text: "Soroban nonces make every consent single-use.",
+    title: "Independent delivery claims",
+    text: "Each claim reserves its own budget and can settle only once.",
     icon: "M10 24a14 14 0 1 0 4-10M10 8v6h6M24 16v9l6 4",
   },
   {
-    title: "One signature, no XLM for payers",
-    text: "The agent signs once. The facilitator pays the fees.",
+    title: "Review before settlement",
+    text: "Buyers accept deliveries or dispute them within the agreed review window.",
     icon: "M8 36c6-2 8-14 14-14s6 8 12 8 6-6 6-6M8 12h14",
   },
   {
-    title: "Refunds anyone can fund",
-    text: "A seller, treasury or insurer can cover a refund.",
+    title: "Bounded arbitration",
+    text: "The current arbiter can allocate only the disputed reservation.",
     icon: "M24 8v32M12 20l12-12 12 12M10 40h28",
   },
 ];
@@ -37,17 +38,17 @@ const features = [
 const uses = [
   ["AI agents", "A spending ceiling per task, not a blank check."],
   ["Inference APIs", "Bill by tokens generated."],
-  ["Long-running jobs", "Capture in parts, void on failure."],
+  ["Long-running jobs", "Review partial deliveries independently."],
   ["Data marketplaces", "Pay before the row count is known."],
-  ["Commerce", "Authorize at checkout, capture on shipment."],
+  ["Commerce", "Fund a budget and review delivery claims."],
   ["MCP tools", "Tool calls priced by their result."],
 ];
 
 const faq = [
-  ["How is this different from the exact scheme?", "exact moves a fixed, final amount. auth-capture holds a maximum in escrow; the seller captures part of it and can refund later."],
-  ["Who holds the funds during a hold?", "The escrow contract. If the seller never acts, the payer reclaims the hold after the deadline."],
-  ["Can the facilitator move funds on its own?", "No. Every capture, void and refund needs the seller's signature."],
-  ["Is it audited?", "Not yet. An audit comes before mainnet."],
+  ["How does protected settlement work?", "The buyer funds an agreed budget. The seller records delivery claims; each claim has its own review and dispute process."],
+  ["What happens if an arbiter does not respond?", "Authority passes to the pinned default. After its window ends, an eligible caller can apply the fallback both parties signed."],
+  ["Does the demo mint its own token?", "No. It uses Circle’s official Stellar testnet USDC. Add the trustline and use Circle’s faucet; test XLM pays network fees."],
+  ["Is it audited or on mainnet?", "The protected v2 contract is deployed on Stellar Testnet. It is unaudited; this demo uses test USDC and no mainnet funds."],
 ];
 
 export default function Home() {
@@ -66,11 +67,11 @@ export default function Home() {
               <div>
                 <h1 className="hero-title" data-split="now">Charge what<br />the work cost.</h1>
                 <p className="lead" data-reveal>
-                  x402 <code>auth-capture</code> on Stellar. Authorize a maximum, capture the real price, refund onchain.
+                  Fund a budget. Review the delivery. Settle in USDC on Stellar.
                 </p>
                 <div className="cta-row" data-reveal>
                   <a href="/demo" className="pill pill-accent pill-lg">Run the testnet demo <span aria-hidden>↗</span></a>
-                  <a href={SPEC_PR} className="pill pill-lg">Read the spec</a>
+                  <a href="/docs" className="pill pill-lg">Read the protocol</a>
                 </div>
               </div>
 
@@ -83,7 +84,7 @@ export default function Home() {
         {/* 02 The gap */}
         <section className="why" id="s2" data-section>
           <div className="wrap">
-            <h2 className="h-lg" data-split>Final at signature<br />is not a business model.</h2>
+            <h2 className="h-lg" data-split>One budget.<br />Every delivery reviewed.</h2>
 
             <div className="panel" data-reveal>
               <div className="panel-grid" />
@@ -92,14 +93,14 @@ export default function Home() {
                 <div className="bar"><div className="bar-fill bar-exact" data-line /><b>1 transfer · amount fixed when the client signs</b></div>
               </div>
               <div className="panel-row">
-                <div className="panel-label"><code>auth-capture</code><span>Nyquist402</span></div>
-                <div className="bar"><div className="bar-fill bar-ac" data-line /><b>hold → capture → void → refund · amount fixed after the work</b></div>
+                <div className="panel-label"><code>protected</code><span>Nyquist402</span></div>
+                <div className="bar"><div className="bar-fill bar-ac" data-line /><b>fund → claim → review → settle or resolve</b></div>
               </div>
             </div>
 
             <div className="why-copy">
               <p className="fill-text" data-fill>
-                x402 on Stellar settles once, at a price fixed in advance.
+                Each delivery is reviewed before it settles.
               </p>
             </div>
           </div>
@@ -111,7 +112,7 @@ export default function Home() {
         {/* Soroban features */}
         <section className="features">
           <div className="wrap">
-            <h2 className="h-lg" data-split>Stronger on Stellar<br />than where it started.</h2>
+            <h2 className="h-lg" data-split>Shared terms.<br />Clear authority.</h2>
             <div className="feature-grid">
               {features.map((f, i) => (
                 <article className="feature" key={f.title} data-reveal>
@@ -148,13 +149,13 @@ export default function Home() {
           <div className="wrap">
             <div className="proof-grid">
               <blockquote className="proof-quote" data-fill>
-                Live on testnet. Spec <em>under review at the x402 Foundation</em>.
+                Protected escrow on testnet. <em>Official Circle test USDC.</em>
               </blockquote>
               <dl className="stats">
-                <div><dt><span data-count="24">24</span></dt><dd>contract tests</dd></div>
-                <div><dt><span data-count="317">317</span></dt><dd>SDK tests</dd></div>
-                <div><dt><span data-count="1">1</span></dt><dd>payer signature</dd></div>
-                <div><dt><span data-count="0">0</span></dt><dd>XLM for the payer</dd></div>
+                <div><dt>3</dt><dd>participant roles</dd></div>
+                <div><dt>1</dt><dd>unified demo</dd></div>
+                <div><dt>USDC</dt><dd>Circle testnet asset</dd></div>
+                <div><dt>Testnet</dt><dd>not audited</dd></div>
               </dl>
             </div>
             <a href={ESCROW_URL} className="contract-chip" data-reveal>
@@ -166,16 +167,16 @@ export default function Home() {
         {/* 06 Start */}
         <section className="start" id="s6" data-section>
           <div className="wrap">
-            <h2 className="h-lg" data-split>Three roles.<br />One package.</h2>
+            <h2 className="h-lg" data-split>Three roles.<br />One flow.</h2>
             <div className="start-grid">
               {[
-                ["Seller", `new AuthCaptureStellarScheme({\n  consentSigner: receiver,\n})`],
-                ["Agent", `new x402Client().register(\n  "stellar:testnet",\n  new AuthCaptureStellarScheme(agent),\n)`],
-                ["Facilitator", `new AuthCaptureStellarScheme(\n  [operator],\n  { feeTerms: { maxFeeBps: 0 } },\n)`],
+                ["Buyer", "Agree the budget and review each delivery. Accept a claim or submit evidence for a dispute."],
+                ["Seller", "Perform the work, record exact delivery claims and respond to case evidence."],
+                ["Arbiter", "Read the current evidence and sign a bounded award within your assigned ruling window."],
               ].map(([role, code]) => (
                 <article className="start-card" key={role} data-reveal>
-                  <div className="start-head"><h3>{role}</h3><span className="t-cap">@x402/stellar/auth-capture</span></div>
-                  <pre><code>{code}</code></pre>
+                  <div className="start-head"><h3>{role}</h3><span className="t-cap">local protected SDK</span></div>
+                  <p>{code}</p>
                 </article>
               ))}
             </div>
@@ -207,7 +208,7 @@ export default function Home() {
         <section className="band">
           <div className="wrap band-inner">
             <Mark size={56} className="band-mark" />
-            <h2 className="h-lg" data-split>Hold. Capture. Refund.</h2>
+            <h2 className="h-lg" data-split>Fund. Review. Resolve.</h2>
             <a href="/demo" className="pill pill-paper pill-lg">Run it on testnet <span aria-hidden>↗</span></a>
           </div>
         </section>

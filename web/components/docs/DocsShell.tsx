@@ -8,7 +8,6 @@ function SearchIcon() {
 
 export default function DocsShell({ entries, children }: { entries: SearchEntry[]; children: ReactNode }) {
   const path = window.location.pathname;
-  const basic = path.startsWith('/docs/basic');
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -35,7 +34,7 @@ export default function DocsShell({ entries, children }: { entries: SearchEntry[
     <header className="docs-topbar">
       <div className="docs-topbar-main">
         <nav className="docs-top-tabs" aria-label="Documentation sections"><a className={!path.includes('/reference/') ? 'active' : ''} href="/docs">Guides</a><a className={path.includes('/reference/') ? 'active' : ''} href="/docs/reference/contract">Reference</a></nav>
-        <div className="docs-top-actions"><button ref={searchTrigger} className="docs-search-trigger" onClick={openSearch} aria-label="Search documentation"><SearchIcon /><span>Search documentation</span><kbd>⌘ K</kbd></button><a className="docs-demo-link" href={basic ? '/demo' : '/demo/protected'}>Testnet {basic ? 'basic' : 'protected'} demo <span aria-hidden="true">↗</span></a></div>
+        <div className="docs-top-actions"><button ref={searchTrigger} className="docs-search-trigger" onClick={openSearch} aria-label="Search documentation"><SearchIcon /><span>Search documentation</span><kbd>⌘ K</kbd></button><a className="docs-demo-link" href='/demo'>Testnet demo <span aria-hidden="true">↗</span></a></div>
       </div>
     </header>
     <div className="docs-body">{children}</div>

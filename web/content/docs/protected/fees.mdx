@@ -32,6 +32,10 @@ The signed policy for each contract version specifies protocol fee rates, earnin
 
 Track principal movements, reserved liabilities, earned protocol fees, arbiter payouts and returned funds separately. Reports must distinguish Nyquist402 protocol revenue from payments to an external arbiter. Directly submitted transactions obey the same accounting rules as relayed transactions.
 
-## Current implementation
+## Current source policy
 
-The existing protected testnet contract is fee-free and does not implement these additional reserves. Its deployed records must not be interpreted using the future schema. See [implementation status](/docs/roadmap).
+The separate v2 contract implements a protocol fee of `floor(seller_award × protocol_bps / 10000)`, paid from its separate reserve when a claim finalizes. It reserves `floor(claim_amount × protocol_bps / 10000)` at claim creation; any unearned difference returns to the buyer. Buyer refunds do not earn protocol fees.
+
+Each claim reserves the maximum applicable custom/default ruling fee. Only a valid ruling earns one fee; a timed-out custom arbiter earns none. The unused portion returns on claim finalization. Free reserves can be reclaimed without touching active reservations. The total arbitration reserve and per-case fee cap bound liability.
+
+The original deployed v1 contract remains fee-free. V2 source requires a separate deployment; see [implementation status](/docs/roadmap).

@@ -1,5 +1,6 @@
-// Real testnet check, never run automatically. Existing agent and seller need DEMOUSD trustlines.
+// Real testnet check, never run automatically. Existing agent and seller need official Circle USDC trustlines.
 // From web: node --env-file=.env.local --experimental-strip-types scripts/e2e-protected.ts [--reclaim]
+import { USDC_CONTRACT } from "../lib/usdc.ts";
 import assert from "node:assert/strict";
 import { authorizeEntry, Keypair, Networks, Transaction, TransactionBuilder } from "@stellar/stellar-sdk";
 import { randomBytes } from "node:crypto";
@@ -10,12 +11,17 @@ const buyer = Keypair.fromSecret(required("DEMO_AGENT_SECRET"));
 const seller = Keypair.fromSecret(required("DEMO_MERCHANT_SECRET"));
 const client = new ProtectedEscrowClient({ contractId: required("DEMO_PROTECTED_ESCROW"), rpcUrl: "https://soroban-testnet.stellar.org", networkPassphrase: Networks.TESTNET });
 const now = Math.floor(Date.now() / 1000);
+
 const terms: PaymentTerms = {
-  payer: buyer.publicKey(), seller: seller.publicKey(), token: required("DEMO_TOKEN"),
+  payer: buyer.publicKey(), seller: seller.publicKey(), token: USDC_CONTRACT,
   agreement: await hashText("Integration test: $10/$3 paid/$4 disputed/$3 unused"), max_amount: "100000000",
   fund_by: now + 120, delivery_deadline: now + 180, buyer_arbiter: null, seller_arbiter: null,
   default_arbiter: await client.defaultArbiter(), review_seconds: 120, response_seconds: 60,
   arbiter_seconds: 60, default_seconds: 60, fallback_seller_bps: 5000, salt: randomBytes(32).toString("hex"),
+};
+if(process.env.DEMO_PROTECTED_VERSION==="2") terms.fees={
+  protocol_reserve:"0",arbitration_reserve:"0",protocol_bps:0,protocol_recipient:seller.publicKey(),
+  custom_fee:"0",default_fee:"0",case_fee_cap:"0",custom_quote:null,default_quote:null,
 };
 const paymentId = await computePaymentId(terms, client.contractId, Networks.TESTNET);
 console.log(`Recovery payment ID: ${paymentId}`);

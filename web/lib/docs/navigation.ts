@@ -32,13 +32,13 @@ export const docGroups = [
     { slug: 'reference/security', title: 'Security model' },
   ] },
   { title: 'Current testnet', pages: [
-    { slug: 'quickstart', title: 'Protected demo guide' },
+    { slug: 'quickstart', title: 'Unified demo guide' },
     { slug: 'setup', title: 'Setup & deployments' },
     { slug: 'testnet/sdk', title: 'Local SDK reference' },
     { slug: 'testnet/signing', title: 'Local signing example' },
   ] },
   { title: 'Basic auth-capture', pages: [
-    { slug: 'basic', title: 'Overview & demo' },
+    { slug: 'basic', title: 'Basic reference' },
     { slug: 'basic/integration', title: 'x402 integration' },
     { slug: 'basic/contract', title: 'Contract reference' },
   ] },

@@ -1,5 +1,5 @@
 import { Account, Address, BASE_FEE, Contract, Keypair, nativeToScVal, rpc, scValToNative, StrKey, Transaction, TransactionBuilder, xdr } from "@stellar/stellar-sdk";
-import { actionToCall, addr, assertAddress, bytes, integer, jsonNative, validateTerms } from "./codec.ts";
+import { actionToCall, addr, assertAddress, bytes, integer, jsonNative, validateTerms, fundingTotal, quoteScope, assertHash } from "./codec.ts";
 import type { Claim, PaymentState, PaymentTerms, Prepared, ProtectedAction } from "./types.ts";
 
 export type AuthorizationSigner = (address: string, entry: xdr.SorobanAuthorizationEntry, validUntilLedger: number) => Promise<xdr.SorobanAuthorizationEntry>;
@@ -25,7 +25,7 @@ export function assertAuthorization(entry: xdr.SorobanAuthorizationEntry, contra
     })), subInvocations: subs,
   });
   const subs = action.type === "authorize" && address === action.terms.payer ? [invoke(action.terms.token, "transfer", [
-    addr(action.terms.payer), addr(contractId), nativeToScVal(BigInt(action.terms.max_amount), { type: "i128" }),
+    addr(action.terms.payer), addr(contractId), nativeToScVal(BigInt(fundingTotal(action.terms)), { type: "i128" }),
   ])] : [];
   if (!entry.rootInvocation().toXDR().equals(invoke(contractId, call.method, call.args, subs).toXDR())) throw new Error("Unexpected authorization invocation");
 }
@@ -49,7 +49,7 @@ export class ProtectedEscrowClient {
     if (!rpc.Api.isSimulationSuccess(sim) || !sim.result) throw new Error(`Protected simulation failed: ${"error" in sim ? sim.error : "no result"}`);
     return sim as rpc.Api.SimulateTransactionSuccessResponse & { result: rpc.Api.SimulateHostFunctionResult };
   }
-  async read(method: "default_arbiter" | "payment_terms" | "payment_state" | "claim_state" | "case_arbiter" | "payment_hash", args: xdr.ScVal[] = []): Promise<unknown> {
+  async read(method: "default_arbiter" | "payment_terms" | "payment_state" | "claim_state" | "case_arbiter" | "payment_hash" | "quote_scope" | "fee_quote" | "version", args: xdr.ScVal[] = []): Promise<unknown> {
     const sim = this.result(await this.server.simulateTransaction(this.raw(new Account(Keypair.random().publicKey(), "0"), method, args)));
     return jsonNative(scValToNative(sim.result.retval));
   }
@@ -57,7 +57,12 @@ export class ProtectedEscrowClient {
     const value = await this.read("default_arbiter"); assertAddress(value); return value;
   }
   async terms(paymentId: string): Promise<PaymentTerms> {
-    const t = await this.read("payment_terms", [bytes(paymentId)]) as PaymentTerms;
+    const raw = await this.read("payment_terms", [bytes(paymentId)]) as PaymentTerms & Record<string,unknown>;
+    const t = raw;
+    if ("protocol_reserve" in raw) {
+      t.fees = Object.fromEntries(["protocol_reserve","arbitration_reserve","protocol_bps","protocol_recipient","custom_fee","default_fee","case_fee_cap","custom_quote","default_quote"].map(key=>[key,raw[key]])) as PaymentTerms["fees"];
+      for (const key of Object.keys(t.fees!)) delete raw[key];
+    }
     for (const key of ["fund_by", "delivery_deadline", "review_seconds", "response_seconds", "arbiter_seconds", "default_seconds"] as const) t[key] = integer(Number(t[key]));
     return t;
   }
@@ -74,7 +79,18 @@ export class ProtectedEscrowClient {
   }
   async prepare(source: string, action: ProtectedAction, signAuth?: AuthorizationSigner): Promise<Prepared> {
     if (!StrKey.isValidEd25519PublicKey(source)) throw new Error("Transaction fee source must be a Stellar account");
-    if (action.type === "authorize") validateTerms(action.terms, { contractId: this.contractId, defaultArbiter: await this.defaultArbiter(), now: Math.floor(Date.now() / 1000) });
+    if (action.type === "authorize") {
+      validateTerms(action.terms, { contractId: this.contractId, defaultArbiter: await this.defaultArbiter(), now: Math.floor(Date.now() / 1000) });
+      if (action.terms.fees) {
+        const terms=action.terms, fees=terms.fees!, scope=await quoteScope(terms,this.contractId,this.networkPassphrase);
+        for (const [id,arbiter,fee] of [[fees.default_quote,terms.default_arbiter,fees.default_fee],[fees.custom_quote,terms.buyer_arbiter,fees.custom_fee]]) {
+          if (id === null && fee === "0") continue;
+          assertHash(id);
+          const quote=await this.read("fee_quote",[bytes(id)]) as Record<string,unknown>;
+          if (quote.scope!==scope || quote.arbiter!==arbiter || quote.fee!==fee || Number(quote.valid_until)<terms.fund_by) throw new Error("Accepted arbiter quote is incompatible or stale");
+        }
+      }
+    }
     const call = actionToCall(action);
     const tx = this.raw(await this.server.getAccount(source), call.method, call.args);
     const sim = this.result(await this.server.simulateTransaction(tx, undefined, "record"));

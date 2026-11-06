@@ -1,7 +1,7 @@
 import { amount, CAPABILITY, computePaymentId, validateTerms } from "./codec.ts";
 import type { Claim, DemoConfig, PaymentTerms } from "./types.ts";
 export type Quote = { protocol: string; terms: PaymentTerms; paymentId: string; capability: string };
-export type QuoteInput = { payer: string; agreementHash: string; buyerArbiter: string | null; fallbackSellerBps: number };
+export type QuoteInput = { agreement?: string; payer: string; agreementHash: string; buyerArbiter: string | null; fallbackSellerBps: number };
 /** The demo seller agrees to any listed non-default arbiter the buyer picks; otherwise it keeps its own preference. */
 export function sellerArbiterFor(buyerArbiter: string | null, c: Pick<DemoConfig, "sellerArbiter"> & { arbiters?: DemoConfig["arbiters"] }): string | null {
   return buyerArbiter && c.arbiters?.some(a => a.address === buyerArbiter && !a.isDefault) ? buyerArbiter : c.sellerArbiter;
@@ -16,7 +16,7 @@ export function claimActions(c: Claim, now: number) {
   };
 }
 export function parseAmount(text: string): string {
-  if (!/^(0|[1-9][0-9]*)(\.[0-9]{1,7})?$/.test(text)) throw new Error("Use a nonnegative DEMOUSD amount with at most 7 decimal places");
+  if (!/^(0|[1-9][0-9]*)(\.[0-9]{1,7})?$/.test(text)) throw new Error("Use a nonnegative USDC amount with at most 7 decimal places");
   const [whole, fraction = ""] = text.split(".");
   const value = (BigInt(whole) * 10000000n + BigInt(fraction.padEnd(7, "0"))).toString();
   amount(value, true); return value;
@@ -35,9 +35,12 @@ export function formatAmount(text: string): string {
   return `${whole}.${fraction.padEnd(2, "0")}`;
 }
 export async function validateQuote(q: Quote, c: DemoConfig, input: QuoteInput, now: number): Promise<void> {
-  if (q.protocol !== CAPABILITY) throw new Error("Route does not offer protected settlement v1");
+  if (q.protocol !== (c.version === 2 ? "nyquist402:protected:v2" : CAPABILITY)) throw new Error("Route does not offer the required protected version");
   validateTerms(q.terms, { contractId: c.contractId, defaultArbiter: c.defaultArbiter, now });
   const t = q.terms;
+  const expectedFees = c.fees ? {...c.fees,custom_fee: (!t.buyer_arbiter || t.buyer_arbiter === c.defaultArbiter) ? "0" : c.fees.custom_fee, custom_quote:null,default_quote:null} : undefined;
+  const withoutQuotes = t.fees ? {...t.fees,custom_quote:null,default_quote:null} : undefined;
+  if (JSON.stringify(withoutQuotes) !== JSON.stringify(expectedFees)) throw new Error("Quote changed accepted fee limits");
   if (t.payer !== input.payer || t.seller !== c.seller || t.token !== c.token || t.agreement !== input.agreementHash ||
       t.buyer_arbiter !== input.buyerArbiter || t.seller_arbiter !== sellerArbiterFor(input.buyerArbiter, c) || t.fallback_seller_bps !== input.fallbackSellerBps ||
       t.max_amount !== c.preset.budget || t.review_seconds !== c.preset.review || t.response_seconds !== c.preset.response ||

@@ -1,4 +1,4 @@
-// Creates funded testnet accounts and a demo token, then writes web/.env.local.
+// Creates testnet accounts and Circle USDC trustlines, then writes web/.env.local.
 // Usage: node scripts/setup-demo.mjs
 import { existsSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
@@ -9,7 +9,6 @@ import {
   Keypair,
   Networks,
   Operation,
-  rpc,
   TransactionBuilder,
 } from "@stellar/stellar-sdk";
 
@@ -17,8 +16,7 @@ const envPath = new URL("../.env.local", import.meta.url);
 if (existsSync(envPath)) throw new Error(".env.local already exists. Keep its funded account keys and add protected settings from .env.example instead of recreating them.");
 
 const HORIZON = "https://horizon-testnet.stellar.org";
-const RPC = "https://soroban-testnet.stellar.org";
-const AGENT_FUNDING = "1000";
+
 
 async function friendbot(address) {
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -29,35 +27,16 @@ async function friendbot(address) {
   throw new Error(`friendbot failed for ${address}`);
 }
 
-const [issuer, agent, merchant, facilitator] = [0, 1, 2, 3].map(() => Keypair.random());
-await Promise.all([issuer, agent, merchant, facilitator].map(k => friendbot(k.publicKey())));
-
-const asset = new Asset("DEMOUSD", issuer.publicKey());
+const [agent, merchant, facilitator] = [0, 1, 2].map(() => Keypair.random());
+await Promise.all([agent, merchant, facilitator].map(k => friendbot(k.publicKey())));
+const asset = new Asset("USDC", "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5");
 const horizon = new Horizon.Server(HORIZON);
-const issuerAccount = await horizon.loadAccount(issuer.publicKey());
-const classic = new TransactionBuilder(issuerAccount, { fee: BASE_FEE, networkPassphrase: Networks.TESTNET })
-  .setTimeout(60)
-  .addOperation(Operation.changeTrust({ asset, source: agent.publicKey() }))
-  .addOperation(Operation.changeTrust({ asset, source: merchant.publicKey() }))
-  .addOperation(Operation.payment({ destination: agent.publicKey(), asset, amount: AGENT_FUNDING }))
-  .build();
-classic.sign(issuer, agent, merchant);
-await horizon.submitTransaction(classic);
-
-const server = new rpc.Server(RPC);
-const sacTx = new TransactionBuilder(await server.getAccount(issuer.publicKey()), {
-  fee: BASE_FEE,
-  networkPassphrase: Networks.TESTNET,
-})
-  .setTimeout(60)
-  .addOperation(Operation.createStellarAssetContract({ asset }))
-  .build();
-const prepared = await server.prepareTransaction(sacTx);
-prepared.sign(issuer);
-const sent = await server.sendTransaction(prepared);
-const result = await server.pollTransaction(sent.hash, { attempts: 30 });
-if (result.status !== "SUCCESS") throw new Error(`SAC deploy failed: ${result.status}`);
-
+for (const account of [agent, merchant, facilitator]) {
+  const tx = new TransactionBuilder(await horizon.loadAccount(account.publicKey()), { fee: BASE_FEE, networkPassphrase: Networks.TESTNET })
+    .setTimeout(60).addOperation(Operation.changeTrust({ asset })).build();
+  tx.sign(account);
+  await horizon.submitTransaction(tx);
+}
 const env = [
   `DEMO_AGENT_SECRET=${agent.secret()}`,
   `DEMO_MERCHANT_SECRET=${merchant.secret()}`,
@@ -69,4 +48,4 @@ const env = [
   "",
 ].join("\n");
 writeFileSync(envPath, env, { mode: 0o600, flag: "wx" });
-console.log(`Demo token ${asset.contractId(Networks.TESTNET)}. Wrote .env.local.`);
+console.log(`Official testnet USDC ${asset.contractId(Networks.TESTNET)}. Wrote .env.local. Get USDC at https://faucet.circle.com/ (Stellar Testnet).`);

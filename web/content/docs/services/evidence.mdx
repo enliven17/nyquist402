@@ -23,3 +23,10 @@ An evidence body must remain available when its commitment is submitted. Updates
 The service must publish retention, access and deletion behavior and preserve availability throughout the response and ruling windows, including handoff. Deployment documentation specifies retention durations, storage limits and service guarantees.
 
 Do not publish private evidence bodies to the ledger. Operators need restricted storage/key access and access audit records. See [operations](/docs/services/operators).
+
+
+## Local application implementation
+
+The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
+
+Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.

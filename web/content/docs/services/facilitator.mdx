@@ -23,3 +23,10 @@ The contract does not wake itself at a deadline. Service scheduling provides liv
 ## Direct actions and outages
 
 Parties and eligible public callers can submit lifecycle actions directly without facilitator approval. Publish the contract/network information and direct-action tooling needed to do so. A relay outage must not become a new veto over valid acceptance, disputes, rulings or fallback.
+
+
+## Local application implementation
+
+The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
+
+Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.

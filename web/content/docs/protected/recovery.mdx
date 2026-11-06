@@ -28,4 +28,11 @@ Restoration tooling and release capabilities must identify which states they sup
 
 Keep direct-action tools and public deployment identifiers available. Parties can read onchain state and submit eligible actions without relay permission. Private evidence still requires the agreed delivery/retention mechanism; restoring a chain record does not restore a missing evidence body.
 
-The current browser-only recovery behavior is documented in the [local SDK reference](/docs/testnet/sdk).
+The local app stores history and transaction hashes in SQLite, with browser records as a convenience. See [setup](/docs/setup) for data directories and worker recovery.
+
+
+## Local application implementation
+
+The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
+
+Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.
