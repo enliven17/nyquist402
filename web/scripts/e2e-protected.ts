@@ -1,15 +1,18 @@
 // Real testnet check, never run automatically. Existing agent and seller need official Circle USDC trustlines.
-// From web: node --env-file=.env.local --experimental-strip-types scripts/e2e-protected.ts [--reclaim]
+// From web: node --experimental-strip-types scripts/e2e-protected.ts [--reclaim]
 import { USDC_CONTRACT } from "../lib/usdc.ts";
+import { resolveProtectedDeployment } from "../lib/deployment.ts";
+import { loadServerEnvironment } from "../server/env.ts";
 import assert from "node:assert/strict";
 import { authorizeEntry, Keypair, Networks, Transaction, TransactionBuilder } from "@stellar/stellar-sdk";
 import { randomBytes } from "node:crypto";
 import { ProtectedEscrowClient, computePaymentId, hashText } from "../lib/protected/index.ts";
 import type { PaymentTerms, ProtectedAction } from "../lib/protected/types.ts";
+loadServerEnvironment();
 const required = (name: string) => { const value = process.env[name]; if (!value) throw new Error(`${name} required`); return value; };
 const buyer = Keypair.fromSecret(required("DEMO_AGENT_SECRET"));
 const seller = Keypair.fromSecret(required("DEMO_MERCHANT_SECRET"));
-const client = new ProtectedEscrowClient({ contractId: required("DEMO_PROTECTED_ESCROW"), rpcUrl: "https://soroban-testnet.stellar.org", networkPassphrase: Networks.TESTNET });
+const client = new ProtectedEscrowClient({ ...resolveProtectedDeployment(process.env), rpcUrl: "https://soroban-testnet.stellar.org", networkPassphrase: Networks.TESTNET });
 const now = Math.floor(Date.now() / 1000);
 
 const terms: PaymentTerms = {
@@ -19,7 +22,7 @@ const terms: PaymentTerms = {
   default_arbiter: await client.defaultArbiter(), review_seconds: 120, response_seconds: 60,
   arbiter_seconds: 60, default_seconds: 60, fallback_seller_bps: 5000, salt: randomBytes(32).toString("hex"),
 };
-if(process.env.DEMO_PROTECTED_VERSION==="2") terms.fees={
+terms.fees={
   protocol_reserve:"0",arbitration_reserve:"0",protocol_bps:0,protocol_recipient:seller.publicKey(),
   custom_fee:"0",default_fee:"0",case_fee_cap:"0",custom_quote:null,default_quote:null,
 };

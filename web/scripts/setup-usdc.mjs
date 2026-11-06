@@ -1,8 +1,8 @@
 // Prepare existing demo recipients for Circle USDC. Dry-run unless --apply is passed.
 // Existing keys are preserved. No issuer, mint, token deployment or faucet automation.
-import {existsSync} from "node:fs";
+import {loadServerEnvironment} from "../server/env.ts";
 import {Asset,BASE_FEE,Horizon,Keypair,Networks,Operation,TransactionBuilder} from "@stellar/stellar-sdk";
-if(existsSync(".env.local")) process.loadEnvFile(".env.local");
+loadServerEnvironment();
 const asset=new Asset("USDC","GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5");
 const horizon=new Horizon.Server("https://horizon-testnet.stellar.org");
 const secrets=[process.env.DEMO_AGENT_SECRET,process.env.DEMO_MERCHANT_SECRET,process.env.DEMO_FACILITATOR_SECRET,...(process.env.DEMO_ARBITER_SECRETS??"").split(",")].map(x=>x?.trim()).filter(Boolean);

@@ -5,7 +5,8 @@
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { Asset, Horizon, Keypair, Networks, Operation, TransactionBuilder } from "@stellar/stellar-sdk";
-if (existsSync(".env.local")) process.loadEnvFile(".env.local");
+import { loadServerEnvironment } from "../server/env.ts";
+loadServerEnvironment();
 const { app } = await import("../server/app.ts");
 const { ProtectedEscrowClient } = await import("../lib/protected/client.ts");
 const { hashText } = await import("../lib/protected/codec.ts");
@@ -31,7 +32,7 @@ async function api(body: Record<string, unknown>, token?: string) {
 const config = (await (await app.fetch(new Request("http://localhost/api/protected"))).json() as { config: DemoConfig }).config;
 const client = new ProtectedEscrowClient(config);
 const [defaultArb, arbA, arbB] = config.arbiters;
-assert.ok(config.version === 2 && arbA && arbB, "needs the v2 escrow and three demo arbiters");
+assert.ok(config.version === 2 && arbA && arbB, "needs the protected escrow and three demo arbiters");
 
 // --- buyers -------------------------------------------------------------------------------
 const dir = process.env.DEMO_DATA_DIR ?? ".nyquist-data"; mkdirSync(dir, { recursive: true });

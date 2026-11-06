@@ -31,4 +31,6 @@ Authenticated service requests establish account identity and case membership. K
 
 ## Current credential support
 
-The local testnet SDK supports ordinary legacy and AddressV2 credentials and rejects delegated CAP-71 trees. No broader signing support is claimed by the target architecture. See the [local signing reference](/docs/testnet/signing) for executable code.
+The client supports supported Stellar address authorization credentials. Custom account authentication is re-simulated in enforcement mode before envelope signing.
+
+Delegated CAP-71 credential support is **not fully implemented yet**. These credential trees are rejected; support will require validation of the full delegated authority before a signature is requested. See the [transaction signing example](/docs/testnet/signing).

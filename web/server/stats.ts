@@ -1,5 +1,5 @@
 import { rpc, scValToNative } from "@stellar/stellar-sdk";
-import { PROTECTED_V2_CONTRACT, PROTECTED_V2_DEPLOY_TX } from "../lib/deployment.ts";
+import { PROTECTED_CONTRACT, PROTECTED_DEPLOY_TX } from "../lib/deployment.ts";
 
 const server = new rpc.Server("https://soroban-testnet.stellar.org");
 // Bucket sizes for the activity chart; the smallest that keeps it under 48 bars.
@@ -33,12 +33,12 @@ export function stats(): Promise<Stats> {
 
 async function events(): Promise<{ list: Event[]; latestLedger: number }> {
   if (!startLedger) {
-    const deploy = await server.getTransaction(PROTECTED_V2_DEPLOY_TX);
+    const deploy = await server.getTransaction(PROTECTED_DEPLOY_TX);
     if (deploy.status !== rpc.Api.GetTransactionStatus.SUCCESS) throw new Error("Deployment transaction not found");
     startLedger = deploy.ledger;
   }
   const list: Event[] = [];
-  const filters = [{ type: "contract" as const, contractIds: [PROTECTED_V2_CONTRACT] }];
+  const filters = [{ type: "contract" as const, contractIds: [PROTECTED_CONTRACT] }];
   let page = await server.getEvents({ startLedger, filters, limit: 1000 });
   for (;;) {
     for (const e of page.events) {
@@ -83,7 +83,7 @@ async function build(): Promise<Stats> {
   };
 
   return {
-    contractId: PROTECTED_V2_CONTRACT, updatedAt: last, firstAt: first, latestLedger,
+    contractId: PROTECTED_CONTRACT, updatedAt: last, firstAt: first, latestLedger,
     payments: funded.length,
     buyers: new Set(funded.map(e => terms(e).payer)).size,
     transactions: txAt.size, events: list.length,

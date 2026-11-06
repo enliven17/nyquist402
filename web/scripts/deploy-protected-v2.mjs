@@ -3,7 +3,9 @@ import {readFileSync,writeFileSync,existsSync,mkdirSync} from "node:fs";
 import {resolve} from "node:path";
 import {createHash,randomBytes} from "node:crypto";
 import {Address,BASE_FEE,Contract,Keypair,Networks,Operation,rpc,scValToNative,TransactionBuilder,StrKey} from "@stellar/stellar-sdk";
-if(existsSync(".env.local")) process.loadEnvFile(".env.local");
+import {loadServerEnvironment} from "../server/env.ts";
+loadServerEnvironment();
+const envPath=existsSync(".env.local")?".env.local":".env";
 const mode=process.argv[2];
 if(!["upload","deploy","inspect"].includes(mode)) throw new Error("Choose upload, deploy or inspect");
 const network=Networks.TESTNET,server=new rpc.Server("https://soroban-testnet.stellar.org");
@@ -46,7 +48,7 @@ async function read(contract,method) {
 }
 if(mode==="upload") {
   await step("upload",Operation.uploadContractWasm({wasm}));
-  console.log("Uploaded v2 Wasm: "+wasmHash);
+  console.log("Uploaded protected escrow Wasm: "+wasmHash);
 } else if(mode==="deploy") {
   if(!journal.steps.upload) throw new Error("Upload first");
   const uploaded=await server.getTransaction(journal.steps.upload.hash);
@@ -58,12 +60,12 @@ if(mode==="upload") {
   const deployedWasm=await server.getContractWasmByContractId(contract);
   if(createHash("sha256").update(deployedWasm).digest("hex")!==wasmHash) throw new Error("Deployed code hash differs from the tested Wasm");
   journal.contract=contract;journal.verified=true;save();
-  let env=readFileSync(".env.local","utf8");
+  let env=readFileSync(envPath,"utf8");
   for(const [key,value] of [["DEMO_PROTECTED_ESCROW",contract],["DEMO_PROTECTED_VERSION","2"]]) {
     const pattern=new RegExp("^"+key+"=.*$","m");
     env=pattern.test(env)?env.replace(pattern,key+"="+value):env.trimEnd()+"\n"+key+"="+value+"\n";
   }
-  writeFileSync(".env.local",env,{mode:0o600});
-  console.log("Verified and configured v2 contract: "+contract);
+  writeFileSync(envPath,env,{mode:0o600});
+  console.log("Verified and configured protected escrow: "+contract);
   console.log("Wasm hash: "+wasmHash);
 } else console.log(JSON.stringify({network:"Stellar Testnet",wasmHash,contract:journal.contract,verified:journal.verified,transactions:Object.fromEntries(Object.entries(journal.steps).map(([k,v])=>[k,{hash:v.hash,confirmed:v.confirmed}]))}));

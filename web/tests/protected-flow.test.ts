@@ -29,13 +29,30 @@ test("token inputs preserve seven decimals without floating-point rounding", () 
 
 test("quote validation rejects downgraded protocol, wrong payer and changed fallback", async () => {
   const input = { payer: terms.payer, agreementHash: terms.agreement, buyerArbiter: terms.buyer_arbiter, fallbackSellerBps: terms.fallback_seller_bps };
-  const config = { contractId: contract, networkPassphrase: Networks.TESTNET, token: terms.token, seller: terms.seller, defaultArbiter: terms.default_arbiter, sellerArbiter: terms.seller_arbiter, preset: { budget: terms.max_amount, session: 360, review: 120, response: 60, custom: 90, default: 90 } } as never;
+  const config = { version: 1, contractId: contract, networkPassphrase: Networks.TESTNET, token: terms.token, seller: terms.seller, defaultArbiter: terms.default_arbiter, sellerArbiter: terms.seller_arbiter, preset: { budget: terms.max_amount, session: 360, review: 120, response: 60, custom: 90, default: 90 } } as never;
   const quote = { protocol: "nyquist402:protected:v1", terms, paymentId: await computePaymentId(terms, contract, Networks.TESTNET), capability: "test" };
   assert.equal(typeof validateQuote, "function", "protected offer validation missing");
   await assert.doesNotReject(validateQuote(quote, config, input, 1800000000));
   await assert.rejects(validateQuote({ ...quote, protocol: "auth-capture" }, config, input, 1800000000));
   await assert.rejects(validateQuote(quote, config, { ...input, fallbackSellerBps: 5000 }, 1800000000));
   await assert.rejects(validateQuote(quote, config, { ...input, payer: terms.seller }, 1800000000));
+});
+
+test("quote validation defaults to the current agreement even when all fees are zero", async () => {
+  const fees = { protocol_reserve: "0", arbitration_reserve: "0", protocol_bps: 0, protocol_recipient: terms.seller,
+    custom_fee: "0", default_fee: "0", case_fee_cap: "0", custom_quote: null, default_quote: null };
+  const input = { payer: terms.payer, agreementHash: terms.agreement, buyerArbiter: terms.buyer_arbiter, fallbackSellerBps: terms.fallback_seller_bps };
+  const config = { contractId: contract, networkPassphrase: Networks.TESTNET, token: terms.token, seller: terms.seller,
+    defaultArbiter: terms.default_arbiter, sellerArbiter: terms.seller_arbiter, fees,
+    preset: { budget: terms.max_amount, session: 360, review: 120, response: 60, custom: 90, default: 90 }, arbiters: [], rpcUrl: "https://soroban-testnet.stellar.org" };
+  const currentTerms = { ...terms, fees };
+  const quote = { protocol: "nyquist402:protected:v2", terms: currentTerms,
+    paymentId: await computePaymentId(currentTerms, contract, Networks.TESTNET), capability: "test" };
+  await assert.doesNotReject(validateQuote(quote, config, input, 1800000000));
+  await assert.rejects(validateQuote({ ...quote, protocol: "nyquist402:protected:v1", terms }, config, input, 1800000000));
+  await assert.rejects(validateQuote({ ...quote, terms }, config, input, 1800000000));
+  await assert.rejects(validateQuote({ ...quote, terms, paymentId: await computePaymentId(terms, contract, Networks.TESTNET) },
+    { ...config, fees: undefined }, input, 1800000000), /fee/i);
 });
 
 import * as flow from "../lib/protected/flow.ts";

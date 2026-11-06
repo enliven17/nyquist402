@@ -32,10 +32,10 @@ The signed policy for each contract version specifies protocol fee rates, earnin
 
 Track principal movements, reserved liabilities, earned protocol fees, arbiter payouts and returned funds separately. Reports must distinguish Nyquist402 protocol revenue from payments to an external arbiter. Directly submitted transactions obey the same accounting rules as relayed transactions.
 
-## Current source policy
+## Fee calculation
 
-The separate v2 contract implements a protocol fee of `floor(seller_award × protocol_bps / 10000)`, paid from its separate reserve when a claim finalizes. It reserves `floor(claim_amount × protocol_bps / 10000)` at claim creation; any unearned difference returns to the buyer. Buyer refunds do not earn protocol fees.
+The protocol fee is `floor(seller_award × protocol_bps / 10000)`, paid from its separate reserve when a claim finalizes. It reserves `floor(claim_amount × protocol_bps / 10000)` at claim creation; any unearned difference returns to the buyer. Buyer refunds do not earn protocol fees.
 
 Each claim reserves the maximum applicable custom/default ruling fee. Only a valid ruling earns one fee; a timed-out custom arbiter earns none. The unused portion returns on claim finalization. Free reserves can be reclaimed without touching active reservations. The total arbitration reserve and per-case fee cap bound liability.
 
-The original deployed v1 contract remains fee-free. V2 source requires a separate deployment; see [implementation status](/docs/roadmap).
+Show the exact reserve amounts and fee rates before funding. Zero-fee offers set the accepted rates and reserve amounts to zero. A contract supporting fees does not imply that every offer charges them. See [terms and compatibility](/docs/reference/terms).

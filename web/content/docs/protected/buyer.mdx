@@ -24,6 +24,8 @@ The buyer interface exposes payment history, pending transaction hashes, claim s
 
 After session expiry, reclaim unused principal and eligible reserve returns. Pending claims retain the funds they need. Confirm the transaction outcome before retrying a mutation.
 
-## Current testnet instructions
+## Try the buyer flow
 
-The [unified demo guide](/docs/quickstart) shows the funding breakdown and private durable history. The configured v1 deployment is fee-free; a v2 deployment enables fee reserves.
+The [demo walkthrough](/docs/quickstart) takes you through funding, acceptance, disputes and recovery using test USDC. Review the offer’s exact work budget, protocol reserve and arbitration reserve. A zero-fee offer uses the same review and dispute rules.
+
+Automatic protected x402 offer negotiation is **not fully implemented yet**. Agent integrations will discover and validate protected offers through the flow described in [payment negotiation](/docs/integration).

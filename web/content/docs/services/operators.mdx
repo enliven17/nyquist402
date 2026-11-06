@@ -1,36 +1,35 @@
 ---
-title: Deployment & operations
-description: Deploy compatible components and preserve execution, evidence and recovery services.
+title: Service operations
+description: Network compatibility, role authority and continuity across execution, evidence and recovery.
 ---
-## Release configuration
+## Network and payment compatibility
 
-Publish network identifiers, contract addresses/code hashes, SDK compatibility, supported policies, API specifications and deployment configuration for each release. Match clients to the contract version they understand. Do not reuse fee-free payment terms as fee-capable records.
+Every payment identifies its network, escrow contract and agreement version. Clients and services check that identity before accepting funding or submitting lifecycle actions. Zero-fee offers use the same protected settlement rules; the accepted agreement determines the charges.
 
-A self-hosted deployment needs configured signing authority, network access, durable records, evidence storage and execution workers. Concrete launch commands and configuration keys belong to the release artifacts; the [current setup](/docs/setup) covers the existing demo only.
+Service releases will publish supported networks, contract addresses, code hashes, SDK versions and API schemas. The [testnet setup guide](/docs/setup) lists the test network and escrow versions used for evaluation.
 
-## Keys and role separation
+## Role authority and keys
 
-Separate transaction submission credentials, seller authority, arbiter ruling keys and evidence access. Apply restricted key access and audit use. A restart, restore or key-management operation must not replace the arbiter pinned to a funded payment.
+Keep transaction submission, seller authorization and arbiter ruling authority separate. A facilitator may pay network fees and relay a signed call; that does not let it spend the work budget or decide a case.
 
-Publish assignment, conflict-of-interest and escalation procedures for the operated default arbitration service.
+Sellers control authorization for their claims. Arbiters sign only cases assigned to them and only within the accepted ruling window. Key rotation or service recovery cannot substitute a different arbiter for one pinned to an existing agreement.
 
-## Monitoring and reconciliation
+The arbitration service's operating policy will define assignment, conflicts of interest, escalation and audit procedures.
 
-Monitor API failures, index lag, pending transactions, eligible actions waiting for submission, arbiter deadlines, evidence retrieval and storage lifetime. Reconcile principal, reserves, earned fees, arbiter payouts and returns with onchain movements.
+## Monitor the payment lifecycle
 
-Deployment documentation must specify how service availability and execution latency are measured.
+Monitor pending transactions, eligible actions awaiting execution, case deadlines and evidence retrieval. Reconcile payment history with onchain state and track principal, reserved fees, earned fees and returns separately.
 
-## Incident recovery
+An interface must distinguish delayed indexing, pending confirmation and a failed transaction. Evidence retrieval failures must remain visible to participants reviewing a case.
 
-Document service restart, database and evidence backup restoration, archived-state restoration, failed transaction recovery and direct contract submission. Reconcile interrupted work before resuming retries. Recovery must preserve participant permissions, deadlines, evidence revisions and exactly-once economic effects.
+## Recover interrupted work
 
-## Mainnet release boundary
+Recover the original transaction identity and reconcile its result before resuming a job. Restore private case records with their access permissions and body versions. A restored service must preserve payment terms, deadlines, evidence revisions and finalized outcomes.
 
-Mainnet activation depends on reviewed contracts and security-relevant SDK/service code, verified deployment configuration and recovery tooling. The intended review scope includes allocation, signing, quote checks, evidence access and restoration. See [implementation status](/docs/roadmap) for current availability.
+If Soroban archives required state, restore that state before preparing the action again. Restoring a contract entry cannot recover a missing offchain evidence body; the two recovery paths have different responsibilities.
 
+## Managed operations — not fully implemented yet
 
-## Local application implementation
+The managed service will publish availability and execution-latency targets, evidence retention and deletion policies, access auditing, backup recovery procedures and incident guidance. Automatic storage maintenance and restoration are also being completed.
 
-The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
-
-Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.
+Mainnet activation will follow independent security review and deployment verification. See the [service roadmap](/docs/roadmap) for these remaining capabilities and [direct-action recovery](/docs/protected/recovery) for the contract path during a service outage.
