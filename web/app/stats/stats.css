@@ -70,6 +70,6 @@
 .st-range button { font: inherit; font-family: var(--font-mono), monospace; font-size: 12px; background: none; border: 0; border-left: 1px solid var(--line); color: var(--muted); padding: 6px 12px; cursor: pointer; }
 .st-range button:first-child { border-left: 0; }
 .st-range button:hover:not(:disabled) { color: var(--text); }
-.st-range button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.st-range button[aria-pressed="true"], .st-range button[aria-pressed="true"]:hover { background: var(--ink); color: #fff; }
 .st-range button:disabled { opacity: 0.35; cursor: default; }
 .st-loading { opacity: 0.5; transition: opacity 0.2s; }
