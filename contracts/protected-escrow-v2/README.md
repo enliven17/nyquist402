@@ -1,6 +1,6 @@
-# Protected escrow v2
+# Protected escrow
 
-Fee-capable version of the protected claim lifecycle. Deployed on Stellar testnet at `CBX657PJAHLHBNVZASBJPRJFKWKYAGFCKMEE5A57I3ZNPWO5RPKPOMEH` (Wasm `5255843a…630c`). The v1 contract and its deployment are unchanged. Not audited.
+Protected claim lifecycle with separate work and fee balances. Deployed on Stellar testnet at `CBX657PJAHLHBNVZASBJPRJFKWKYAGFCKMEE5A57I3ZNPWO5RPKPOMEH` (Wasm `5255843a…630c`). Not audited.
 
 Both parties authorize the full agreement; the payer transfers principal + protocol reserve + arbitration reserve. Each claim reserves disjoint principal and fee capacity. Reclaim/early return touches only free buckets.
 
@@ -17,7 +17,7 @@ Both parties authorize the full agreement; the payer transfers principal + proto
 
 `register_quote(FeeQuote)` requires the quoted arbiter's authorization. A quote contains scope, arbiter, fee, valid_until and salt. Its ID is SHA-256 of its canonical Soroban XDR.
 
-`quote_scope(terms)` binds the network ID, deployment and complete terms (with quote identifiers cleared) under `nyquist402:quote-scope:v2`. Funding checks the exact fee, authority, scope and expiry through fund_by. Payment uniqueness/salt prevents unrelated reuse. Zero-fee arbitration can omit a quote.
+`quote_scope(terms)` binds the network ID, deployment and complete terms (with quote identifiers cleared) using a dedicated quote-scope domain. Funding checks the exact fee, authority, scope and expiry through fund_by. Payment uniqueness/salt prevents unrelated reuse. Zero-fee arbitration can omit a quote.
 
 Additional entry points: `version()`, `fee_quote(id)`, `register_quote(quote)`, `quote_scope(terms)`. Existing claim lifecycle method names are preserved with versioned terms/state encodings. The SDK groups extra term fields under `fees` and flattens them onchain.
 
@@ -30,6 +30,6 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 stellar contract build
 ```
 
-Rust/TypeScript parity vectors cover the v2 canonical terms and payment identity. Tests cover principal/fee conservation, quote authority/binding, insufficient capacity, custom-to-default escalation, unearned returns and duplicate payout rejection.
+Rust/TypeScript parity vectors cover the canonical terms and payment identity. Tests cover principal/fee conservation, quote authority/binding, insufficient capacity, custom-to-default escalation, unearned returns and duplicate payout rejection.
 
-A new deployment, USDC recipient trustlines, operational retention/recovery and independent review are required before activating paid settlement. Existing v1 records cannot be interpreted using v2 terms.
+Paid settlement requires configured reserve amounts and accepted arbiter quotes, USDC recipient trustlines and verified deployment configuration. Managed retention and recovery guarantees and independent security review remain release requirements. Every funded payment stays bound to its original contract and agreement.

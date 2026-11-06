@@ -1,58 +1,39 @@
 ---
-title: Local setup & deployments
-description: Run the unified Stellar testnet USDC demo and its private local services.
+title: Testnet setup
+description: Prepare your wallet and identify the network, USDC asset and protected escrow.
 ---
-## Run the website
+## Connect a Stellar testnet wallet
 
-Use Node 24 (including its built-in SQLite support) and pnpm. From the repository root:
+Open [/demo](/demo), select **Testnet** in a supported Stellar wallet and connect the account you want to use as the buyer. You need test XLM for account reserves and transaction fees, plus test USDC for the work budget.
 
-```sh
-cd web
-pnpm install --frozen-lockfile
-pnpm dev
-```
+Sign the service sign-in challenge to access private history and case material. This challenge is never broadcast and does not fund a payment. Each fund movement requires its own transaction authorization.
 
-Open `http://localhost:3000/demo` or `/docs`. The website uses Vite and Hono. A production run uses:
+## Add USDC and fund your test balance
 
-```sh
-pnpm typecheck
-pnpm test
-pnpm build
-pnpm start
-```
+Choose **Add USDC trustline**, review the asset and sign the trustline transaction. Then open [Circle's faucet](https://faucet.circle.com/), select **USDC / Stellar Testnet** and enter your connected account address. Return to the demo after funding; the displayed balance refreshes automatically.
 
-## Existing configuration
-
-Keep the funded keys in `web/.env.local`. Configure `DEMO_MERCHANT_SECRET`, `DEMO_PROTECTED_ESCROW` and a stable `DEMO_SESSION_SECRET` of at least 32 characters. Optional `DEMO_ARBITER_SECRETS` contains the demo's testnet arbiter keys. Never publish these values.
-
-The unified demo pins official Circle testnet USDC independently of a historical `DEMO_TOKEN` value. Existing v1 payments retain their original token and terms.
-
-Inspect recipient trustlines without changing accounts:
-
-```sh
-node scripts/setup-usdc.mjs
-```
-
-An operator who intends to add those testnet account trustlines can run `node scripts/setup-usdc.mjs --apply`. This preserves keys and creates no issuer or token. For a new environment, `pnpm setup-demo` creates testnet accounts and USDC trustlines; it refuses to overwrite existing credentials.
-
-Wallet users add their own trustline in the demo, then obtain USDC manually from [Circle's faucet](https://faucet.circle.com/) using **Stellar Testnet**. Test XLM for reserves/fees is separate.
-
-## Deployment versions
-
-| Version | Configuration |
+| Setting | Value |
 | --- | --- |
-| Existing fee-free v1 | `DEMO_PROTECTED_VERSION=1`, protected address `CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW` |
-| Fee-capable v2 source | `contracts/protected-escrow-v2`; build/review/deploy separately, then set its address and `DEMO_PROTECTED_VERSION=2` |
-| Historical basic | Separate contract `CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI`; no second demo |
+| Network | Stellar Testnet |
+| RPC | `https://soroban-testnet.stellar.org` |
+| Network passphrase | `Test SDF Network ; September 2015` |
+| Asset code | `USDC` |
+| USDC issuer | `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5` |
+| Amount precision | Seven decimals; 1 USDC = `10000000` base units |
 
-The recorded v1 address cannot process v2 terms. The application verifies the configured payment identity; version mismatches fail visibly. No v2 deployment address or mainnet availability is claimed.
+Test XLM and test USDC serve different purposes. USDC funds the agreement; XLM covers Stellar reserves and network fees.
 
-V2 fee settings are `DEMO_PROTOCOL_RESERVE`, `DEMO_ARBITRATION_RESERVE`, `DEMO_PROTOCOL_BPS`, `DEMO_PROTOCOL_RECIPIENT`, `DEMO_CASE_FEE_CAP`, `DEMO_CUSTOM_FEE` and `DEMO_DEFAULT_FEE`. Amounts use seven-decimal USDC base units. Defaults are zero; no commercial pricing is implied. Paid demo arbiters must be configured signers so their exact scoped quotes can be registered onchain before funding.
+## Protected escrow deployments
 
-## Private data and deadlines
+| Version | Stellar testnet contract | Payment model |
+| --- | --- | --- |
+| Protected escrow | `CBX657PJAHLHBNVZASBJPRJFKWKYAGFCKMEE5A57I3ZNPWO5RPKPOMEH` | Work budget, protocol-fee reserve and arbitration reserve |
+| Basic auth-capture | `CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI` | Spending hold and seller-consented capture |
 
-`DEMO_DATA_DIR` defaults to `.nyquist-data`. SQLite stores agreements, immutable body versions, transaction hashes and worker job records. Keep the directory private, back it up, and never serve it as static content. It is ignored by Git. This local service does not promise managed hosting or a retention SLA; the operator must preserve data through the full case lifetime and define deletion/backups.
+The client must match the network and contract version before requesting a signature. Each funded payment stays bound to its original deployment and terms. Confirm the fee breakdown shown by the offer rather than inferring fees from the contract version.
 
-`pnpm start` reconciles pending transaction hashes every 15 seconds. Set `DEMO_WORKER_ENABLED=true` only with an intentionally configured funded testnet `DEMO_FACILITATOR_SECRET` to submit eligible settlement/fallback actions. A durable unknown job is reconciled rather than replaced; investigate its hash after interruption. Direct wallet actions remain available.
+## Start a payment
 
-Restart after changing configuration. Automatic Soroban archive restoration remains separate operational work.
+Follow the [demo walkthrough](/docs/quickstart) to fund a budget, record deliveries, accept or dispute a claim and return unused funds. Keep the payment ID and transaction hashes so you can recover the state after reconnecting.
+
+The demo uses test assets. Mainnet service is **not fully implemented yet**; see the [service roadmap](/docs/roadmap).

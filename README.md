@@ -1,16 +1,32 @@
 # Nyquist402
 
-Protected API payments on Stellar: agree a budget, record delivery claims, review the work and resolve disputes under terms accepted before funding.
+Protected API payments on Stellar. Agree a work budget, review delivery claims and resolve disputes under terms accepted before funding.
 
-## One USDC demo
+## How it works
 
-`/demo` provides Buyer, Seller and Arbiter views over one payment. `/demo/protected` redirects there. The demo uses Circle's official **Stellar testnet USDC**, not an issued demo token. Add the USDC trustline, then visit [Circle's faucet](https://faucet.circle.com/) and select **Stellar Testnet**.
+1. Buyer and seller agree delivery criteria, budget, deadlines, arbiters, fees and a terminal fallback.
+2. The buyer funds Soroban escrow under the exact signed terms.
+3. The seller records delivery claims, each with its own reserved amount and review window.
+4. The buyer accepts a claim or either party disputes it before review closes.
+5. Acceptance, undisputed settlement, a valid ruling or the agreed fallback finalizes the claim. Unused funds return without consuming active reservations.
 
-Issuer: `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`. Source: [Circle contract addresses](https://developers.circle.com/stablecoins/usdc-contract-addresses). Stellar USDC amounts use **seven decimals**. Test XLM is still needed for reserves and fees.
+Protected escrow tracks principal, protocol-fee reserves and arbitration reserves separately. An arbiter can allocate only the disputed claim’s principal and earn only its accepted fee. A service cannot change the funded agreement or finalize a claim twice.
 
-## Run locally
+## Try the testnet demo
 
-Node 24 and pnpm are required.
+The `/demo` interface includes Buyer, Seller and Arbiter views for one payment. Connect a Stellar testnet wallet with test XLM, add the official USDC trustline and obtain USDC from [Circle’s faucet](https://faucet.circle.com/) using **Stellar Testnet**.
+
+USDC issuer: `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`. Stellar USDC uses seven decimals. The protected testnet escrow is `CBX657PJAHLHBNVZASBJPRJFKWKYAGFCKMEE5A57I3ZNPWO5RPKPOMEH`. Every payment remains bound to its signed agreement and contract.
+
+## Documentation
+
+The website’s `/docs` explains the [payment model](web/content/docs/index.mdx), [API payment negotiation](web/content/docs/integration.mdx), [SDK integration](web/content/docs/sdk.mdx), [evidence access](web/content/docs/services/evidence.mdx) and [recovery](web/content/docs/protected/recovery.mdx).
+
+Protected x402 negotiation, SDK package distribution, the public facilitator API, managed service guarantees and automatic storage recovery are **not fully implemented yet**. The [service roadmap](web/content/docs/roadmap.mdx) explains how these features will work. The testnet contracts are unaudited; mainnet service is not fully implemented yet.
+
+## Development
+
+Use Node 24 and pnpm:
 
 ```sh
 cd web
@@ -18,32 +34,13 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Keep existing funded credentials in `web/.env.local`; configure settings from [web/.env.example](web/.env.example). The new demo pins the official USDC asset independently of historical DEMO_TOKEN settings.
+Configure testnet service credentials in `web/.env`; `web/.env.local` is an optional override. Set `DEMO_MERCHANT_SECRET`, a stable `DEMO_SESSION_SECRET` of at least 32 characters and `DEMO_ARBITER_SECRETS` for the operated arbitration accounts. Restart after configuration changes. Both development and production startup load these files; externally supplied environment variables take precedence.
 
-`node scripts/setup-usdc.mjs` inspects recipient trustlines without changing accounts. Its explicit `--apply` mode adds missing testnet trustlines. `pnpm setup-demo` is only for a new environment and refuses to overwrite existing keys; it creates accounts/trustlines, never an issuer or token mint.
+Preserve existing funded keys and keep secrets out of Git. For a new environment, `pnpm setup-demo` creates testnet accounts and USDC trustlines and refuses to recreate credentials when either configuration file already exists.
 
-## Versions and availability
+`node scripts/setup-usdc.mjs` inspects recipient trustlines. Its explicit `--apply` mode adds missing testnet trustlines. The demo uses official USDC rather than minting a token.
 
-| Component | Status |
-| --- | --- |
-| Protected escrow v1 | Fee-free testnet deployment: `CCQLNKUMUSMJ2L7KAH7VJSCXW6FOBLI3VAPZO4ZLCDEQ4PL76FDXKCEW` |
-| Protected escrow v2 | Separate [fee-capable source](contracts/protected-escrow-v2/README.md); requires separate deployment |
-| TypeScript SDK | Local v1/v2 source; not an npm release or upstream protected x402 extension |
-| Case/history service | Wallet-authenticated private SQLite storage and retained evidence versions |
-| Deadline execution | Optional local worker with durable transaction/job reconciliation |
-| Basic auth-capture | Historical separate contract/integration reference; no second demo |
-
-No audit or mainnet readiness is claimed. V2 is never silently substituted for a funded v1 payment.
-
-## Data, signing and recovery
-
-The local service authenticates ordinary wallets using a signed, never-broadcast challenge. It checks private case access against onchain parties and the current arbiter. Demo seller/arbiter controls additionally require the exact payment delegation. A payment ID grants no signing authority.
-
-Evidence and delivery bodies are retained privately in `web/.nyquist-data` (or DEMO_DATA_DIR) and checked against onchain hashes. Keep this directory out of Git and static hosting; operators must define backups/retention.
-
-Transaction hashes are persisted before wallet broadcast. Production startup reconciles pending hashes. Optional settlement/fallback submission uses DEMO_WORKER_ENABLED and an explicitly configured funded signer. Unknown submissions reuse their exact signed transaction while valid; they do not create replacement payouts.
-
-See [local SDK](web/lib/protected/README.md), [current docs](web/content/docs/roadmap.mdx), [setup](web/content/docs/setup.mdx) and [unified walkthrough](web/content/docs/quickstart.mdx).
+Keep private service data in `web/.nyquist-data` (or `DEMO_DATA_DIR`) out of Git and static hosting. Wallet sign-in controls private history and evidence access; transaction signatures separately control fund movements. See the [client guide](web/lib/protected/README.md) for integration and verification details.
 
 ## Verify
 
@@ -59,10 +56,6 @@ pnpm build
 pnpm start
 ```
 
-The optional existing live testnet script creates funded payments; do not run it unless those test allocations are intended.
-
-## Basic integration history
-
-The separate basic contract is `CCB3W5542IQIVWT3ZDTSQIN2LPRMVYLZ2KKQOJT2CTIIDDTYIQVHHCCI`. Vendored x402 basic integration and contracts remain available as reference. The [basic proposal](https://github.com/x402-foundation/x402/pull/4124) does not establish a released protected x402 binding.
+The optional testnet scenario scripts allocate test funds; run them only for intended test payments.
 
 MIT license.

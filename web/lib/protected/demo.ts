@@ -1,10 +1,11 @@
 import { usdcStatus } from "../../server/usdc.ts";
 import { rememberPayment,track } from "../../server/store.ts";
 import { USDC_CONTRACT } from "../usdc.ts";
+import { resolveProtectedDeployment } from "../deployment.ts";
 import { randomBytes } from "node:crypto";
 import { authorizeEntry, Keypair, Networks, StrKey, TransactionBuilder } from "@stellar/stellar-sdk";
 import { ProtectedEscrowClient } from "./client.ts";
-import { assertAddress, assertHash, CAPABILITY, computePaymentId, integer, termsToScVal, selectedArbiter, hashText, quoteScope, quoteId, bytes, validateTerms } from "./codec.ts";
+import { assertAddress, assertHash, computePaymentId, integer, termsToScVal, selectedArbiter, hashText, quoteScope, quoteId, bytes, validateTerms } from "./codec.ts";
 import { issueCapability, parseRequest, verifyCapability } from "./capability.ts";
 import { authorizeDemoAction } from "./policy.ts";
 import { operatedArbiters, publicRoster } from "./arbiters.ts";
@@ -13,11 +14,11 @@ import type { DemoConfig, PaymentTerms } from "./types.ts";
 
 function env(name: string): string {
   const value = process.env[name];
-  if (!value) throw new Error(`${name} is not configured. See web/.env.example and the protected SDK README.`);
+  if (!value) throw new Error(`${name} is not configured. Set it in web/.env (or web/.env.local), then restart the server.`);
   return value;
 }
 export function protectedClient(): ProtectedEscrowClient {
-  return new ProtectedEscrowClient({ contractId: env("DEMO_PROTECTED_ESCROW"), networkPassphrase: Networks.TESTNET, rpcUrl: "https://soroban-testnet.stellar.org" });
+  return new ProtectedEscrowClient({ ...resolveProtectedDeployment(process.env), networkPassphrase: Networks.TESTNET, rpcUrl: "https://soroban-testnet.stellar.org" });
 }
 export async function config(): Promise<DemoConfig> {
   const client = protectedClient();
@@ -26,14 +27,14 @@ export async function config(): Promise<DemoConfig> {
   const sellerArbiter = process.env.DEMO_SELLER_ARBITER || null;
   if (sellerArbiter) assertAddress(sellerArbiter);
   const defaultArbiter = await client.defaultArbiter();
-  const version = process.env.DEMO_PROTECTED_VERSION === "2" ? 2 : 1;
-  if (version === 2 && Number(await client.read("version")) !== 2) throw new Error("Configure a deployed v2 escrow for fee-capable settlement");
-  const fees = version === 2 ? {
+  const { version } = resolveProtectedDeployment(process.env);
+  if (Number(await client.read("version")) !== version) throw new Error("Configured escrow does not support the required protected payment schema");
+  const fees = {
     protocol_reserve: process.env.DEMO_PROTOCOL_RESERVE ?? "0",
     arbitration_reserve: process.env.DEMO_ARBITRATION_RESERVE ?? "0",
     protocol_bps: Number(process.env.DEMO_PROTOCOL_BPS ?? 0),protocol_recipient:process.env.DEMO_PROTOCOL_RECIPIENT || seller,
     custom_fee:process.env.DEMO_CUSTOM_FEE ?? "0",default_fee:process.env.DEMO_DEFAULT_FEE ?? "0",case_fee_cap:process.env.DEMO_CASE_FEE_CAP ?? "0",custom_quote:null,default_quote:null,
-  } : undefined;
+  };
   const recipients=new Set([seller]);
   if (fees && fees.protocol_bps>0) recipients.add(fees.protocol_recipient);
   if (fees && BigInt(fees.default_fee)>0n) recipients.add(defaultArbiter);
@@ -91,7 +92,7 @@ export async function quote(request: Record<string, unknown>) {
   if (remoteId !== paymentId) throw new Error("Protected deployment identity is incompatible with this SDK");
   const capability = issueCapability({ network: c.networkPassphrase, contractId: c.contractId, paymentId }, env("DEMO_SESSION_SECRET"));
   rememberPayment(c.contractId,paymentId,payer,c.seller,typeof request.agreement === "string" ? request.agreement : "Obtain the original agreement from the parties.");
-  return { protocol: c.version === 2 ? "nyquist402:protected:v2" : CAPABILITY, terms, paymentId, capability };
+  return { protocol: "nyquist402:protected:v2", terms, paymentId, capability };
 }
 export async function prepare(request: Record<string, unknown>) {
   const source = request.source;

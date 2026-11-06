@@ -1,32 +1,31 @@
 ---
 title: Evidence delivery & access
-description: Private offchain case material verified against onchain commitments.
+description: Store private case material and verify it against the commitments recorded with each claim.
 ---
-## Commitments and bodies
+## Agreement, delivery and evidence
 
-The contract stores minimal delivery and evidence commitments. The intended evidence service stores the corresponding agreement, delivery receipts and case submissions and delivers them to authorized participants. A hash alone neither stores a document nor gives an arbiter access to it.
+Nyquist402 keeps agreement text, delivery descriptions and case submissions offchain. The contract records their commitments. Participants retrieve the corresponding bodies through the case service and verify their hashes before relying on them.
 
-On retrieval, verify each body against its recorded commitment. Keep the case revision and the exact evidence snapshot visible to the arbiter and parties.
+A hash alone neither stores a document nor gives an arbiter access to it. Keep the payment, claim and evidence revision attached to the material being reviewed.
 
-## Access control
+## Sign in and retrieve a case
 
-Authorize access for the payment's buyer, seller and currently assigned arbiter. Authenticate the requesting account and check its case relationship; a public payment ID is not an access token. Separate public state/history views from private evidence retrieval.
+Authenticate with the account that participates in the payment. The service checks that the requesting account is the buyer, seller or currently assigned arbiter before returning private case material. Knowing a public payment ID grants state reads, not private evidence access.
 
-When a case escalates, enable the pinned default to retrieve the evidence required to decide the case, with access changes consistent with the current assignment. Do not expose evidence to unrelated accounts.
+Wallet sign-in uses a signed challenge that is never broadcast. This establishes service identity; it does not authorize a contract transaction.
 
-## Submission and revisions
+When authority passes from a custom arbiter to the pinned default, access follows the current assignment so the default can review the same case record. Unrelated accounts cannot retrieve its private bodies.
 
-An evidence body must remain available when its commitment is submitted. Updates preserve the previous record for audit purposes and bind the current version used by a ruling. A server restart, browser reload or assignment change must not erase the submitted evidence or its access permissions.
+## Submit and revise evidence
+
+Store the body before submitting its commitment to the contract. During the evidence window, a party may update its submission. Previous body versions remain retained, while the current commitment and revision identify the evidence relevant to a ruling.
+
+A browser reload, service restart or arbitration handoff must preserve the submitted material. The arbiter checks the current revision and body hashes before signing an award.
 
 ## Retention and confidentiality
 
-The service must publish retention, access and deletion behavior and preserve availability throughout the response and ruling windows, including handoff. Deployment documentation specifies retention durations, storage limits and service guarantees.
+Private evidence stays off the public ledger. Access is tied to the authenticated participant and current case relationship. Transaction authorization remains separate from permission to read a document.
 
-Do not publish private evidence bodies to the ledger. Operators need restricted storage/key access and access audit records. See [operations](/docs/services/operators).
+**Managed retention guarantees are not fully implemented yet.** The service will publish retention durations, storage limits, deletion rules and access-audit procedures, covering the response and ruling windows and escalation. These guarantees will explain how case material remains retrievable during recovery and service interruptions.
 
-
-## Local application implementation
-
-The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
-
-Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.
+See [history and recovery](/docs/protected/recovery) for interrupted transactions and [service operations](/docs/services/operators) for continuity requirements.

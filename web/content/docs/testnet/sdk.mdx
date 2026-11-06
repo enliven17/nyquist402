@@ -1,14 +1,15 @@
 ---
-title: Local SDK reference
-description: Read contract state and prepare signed actions using the repository’s protected escrow client.
+title: TypeScript client reference
+description: Configure a protected payment client, read state and prepare signed lifecycle actions.
 ---
-## Use the local source
+## Configure the client
 
-The SDK lives at `web/lib/protected/index.ts`. Use it within this app, or copy the reusable source with its Stellar SDK dependency into your TypeScript application. It supports browsers and Node 22.18+/24; it is not published as an npm package.
+Create a `ProtectedEscrowClient` for the payment’s escrow contract, RPC and network passphrase. The client prepares lifecycle actions, validates authorization and reads payment and claim state.
+
+**SDK distribution is not fully implemented yet.** An installable release will provide the client and its versioned exports. The examples below describe its TypeScript API and assume your integration supplies the `ProtectedEscrowClient` constructor, payment identifiers and wallet adapter.
 
 ```ts
 import { Networks } from '@stellar/stellar-sdk';
-import { ProtectedEscrowClient } from './lib/protected/index.ts';
 
 const client = new ProtectedEscrowClient({
   contractId: protectedContractId,
@@ -43,7 +44,16 @@ console.log(result.tx);
 
 ## Action and read methods
 
-Mutations use a typed action with `prepare`: `authorize`, `claim`, `accept`, `dispute`, `submit_evidence`, `rule`, `settle`, `finalize_fallback`, `reclaim` and `void_unclaimed`.
+Mutations use a typed action with `prepare`:
+
+| Action | Use |
+| --- | --- |
+| `authorize` | Fund terms approved by buyer and seller |
+| `claim` | Reserve payment for a delivery |
+| `accept` / `settle` | Finalize acceptance or eligible undisputed delivery |
+| `dispute` / `submit_evidence` | Open a case or update a party’s evidence |
+| `rule` / `finalize_fallback` | Apply a valid ruling or the agreed terminal split |
+| `reclaim` / `void_unclaimed` | Return eligible unused funds |
 
 Read methods are `defaultArbiter`, `terms`, `state`, `claimState` and `arbiter`. Contract deadlines and authorization remain authoritative if state changes between simulation and submission.
 
@@ -51,9 +61,10 @@ Read methods are `defaultArbiter`, `terms`, `state`, `claimState` and `arbiter`.
 
 Token amounts are integer strings in base units. Seven-decimal USDC represents 3.00 as `"30000000"`. Do not use JavaScript floating point for token arithmetic. Hashes and payment IDs are 32-byte values represented as hex strings.
 
+## Funding and fees
 
-## Local application implementation
+Payment terms include `fees` with protocol and arbitration reserves, fee limits and accepted quote references. Zero-fee offers set the relevant amounts to zero. Use `fundingTotal(terms)` to calculate the total authorized amount; separate reserves do not reduce the work budget. See [terms and compatibility](/docs/reference/terms).
 
-The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
+## Confirmation and recovery
 
-Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.
+Keep the payment ID and transaction hash for each submission. A pending result must be reconciled before another claim or payout is prepared. Read the original transaction outcome and current contract state after an interruption; see [history and recovery](/docs/protected/recovery).

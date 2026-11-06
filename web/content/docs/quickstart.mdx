@@ -1,5 +1,5 @@
 ---
-title: Unified testnet demo
+title: Demo walkthrough
 description: Explore one protected USDC payment as buyer, seller and arbiter.
 ---
 ## Prepare your wallet
@@ -13,7 +13,7 @@ The asset is USDC issued by `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZL
 
 ## Buyer: agree and fund
 
-Choose the **Buyer** view. Review the agreement, budget, selected arbiter, deadlines, fallback and any separate fee reserves. Select **Review terms**, then sign the exact total. The existing v1 deployment is fee-free; fee-capable v2 requires its own configured deployment.
+Choose the **Buyer** view. Review the agreement, budget, selected arbiter, deadlines, fallback and any separate fee reserves. Select **Review terms**, then sign the exact total. The agreement may include separately funded protocol and arbitration reserves. Zero-fee offers use the same protected payment flow. The offer shows the exact total before signing.
 
 A default 10 USDC work budget starts with 10 available and none reserved. Keep the payment ID. A saved offer or pending transaction is not proof of funding.
 
@@ -41,4 +41,4 @@ After session expiry, the buyer can reclaim the unused 3 USDC while the disputed
 
 Reconnect and sign in to recover server-side history from another browser. Importing a payment ID permits public state reads but grants no private evidence or signing authority. Reconcile pending transaction hashes before retrying.
 
-The old `/demo/protected` address redirects to `/demo`. Basic auth-capture remains a separate technical reference, not another demo screen.
+Continue with [SDK integration](/docs/sdk) to connect your application, or [history and recovery](/docs/protected/recovery) to understand interrupted submissions and direct actions.

@@ -1,11 +1,13 @@
 // Real testnet check of buyer-chosen, demo-operated arbiters. Never run automatically.
-// From web: node --conditions=react-server --env-file=.env.local --experimental-strip-types scripts/e2e-arbiter.ts
+// From web: node --conditions=react-server --experimental-strip-types scripts/e2e-arbiter.ts
 import assert from "node:assert/strict";
 import { Keypair, Networks, TransactionBuilder } from "@stellar/stellar-sdk";
 import { arbitrate, config, prepare, protectedClient, quote } from "../lib/protected/demo.ts";
 import { hashText } from "../lib/protected/codec.ts";
 import type { ProtectedAction } from "../lib/protected/types.ts";
+import { loadServerEnvironment } from "../server/env.ts";
 
+loadServerEnvironment();
 const buyer = Keypair.fromSecret(process.env.DEMO_AGENT_SECRET!);
 const client = protectedClient();
 const c = await config();

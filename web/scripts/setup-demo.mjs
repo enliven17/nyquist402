@@ -2,6 +2,7 @@
 // Usage: node scripts/setup-demo.mjs
 import { existsSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
+import { resolveProtectedDeployment } from "../lib/deployment.ts";
 import {
   Asset,
   BASE_FEE,
@@ -13,9 +14,10 @@ import {
 } from "@stellar/stellar-sdk";
 
 const envPath = new URL("../.env.local", import.meta.url);
-if (existsSync(envPath)) throw new Error(".env.local already exists. Keep its funded account keys and add protected settings from .env.example instead of recreating them.");
+if (existsSync(envPath) || existsSync(new URL("../.env", import.meta.url))) throw new Error("Demo configuration already exists in .env or .env.local. Keep its funded account keys and update that file instead of recreating them.");
 
 const HORIZON = "https://horizon-testnet.stellar.org";
+const deployment = resolveProtectedDeployment(process.env);
 
 
 async function friendbot(address) {
@@ -43,7 +45,8 @@ const env = [
   `DEMO_FACILITATOR_SECRET=${facilitator.secret()}`,
   `DEMO_TOKEN=${asset.contractId(Networks.TESTNET)}`,
   `DEMO_SESSION_SECRET=${randomBytes(32).toString("hex")}`,
-  `DEMO_PROTECTED_ESCROW=${process.env.DEMO_PROTECTED_ESCROW ?? ""}`,
+  `DEMO_PROTECTED_ESCROW=${deployment.contractId}`,
+  `DEMO_PROTECTED_VERSION=${deployment.version}`,
   `DEMO_SELLER_ARBITER=${process.env.DEMO_SELLER_ARBITER ?? ""}`,
   "",
 ].join("\n");

@@ -1,29 +1,35 @@
 ---
 title: x402 payment negotiation
-description: The intended protected HTTP payment flow between a consumer, resource server and facilitator.
+description: Connect protected payments to an API request, from the offer through delivery and settlement.
 ---
-## Negotiate a protected route
+**Protected x402 negotiation is not fully implemented yet.** The flow below describes how the integration will work. The protected HTTP schema and compatibility rules will be published with the integration release.
 
-The resource server returns HTTP 402 payment requirements identifying supported network, asset, deployment and payment capability. A consumer requiring review and disputes selects a protected route only when the seller and facilitator support its contract and schema version.
+## Receive the payment offer
 
-The existing basic auth-capture mechanism is not automatically a protected extension. Protection requirements must fail closed before a signature when the required capability is absent.
+When an API route requires payment, the resource server will return HTTP 402 with its supported network, asset, escrow contract and protected-payment capability. The buyer or agent will choose a compatible route and inspect the agreement before signing.
 
-## Validate the offer
+A buyer requiring review and dispute resolution will reject a basic-only offer. Basic auth-capture and protected settlement have different authorization and finalization rules.
 
-The SDK verifies delivery/pricing terms, principal limit, deadlines, arbiter selection, accepted quote applicability and fee caps. Both parties agree the complete terms. The buyer funds principal and the two fee reserves under the selected contract version.
+## Agree and fund
 
-## Invoke and account for work
+The buyer integration will validate delivery and pricing criteria, work budget, deadlines, arbiters, fallback and fee limits. Both parties will authorize the complete terms. The buyer will fund principal and any accepted protocol and arbitration reserves under the agreed contract version.
 
-Once funding is confirmed, the consumer invokes the resource with the appropriate payment context. The seller meters real work, returns a usage/delivery receipt and records the matching claim. Client verification compares the receipt with the offer and claimed amount.
+The application will wait for funding confirmation before treating the budget as available. An offer, signature or queued transaction alone will not prove funding.
 
-Receipt production is an offchain integration responsibility. A claim's hash records a commitment and does not establish that the service met its promise.
+## Invoke the API and record delivery
+
+The consumer will call the resource with its payment context. The seller will meter the work, return a usage or delivery receipt and submit a claim for the corresponding amount. The client will compare that receipt with the accepted pricing criteria and claim.
+
+Receipts and delivery bodies remain offchain. Their onchain commitments let participants verify that the material being reviewed matches the recorded claim; a hash does not prove delivery quality.
 
 ## Review and settle
 
-The buyer accepts the claim or either party disputes it during review. An undisputed claim can settle after review; a disputed claim follows evidence, ruling and fallback rules. These are lifecycle actions, not an immediate final payment implied by receiving an HTTP response.
+The buyer can accept a recorded claim, or either party can dispute it before review closes. An undisputed claim becomes eligible for settlement after review. A dispute follows the evidence, ruling and fallback process defined by the funded agreement.
 
-## Wire compatibility
+Receiving an API response does not itself finalize payment. Each claim settles through the [payment lifecycle](/docs/protected/lifecycle).
 
-The protected x402 binding and public SDK are intended to publish versioned requirements, payloads, compatibility rules and examples. This page specifies the technical sequence, not finalized header extensions or a released protected npm import.
+## Build against compatible interfaces
 
-Current runnable examples are the [local protected SDK](/docs/testnet/sdk) and the separate [basic x402 integration](/docs/basic/integration).
+The integration release will define payment requirements, payloads, receipts, capability discovery and error responses. SDK and facilitator compatibility checks will identify the supported contract and schema before signing. See [SDK integration](/docs/sdk) and [facilitator execution](/docs/services/facilitator) for their responsibilities.
+
+For the separate spending-hold flow, see [basic x402 integration](/docs/basic/integration).
