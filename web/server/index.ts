@@ -8,9 +8,9 @@ import { startWorker } from "./worker";
 
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
-const index = readFileSync("dist/index.html", "utf8");
 app.use("/*", serveStatic({ root: "./dist" }));
-app.get("*", c => c.html(index)); // client routes: /, /demo, /demo/protected, /docs
+// Read per request so a rebuild is served without restarting.
+app.get("*", c => c.html(readFileSync("dist/index.html", "utf8"))); // client routes
 
 startWorker();
 const port = Number(process.env.PORT ?? 3000);

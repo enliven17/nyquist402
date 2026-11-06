@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Stats } from "../../server/stats";
+import { Sk } from "@/components/Skeleton";
 import "./stats.css";
 
 const EXPERT = "https://stellar.expert/explorer/testnet";
@@ -36,6 +37,7 @@ export default function StatsPage() {
       <header className="st-head">
         <h1>Onchain stats</h1>
         <p>Read from the protected escrow's events on Stellar testnet. Refreshes every 30 seconds.</p>
+        {!data && !error && <p className="st-meta"><Sk w={320} h={12} /></p>}
         {data && <p className="st-meta">
           <a href={`${EXPERT}/contract/${data.contractId}`} target="_blank" rel="noreferrer">{short(data.contractId)} ↗</a>
           <span>ledger {data.latestLedger.toLocaleString("en-US")}</span>
@@ -44,7 +46,7 @@ export default function StatsPage() {
       </header>
 
       {error && !data && <p className="st-error">{error}</p>}
-      {!data && !error && <p className="st-muted">Reading events…</p>}
+      {!data && !error && <Loading />}
 
       {data && <>
         <dl className="st-tiles">
@@ -99,6 +101,31 @@ export default function StatsPage() {
         </section>
       </>}
     </main>
+  );
+}
+
+function Loading() {
+  return (
+    <div aria-busy="true" aria-label="Loading onchain stats">
+      <dl className="st-tiles">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i}><dt><Sk w={110} h={10} /></dt><dd><Sk w={90} h={40} style={{ margin: "12px 0 10px" }} /><Sk w={80} h={11} /></dd></div>
+        ))}
+      </dl>
+      <section className="st-card"><Sk w={160} h={14} style={{ marginBottom: 22 }} />
+        <div className="st-sk-bars">{Array.from({ length: 32 }, (_, i) => <Sk key={i} h={`${30 + ((i * 37) % 60)}%`} />)}</div>
+      </section>
+      <div className="st-grid">
+        {[0, 1].map(c => (
+          <section className="st-card" key={c}><Sk w={150} h={14} style={{ marginBottom: 22 }} />
+            {Array.from({ length: 4 }, (_, i) => <div key={i} style={{ marginBottom: 18 }}><Sk w="60%" h={12} /><Sk h={8} style={{ margin: "8px 0" }} /><Sk w={140} h={10} /></div>)}
+          </section>
+        ))}
+      </div>
+      <section className="st-card"><Sk w={120} h={14} style={{ marginBottom: 22 }} />
+        {Array.from({ length: 8 }, (_, i) => <Sk key={i} h={14} style={{ margin: "0 0 18px" }} />)}
+      </section>
+    </div>
   );
 }
 
