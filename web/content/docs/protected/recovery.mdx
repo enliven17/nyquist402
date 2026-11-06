@@ -28,7 +28,21 @@ Acceptance, settlement, a valid ruling or terminal fallback finalizes each claim
 
 An archived entry, a missing payment and a delayed history record are different conditions. An archived entry needs its Soroban storage restored before the original action can be retried; its agreement and funds are not redefined by that process.
 
-**Automatic storage recovery is not fully implemented yet.** Storage maintenance will extend required record lifetimes, and restoration tooling will recover archived entries before preparing the interrupted call. Until then, a restoration requirement is reported for explicit handling rather than treated as a missing payment.
+## Automatic restoration
+
+**Not fully implemented yet.** The planned recovery flow is explicit and separate from the business action:
+
+1. Simulation identifies archived entries and returns `restoration_required` with the affected footprint, estimated network fee, current ledger and a restoration transaction template. It does not report the payment as nonexistent.
+2. The SDK checks that the footprint is limited to the configured contract instance/code, required payment/claim records and authentication dependencies for the requested action. Unexpected addresses or keys stop recovery for inspection. Restoration is allowed only within the caller’s explicit fee budget.
+3. The caller signs the restoration transaction as its fee source. A managed worker may sponsor it only from its configured restoration budget; sponsorship never authorizes an escrow payout. Broadcast uses its own idempotent operation and persisted hash.
+4. Wait for ledger-confirmed restoration, then read current terms, claim state, revision and authority again. Reconcile any original pending business transaction before deciding whether a new action is needed.
+5. Simulate and prepare the still-eligible original action again, collecting fresh role and envelope signatures. Restoring storage cannot preserve an expired ruling window or revive a finalized claim.
+
+A restoration preparation expires after 120 seconds and must be re-simulated if its fee estimate or footprint changes. The managed default restoration budget is 1 XLM per transaction and 10 XLM per payment per UTC day; exhaustion produces a blocked job, `RESTORATION_UNAVAILABLE` and an operator alert. A direct caller may explicitly choose a different fee budget without changing the protected agreement.
+
+Storage maintenance checks live instance, code, payment and claim TTL every hour. It targets retention through the maximum remaining signed lifecycle plus a 7-day buffer, capped by the network’s permitted TTL. If the network cap is shorter, it renews in bounded increments and alerts when fewer than 48 hours remain. It never assumes a single TTL extension covers a long-running agreement.
+
+All restoration hashes, fees and outcomes appear in payment activity. A failed restore is not a failed claim; a successful restore is not a successful payout. [API transaction states](/docs/reference/service-api#idempotency-and-interrupted-requests) apply independently to each operation.
 
 ## Continue during a service outage
 

@@ -1,31 +1,66 @@
 ---
 title: Evidence delivery & access
-description: Store private case material and verify it against the commitments recorded with each claim.
+description: Planned material formats, access rules, retention periods and deletion behavior.
 ---
-## Agreement, delivery and evidence
+Nyquist402 stores agreement, delivery and case bodies offchain and verifies them against the commitments recorded with each payment. A hash identifies exact content; it does not store that content or prove that the work was correct.
 
-Nyquist402 keeps agreement text, delivery descriptions and case submissions offchain. The contract records their commitments. Participants retrieve the corresponding bodies through the case service and verify their hashes before relying on them.
+**Managed retention and delivery guarantees are not fully implemented yet.** The following format, limits and retention schedule define the planned service policy, rather than a claim about current hosting.
 
-A hash alone neither stores a document nor gives an arbiter access to it. Keep the payment, claim and evidence revision attached to the material being reviewed.
+## Store material before committing it
 
-## Sign in and retrieve a case
+A party sends `POST /payments/{paymentId}/materials` with `kind`, `claimId` and `body`. `kind` is `agreement`, `delivery`, `buyer_evidence` or `seller_evidence`. An agreement has `claimId: null`; a new delivery may use null until its claim confirms; evidence requires a confirmed claim ID and the author's matching role.
 
-Authenticate with the account that participates in the payment. The service checks that the requesting account is the buyer, seller or currently assigned arbiter before returning private case material. Knowing a public payment ID grants state reads, not private evidence access.
+The service validates membership, body size and remaining capacity, then durably stores the exact UTF-8 bytes. It returns `materialId`, `bodyHash`, `storedAt`, `retentionState` and `earliestDeletionAt`. The hash is SHA-256 of the original body bytes: no trimming, Unicode normalization, line-ending conversion or JSON reserialization occurs after hashing.
 
-Wallet sign-in uses a signed challenge that is never broadcast. This establishes service identity; it does not authorize a contract transaction.
+The client submits that body hash through the appropriate contract action. Storage success alone does not record delivery or open a dispute. After confirmation, the service binds the material to the ledger's payment, claim and commitment. A conflicting binding is rejected, not overwritten.
 
-When authority passes from a custom arbiter to the pinned default, access follows the current assignment so the default can review the same case record. Unrelated accounts cannot retrieve its private bodies.
+## Formats, limits and abandoned uploads
 
-## Submit and revise evidence
+The planned initial service accepts plain UTF-8 text only: at most 10,000 bytes per body and 1,000 material records per payment, including retained versions. It rejects binary or `text/html` uploads with `415 UNSUPPORTED_MEDIA_TYPE`; clients send a textual account or summary rather than an inaccessible attachment URL. Literal markup inside a JSON text body is preserved and displayed as text without execution.
 
-Store the body before submitting its commitment to the contract. During the evidence window, a party may update its submission. Previous body versions remain retained, while the current commitment and revision identify the evidence relevant to a ruling.
+Capacity is checked before acknowledgment. A committed body cannot be evicted to make room for another upload. A record that is never referenced by a confirmed agreement or claim is an uncommitted upload and is removed after 24 hours. Pending or unknown commitment transactions suspend that removal until reconciliation establishes whether the upload was used.
 
-A browser reload, service restart or arbitration handoff must preserve the submitted material. The arbiter checks the current revision and body hashes before signing an award.
+## Identity and access
+
+Private reads require the [wallet session](/docs/reference/service-api#wallet-authentication) for the buyer, seller or currently assigned case arbiter. For a funded payment, every retrieval rechecks the current relationship against a chain read no more than one ledger old; if that check is unavailable, access fails closed with `503` rather than using an old assignment. Before funding, the quote service records the exact offer terms and their buyer/seller membership. Only those authenticated parties may retrieve that offer’s agreement until its expiry; no arbiter receives access. Confirmed funding switches membership authority to the contract. Unfunded, expired offer records and their uncommitted bodies expire after 24 hours, except while funding is unresolved.
+
+Buyer and seller can retrieve the payment's retained materials throughout retention. An arbiter can read only the assigned claim's agreement, delivery and bilateral evidence while it is assigned. On escalation, the default gains that access and the previous custom arbiter loses it. Historical arbiter assignment alone does not permit further reads.
+
+A nonmember's request receives `404 NOT_FOUND`, with no disclosure of body existence. Authenticated sessions do not authorize fund movements. Bearer sessions and bodies are excluded from URLs, analytics and application logs. Storage is encrypted in transit and at rest, and each managed tenant's storage keys are isolated.
+
+## Find a case’s material
+
+`GET /payments/{paymentId}/materials?claimId=0` returns authorized material descriptors and `nextCursor`, plus `claimRevision` and `checkedAtLedger`. A descriptor contains `materialId`, `bodyHash`, `kind`, `claimId`, `author`, `storedAt`, `committed`, `current`, `retentionState` and `earliestDeletionAt`. The client then retrieves the exact body by `materialId`; it does not need IDs saved by the other participant’s browser.
+
+Buyer and seller can list all their payment’s records, including proposed offer material and pending commitment versions. An arbiter must specify its currently assigned claim; its listing includes the funded agreement, that claim’s delivery and both parties’ retained committed evidence versions. Uncommitted uploads from other cases are not exposed. The same fresh role checks apply to listing and retrieval, so escalation permits the new arbiter to discover the complete authorized case.
+
+The `current` flag is computed from the latest onchain commitment; it is false for an unconfirmed version. Before funding, the offer’s agreement hash defines its current agreement and ledger/revision fields are null. Pagination and interrupted listing never imply that a partial bundle is complete; verify all returned pages before ruling.
+
+## Revisions and ruling snapshots
+
+Updates append a new immutable record; they do not replace an earlier body. The current onchain commitment and revision determine which version is relevant to a ruling. The retrieval response includes the body hash, kind, author, claim reference and stored time so a participant can verify the record independently.
+
+An arbiter reads the current revision immediately before signing and includes it in the ruling. A revision change invalidates a prepared ruling and requires another read and decision. Evidence submitted after the contract's response deadline may be retained as correspondence but cannot be presented as an accepted onchain revision.
 
 ## Retention and confidentiality
 
-Private evidence stays off the public ledger. Access is tied to the authenticated participant and current case relationship. Transaction authorization remains separate from permission to read a document.
+| Record | Planned retention rule |
+| --- | --- |
+| Referenced agreement, delivery and evidence bodies | Full active payment/case lifetime plus 90 days after closure |
+| Previous committed body versions | Same rule as the current committed body |
+| Uncommitted uploads | 24 hours, except while a commitment outcome is unresolved |
+| Payment and transaction metadata, action idempotency and claim work-ID mappings | 365 days after closure |
+| Evidence access audit records | 365 days after closure; no body or bearer token included |
+| Expired/deleted body copies in encrypted backups | Removed as backup generations expire, within 30 additional days |
 
-**Managed retention guarantees are not fully implemented yet.** The service will publish retention durations, storage limits, deletion rules and access-audit procedures, covering the response and ruling windows and escalation. These guarantees will explain how case material remains retrievable during recovery and service interruptions.
+Closure means the session has ended or all unused funds were returned, every claim is finalized, and no remaining principal or fee reservation is unresolved. The closure timestamp is the last of those conditions to become true. A pending or unknown relevant transaction blocks closure. A retention clock never runs merely because a browser session ended.
 
-See [history and recovery](/docs/protected/recovery) for interrupted transactions and [service operations](/docs/services/operators) for continuity requirements.
+`DELETE /payments/{paymentId}/materials/{materialId}` records an original author's deletion request. Before the retention boundary it returns `409 RETENTION_LOCKED` and an earliest eligible time, or null while closure is unresolved. After the boundary it returns `202` and removes the active copy within 24 hours. Previously scheduled requests do not shorten retention. All bodies are purged automatically at their retention boundary even without a request.
+
+The service retains a content-free deletion audit record and notifies the payment parties of scheduled deletion 7 days before it is due. Participants can export their authorized bodies before expiry. Onchain hashes and public transactions are not deleted by an offchain deletion request. An exported copy is controlled by its recipient; removing the service copy does not erase other participants' copies.
+
+## Delivery failure and recovery
+
+An evidence read failure is visible as `503 SERVICE_UNAVAILABLE`, with a request ID and retry hint. The operator starts the [incident procedure](/docs/services/operators#backups-and-restoration); it does not report missing evidence as an empty submission. An arbiter must not treat an incomplete retrieval as a complete case file.
+
+Service incidents cannot extend signed deadlines. The provider should report the retrieval problem and avoid a merits ruling without the required record; escalation and fallback remain those accepted before funding. Users can submit eligible direct actions, but chain restoration cannot recreate a lost offchain body. Backups and the 90-day retention policy address that separate responsibility.
