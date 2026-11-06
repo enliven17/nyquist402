@@ -4,13 +4,13 @@ description: Authorize a spending ceiling and let the seller capture the actual 
 ---
 ## The basic payment flow
 
-Basic auth-capture is the x402 scheme integrated through the vendored `@x402/stellar` fork. It uses a separate contract from protected settlement. The seller consents to the final amount; there is no claim review or arbitration process.
+Basic auth-capture authorizes a maximum spending amount and lets the seller capture the actual cost. It uses a separate contract from protected settlement. The seller consents to the final amount; there is no claim review or arbitration process.
 
 <BasicLifecycleDiagram />
 
-## Reference status
+## Settlement model
 
-Basic auth-capture remains a separate contract and vendored integration reference. The product now offers one [protected USDC demo](/demo). Do not apply protected review/arbitration rules to an existing basic payment.
+The seller consents to capture from an authorized hold. A basic payment settles under its capture rules; protected claim review and arbitration do not apply to it. Use the [protected USDC demo](/demo) to explore the review-based flow.
 
 ## Capture, release and refund
 

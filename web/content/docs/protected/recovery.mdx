@@ -1,38 +1,37 @@
 ---
 title: History & recovery
-description: Durable history, transaction reconciliation and restoration without changing settlement authority.
+description: Recover payment history, reconcile pending transactions and preserve the original agreement.
 ---
-## Durable payment and case history
+## Reconnect to a payment
 
-The intended index persists payment, claim and case relationships, accepted terms, evidence references, deadlines and transaction outcomes. Buyer, seller and arbiter views can recover their permitted work from another browser after authentication.
+Connect the participant wallet and sign in to retrieve private payment history and case material. A buyer or seller can resume its permitted work from another browser. Access to evidence follows the payment participants and current arbiter.
 
-The ledger remains authoritative for funds, claim status and ruling authority. Reconcile indexed records with contract state; an index response must not conceal lag or invent a confirmed result.
+A payment ID lets you identify and read public contract state. It does not grant a role, private evidence access or signing authority. The ledger remains authoritative for balances, claim status, deadlines and ruling authority.
 
-## Pending transactions
+## Resolve a pending transaction
 
-Persist a submission's identity before waiting for confirmation. If processing stops after broadcast, recover the original transaction and outcome on restart. A client receives the transaction hash and confirmation state so it can query before retrying.
+Keep the transaction hash returned for a submission. If confirmation is delayed or the connection drops, look up that original transaction before preparing a replacement.
 
-Repeated requests and replayed jobs must not create duplicate claims, rulings, fees or payouts. When state has already advanced, return or reconcile the existing result instead of repeating its economic effect.
+- **Confirmed:** read the resulting payment or claim state and continue from that outcome.
+- **Failed:** inspect the failure, refresh state and prepare an eligible action again.
+- **Still pending or unknown:** continue reconciliation; do not assume the action failed because a response was lost.
 
-## Deadlines and active reservations
+Payment history retains submission identities so reconnecting does not require guessing whether a claim or payout happened. A saved payment ID or signed transaction is not proof of confirmed funding.
 
-Session expiry permits returning eligible unused funds; it does not settle existing claims. Preserve principal and fee reservations needed by pending cases. Workers recover scheduled actions from durable state and re-check current deadlines and eligibility before execution.
+## Recover unused funds
 
-## Soroban storage lifetime
+After session expiry, the buyer can reclaim unused principal and eligible fee reserves. Pending claims retain the principal and arbitration capacity they need. Session expiry does not finalize an outstanding dispute or release another claim's reservation.
 
-Maintain contract instance/code and persistent payment/claim storage through the required lifecycle, subject to network limits. When an entry is archived, restore the required footprint before retrying the intended call. Restoration cannot alter the agreement or allocate funds.
+Acceptance, settlement, a valid ruling or terminal fallback finalizes each claim independently. Refresh state and check confirmation before repeating any action.
 
-Restoration tooling and release capabilities must identify which states they support. A stale index, archived entry and nonexistent payment are distinct conditions and must be reported distinctly.
+## Archived contract records
 
-## Recovery during service outage
+An archived entry, a missing payment and a delayed history record are different conditions. An archived entry needs its Soroban storage restored before the original action can be retried; its agreement and funds are not redefined by that process.
 
-Keep direct-action tools and public deployment identifiers available. Parties can read onchain state and submit eligible actions without relay permission. Private evidence still requires the agreed delivery/retention mechanism; restoring a chain record does not restore a missing evidence body.
+**Automatic storage recovery is not fully implemented yet.** Storage maintenance will extend required record lifetimes, and restoration tooling will recover archived entries before preparing the interrupted call. Until then, a restoration requirement is reported for explicit handling rather than treated as a missing payment.
 
-The local app stores history and transaction hashes in SQLite, with browser records as a convenience. See [setup](/docs/setup) for data directories and worker recovery.
+## Continue during a service outage
 
+Use the payment's original contract and network to read state and submit eligible actions directly through the [client](/docs/testnet/sdk). Acceptance, disputes and rulings retain their role requirements. Settlement after review and terminal fallback remain publicly callable when eligible.
 
-## Local application implementation
-
-The repository now includes the private SQLite-backed case/history service and optional deadline worker described in [setup](/docs/setup). Wallet sign-in is separate from transaction authorization. Body versions are retained and checked against current commitments; a pending hash is never shown as confirmed settlement. These local components do not establish a managed public service.
-
-Fee-capable v2 is separate source and requires its own deployment. See [implementation status](/docs/roadmap) for release boundaries.
+Private evidence still needs to be retrieved through its authorized delivery mechanism. Managed retention and outage recovery guarantees are [not fully implemented yet](/docs/services/evidence#retention-and-confidentiality); chain restoration alone cannot recover a missing document.

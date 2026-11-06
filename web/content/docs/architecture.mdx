@@ -1,6 +1,6 @@
 ---
 title: System architecture
-description: Components, responsibilities and trust boundaries of the intended protected-payment system.
+description: How clients, payment services and Soroban escrow work together.
 ---
 ## Component model
 
@@ -29,6 +29,10 @@ Payment history, evidence storage and deadline execution have separate responsib
 
 Buyer, seller and arbiter interfaces derive permitted actions from the authenticated account, contract state and current deadlines. A payment ID identifies a record; it is not a credential.
 
+## Capabilities being completed
+
+The public facilitator API, protected x402 negotiation, managed service guarantees and automatic storage recovery are **not fully implemented yet**. These components will provide the discovery, relay, continuity and storage-maintenance responsibilities shown above. Their pages describe the planned behavior and the [service roadmap](/docs/roadmap) tracks the remaining work.
+
 ## Version boundaries
 
-The fee-capable protected contract requires an explicit deployment and schema version. Existing fee-free and basic payments retain their original semantics. Clients must negotiate the required capability before signing; see [terms and compatibility](/docs/reference/terms).
+Each protected payment binds a contract and schema version. Basic auth-capture uses a separate settlement model. Clients verify the required capability before signing; see [terms and compatibility](/docs/reference/terms).

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { source } from '@/lib/docs/source';
-import { docPages, isReleaseGuide, type SearchEntry } from '@/lib/docs/navigation';
+import { docPages, type SearchEntry } from '@/lib/docs/navigation';
 import { resolveDocSlug } from '@/lib/docs/search';
 import DocsShell from '@/components/docs/DocsShell';
 import { DocCard, DocCards, Note, Steps, CodeBlock, DocLink } from '@/components/docs/Content';
@@ -37,12 +37,10 @@ export default function Docs() {
   const previous = docPages[index - 1];
   const next = docPages[index + 1];
   const Body = page.data.body;
-  const releaseGuide = isReleaseGuide(slug);
   return <DocsShell entries={entries}><div className={`docs-page${!slug ? ' docs-introduction' : ''}`}>
     <main id="docs-content" className="docs-article" tabIndex={-1}>
       <div className="docs-breadcrumb"><span>{current?.group}</span><span aria-hidden="true">/</span><span>{current?.title}</span></div>
       <header className="docs-page-heading"><h1>{page.data.title}</h1><p>{page.data.description}</p></header>
-      <div className="docs-scope-note">{releaseGuide ? <>Current testnet documentation. These instructions describe the existing contract and local integration.</> : <>Protocol guide. This section covers architecture and versioned behavior; <a href="/docs/roadmap">implementation status</a> identifies what is available today.</>}</div>
       <div className="docs-prose"><Body components={{ a: DocLink, pre: CodeBlock, DocCard, DocCards, Note, Steps, SystemArchitecture, ...diagramComponents }} /></div>
       <nav className="docs-pagination" aria-label="Adjacent pages">{previous ? <a href={previous.url}><span>← Previous</span><strong>{previous.title}</strong></a> : <div />}{next && <a href={next.url}><span>Next →</span><strong>{next.title}</strong></a>}</nav>
       <div className="docs-article-foot"><span>Nyquist402 technical documentation · MIT</span><a href="https://github.com/enliven17/nyquist402">Source repository ↗</a></div>

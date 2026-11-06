@@ -1,5 +1,5 @@
 ---
-title: Local signing example
+title: Transaction signing example
 description: Separate fee-source signatures from the exact authorizations each contract action requires.
 ---
 ## Who signs what
@@ -38,6 +38,8 @@ This Node signing example assumes funded `buyer` and `seller` keypairs, agreed `
 
 ## Supported credentials
 
-The local SDK supports ordinary legacy and AddressV2 authorization credentials. It rejects delegated CAP-71 credential trees in this version. Custom account authentication is re-simulated in enforcement mode before envelope signing.
+The client supports supported Stellar address authorization credentials. Custom account authentication is re-simulated in enforcement mode before envelope signing.
 
-The protected demo charges network fees to the connected wallet in test XLM. Basic demo sponsorship is a separate integration and should not be assumed for protected settlement.
+Delegated CAP-71 support is **not fully implemented yet**. Delegated credential trees are rejected until their expanded authority can be validated before signing.
+
+The protected demo charges network fees to the connected wallet in test XLM. A relay may sponsor transaction fees under its own policy, but sponsorship never replaces the buyer, seller or arbiter authorization required by a call.

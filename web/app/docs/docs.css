@@ -273,8 +273,6 @@ body:has(.docs-site) { padding-left: 240px; }
 
 /* Technical documentation: compact headings and static, inspectable diagrams. */
 .docs-introduction .docs-page-heading h1 { font-size: clamp(34px, 3.4vw, 50px); font-weight: 400; line-height: 1.08; letter-spacing: -.035em; }
-.docs-scope-note { margin: 0 0 28px; padding: 12px 15px; border-left: 2px solid var(--line); background: var(--surface); color: var(--muted); font-size: 12px; line-height: 1.7; }
-.docs-scope-note a { color: var(--accent); text-underline-offset: 3px; }
 .docs-site .dg, .docs-site .dg * { animation: none !important; }
 .docs-site .dg-packet { display: none; }
 .docs-site .bl-step { opacity: 1; }
@@ -292,13 +290,12 @@ body:has(.docs-site) { padding-left: 240px; }
 ::view-transition-group(docs-article) { animation-duration: 0.2s; }
 @keyframes docs-out { to { opacity: 0; transform: translateX(-12px); } }
 
-.docs-breadcrumb, .docs-page-heading h1, .docs-page-heading p, .docs-scope-note,
+.docs-breadcrumb, .docs-page-heading h1, .docs-page-heading p,
 .docs-prose > *:nth-child(-n + 8), .docs-page > :not(.docs-article) {
   animation: docs-in 0.55s cubic-bezier(.2, .8, .2, 1) both;
 }
 .docs-page-heading h1 { animation-delay: 0.05s; }
 .docs-page-heading p { animation-delay: 0.1s; }
-.docs-scope-note { animation-delay: 0.15s; }
 .docs-prose > :nth-child(1) { animation-delay: 0.2s; }
 .docs-prose > :nth-child(2) { animation-delay: 0.24s; }
 .docs-prose > :nth-child(3) { animation-delay: 0.28s; }
@@ -312,7 +309,7 @@ body:has(.docs-site) { padding-left: 240px; }
 @keyframes docs-fade { from { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .docs-breadcrumb, .docs-page-heading h1, .docs-page-heading p, .docs-scope-note,
+  .docs-breadcrumb, .docs-page-heading h1, .docs-page-heading p,
   .docs-prose > *, .docs-page > :not(.docs-article) { animation: none; }
   ::view-transition-old(docs-article) { animation: none; }
 }

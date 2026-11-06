@@ -6,11 +6,11 @@ description: Agree on arbitration authority, applicable pricing and limits befor
 
 Matching nonempty buyer and seller preferences select a mutually agreed custom arbiter. Otherwise the pinned default handles the case. The selected path, default identity, time windows and terminal fallback are part of the funded agreement.
 
-After funding, a party or service cannot replace those terms unilaterally. A release supporting a different selection policy must identify that policy explicitly.
+After funding, a party or service cannot replace those terms unilaterally. Any different selection policy must be explicitly agreed before funding.
 
 ## Obtain and accept pricing
 
-The intended quote mechanism supports published pricing and direct quotes. Before funding, the integration verifies that the custom and default quotes apply to the agreed payment and arbitration policy, including any escalation costs.
+A paid arbiter authenticates a quote before funding. The buyer and seller verify that the custom and default quotes apply to the complete payment and arbitration policy, including the applicable fee limits. Zero-cost arbitration can omit a quote.
 
 | Binding | Validation purpose |
 | --- | --- |
@@ -27,10 +27,12 @@ Both parties accept the arbitration terms; the buyer authorizes the funded fee a
 
 The agreement must account for default handling when a custom arbiter times out. Handoff preserves evidence access, the current revision and existing deadlines. It must not create a new fee obligation outside the buyer's accepted limit.
 
-## Local v2 quote encoding
+## Quote encoding
 
-V2 provides `register_quote(FeeQuote)`, authenticated by the named arbiter. The quote contains `scope`, `arbiter`, `fee`, `valid_until` and `salt`; its ID is the SHA-256 of its canonical Soroban XDR. Its scope hashes the network, deployment and complete v2 payment terms with both quote IDs cleared, under the domain `nyquist402:quote-scope:v2`.
+The contract provides `register_quote(FeeQuote)`, authenticated by the named arbiter. The quote contains `scope`, `arbiter`, `fee`, `valid_until` and `salt`; its ID is the SHA-256 of its canonical Soroban XDR. Its scope hashes the network, deployment and complete payment terms with both quote IDs cleared, using a dedicated quote-scope domain to separate quotes from other signed data.
 
 Funding references the accepted quote IDs. The contract verifies authority, scope, exact fee and validity through the funding deadline. Changing parties, budget, policy, token, deployment or payment salt invalidates applicability. Registration is a separate arbiter-signed transaction; it is not a trust assertion from the facilitator. Zero-cost arbitration can omit a quote.
 
-The public HTTP quote envelope is not a released upstream x402 specification. Use the local SDK/source for this version and preserve v1 compatibility.
+## Quote discovery — not fully implemented yet
+
+Arbitration integrations will expose published pricing and direct quotes through the protected payment negotiation flow. The client will check each returned quote against the agreed terms before signing; receiving a quote through a facilitator will not replace arbiter authentication. Public HTTP schemas will be defined with the [protected x402 integration](/docs/integration).

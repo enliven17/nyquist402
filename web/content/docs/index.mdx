@@ -1,36 +1,36 @@
 ---
 title: Nyquist402 documentation
-description: Technical architecture and integration model for protected API payments on Stellar.
+description: Accept protected API payments, review deliveries and resolve disputes on Stellar.
 ---
-Nyquist402 combines x402 payment negotiation with Soroban escrow. A buyer or software agent funds an agreed work budget. The seller records delivery claims, the buyer reviews them, and disputed claims are resolved under arbitration terms accepted before funding.
+Nyquist402 lets buyers and software agents fund work before its final cost is known. The buyer and seller agree a budget and settlement rules, the seller records delivery claims, and the buyer reviews each claim before payment. Soroban escrow enforces the agreement; arbitration resolves disputed deliveries.
 
-This documentation describes the intended system: payment contracts, SDK integration, transaction relay, case history, evidence delivery and role interfaces. It also provides separate instructions for the current testnet implementation.
+Start with the [demo walkthrough](/docs/quickstart) to try the flow, or [payment negotiation](/docs/integration) to understand how it connects to your API. Features still being completed are marked on their pages and in the [service roadmap](/docs/roadmap).
 
-## Payment model
+## How a protected payment works
 
-Protected payments separate **principal**, **protocol-fee reserves** and **arbitration reserves**. A claim reserves part of the work budget and enough accepted arbitration capacity for its possible case. Neither unused-fund return nor a dispute over another claim can spend that reservation.
+1. **Agree the work.** Define delivery criteria, pricing, budget, deadlines, arbiters and the fallback if arbitration times out.
+2. **Fund the agreement.** The buyer funds the work budget and any accepted protocol and arbitration reserves. Both parties authorize the exact terms.
+3. **Record delivery.** The seller submits a claim for completed work. Each claim reserves its own part of the budget and starts a review window.
+4. **Review or dispute.** The buyer accepts the claim, or either party opens a dispute before review closes. An undisputed claim becomes eligible for settlement after review.
+5. **Settle and recover unused funds.** Acceptance, review expiry, a valid ruling or the agreed fallback finalizes each claim. Unused funds return without spending another claim's reservation.
 
-Settlement follows buyer acceptance, an undisputed review deadline, a valid ruling or the agreed terminal fallback. Escrow enforces the authority and allocation for each route. Services submit and track eligible actions; they do not decide who owns the funds.
+The contract controls fund allocation. Nyquist402 services provide transaction execution, private evidence delivery and payment history; they cannot change the funded agreement.
 
-## Documentation paths
+## Choose your workflow
 
-| Subject | Documentation |
+| You want to… | Start here |
 | --- | --- |
-| Components and trust boundaries | [System architecture](/docs/architecture) |
-| Funding, claims and finalization | [Payment lifecycle](/docs/protected/lifecycle) |
-| Principal and fee accounting | [Funding and fee reserves](/docs/protected/fees) |
-| Pricing and arbitration agreement | [Quotes and arbiter selection](/docs/protected/quotes) |
-| HTTP payment integration | [x402 negotiation](/docs/integration) and [SDK](/docs/sdk) |
-| Case data and execution | [Evidence](/docs/services/evidence), [recovery](/docs/protected/recovery) and [operations](/docs/services/operators) |
+| Pay for work as a buyer or agent | [Buyer workflow](/docs/protected/buyer) |
+| Accept protected payments for your API | [Seller workflow](/docs/protected/seller) and [SDK integration](/docs/sdk) |
+| Handle arbitration cases | [Arbiter workflow](/docs/protected/arbiter) |
+| Understand budgets, fees and settlement | [Payment lifecycle](/docs/protected/lifecycle) and [fee reserves](/docs/protected/fees) |
+| Retrieve evidence or recover a payment | [Evidence access](/docs/services/evidence) and [history and recovery](/docs/protected/recovery) |
+| Understand service trust boundaries | [Architecture](/docs/architecture) and [security model](/docs/reference/security) |
 
-## Roles
+## Try it on testnet
 
-[Buyers and agents](/docs/protected/buyer) approve budgets and review deliveries. [Sellers](/docs/protected/seller) publish offers, record claims and provide delivery evidence. [Arbiters](/docs/protected/arbiter) review the current case evidence and sign bounded rulings. Each role has its own authenticated interface and signing authority.
+The demo uses Circle's Stellar testnet USDC. Connect a testnet wallet, add the USDC trustline and follow one payment through the Buyer, Seller and Arbiter views. See [testnet setup](/docs/setup) for the network and contract details.
 
 ## Basic auth-capture
 
-Basic auth-capture remains a separate payment flow: the seller captures the actual cost from an authorized hold and can arrange a funded refund. It does not provide protected claim review or arbitration. See the [basic reference](/docs/basic).
-
-## Release availability
-
-The existing v1 deployment provides the fee-free claim lifecycle. Separate v2 contract source implements fee reserves and authenticated quotes; the unified app adds local private evidence/history and optional deadline execution. V2 still needs a separate deployment, and no managed public service or upstream protected integration is claimed. See [implementation status](/docs/roadmap) for the exact boundary and [testnet setup](/docs/setup) for executable instructions.
+For payments that only need a spending ceiling and capture of the actual cost, [basic auth-capture](/docs/basic) provides a separate flow. Choose protected payments when deliveries need review and claim-level arbitration.

@@ -1,33 +1,35 @@
 ---
-title: SDK responsibilities
-description: The intended SDK surface for capability checks, protected signing, receipts and recovery.
+title: SDK integration
+description: Validate agreements, prepare authorized actions and track protected payments from your application.
 ---
-## Integration responsibilities
+## Connect your application
 
-The SDK connects buyer/agent clients, seller resource servers, facilitators and direct contract callers. Its responsibilities are:
+The SDK connects buyer and agent clients, seller APIs and arbitration integrations to protected escrow. Configure the contract, RPC endpoint and network passphrase for the payment version you support. Verify these values before asking anyone to sign.
 
-- Identify supported contract, network, policy and x402 versions before signing.
-- Validate complete payment terms and custom/default quote applicability.
-- Present principal, fee reserves and caps without hidden economic changes.
-- Encode canonical terms and compute the deployment-bound payment identity.
-- Prepare and verify authorized transaction invocation trees.
-- Read payment, claim, case and fee state and track submitted transaction outcomes.
-- Support delivery/usage receipt verification and direct lifecycle actions.
+**SDK distribution is not fully implemented yet.** The installable release will provide versioned packages and supported-network declarations. The [TypeScript client reference](/docs/testnet/sdk) describes the integration methods; package installation instructions will accompany the release.
 
-## Signing boundary
+## Validate before funding
 
-Preparation simulates the action and checks required authorization. Each role signs only its permitted exact call. Additional authorizers are handled through explicit signing callbacks; the transaction fee source signs the envelope.
+Check the complete agreement: delivery criteria, principal budget, asset, deadlines, arbiter selection, fallback allocation and accepted fee quotes. Present the work budget, protocol reserve and arbitration reserve separately. Compute the payment identity from the canonical terms, network and contract.
 
-The SDK must reject a modified wallet transaction, unsupported permissions, stale quotes and mismatched deployment or network bindings. A failed compatibility check must not downgrade a protected request to basic settlement.
+A required capability must be supported by every participating integration. Reject an incompatible offer before signing; an agent requiring protected review must not accept a basic-only payment.
 
-## Recovery boundary
+## Prepare, sign and submit
 
-Submission returns a transaction identity and confirmation status so a consumer can resolve uncertain outcomes before retrying. Durable history and job scheduling belong to the operated services; the SDK provides the reads and submissions needed to recover or act directly.
+1. Call `prepare` with the transaction source and the exact lifecycle action.
+2. Collect any additional role authorizations requested for that call.
+3. Ask the transaction source's wallet to sign the prepared envelope.
+4. Call `submit` with the prepared transaction and signed XDR.
+5. Track confirmation and read the resulting payment or claim state.
 
-Automatic restoration is a separately versioned capability. A client must report an unsupported restoration requirement rather than imply that an archived record is absent or its funds are lost.
+Preparation simulates the action and validates its authorization tree. Each role signs only its permitted call; the transaction source signs the envelope and pays network fees. Submission rejects a wallet response that changes the prepared transaction body. See [signing and authorization](/docs/signing).
 
-## Package and schema availability
+## Read and reconcile state
 
-A public release is intended to include installable packages, supported-version declarations and runnable integration examples. Use the package identifiers, protected wire encodings and fee-capable method signatures published for the selected release.
+Use `terms`, `state`, `claimState` and `arbiter` to retrieve the agreement, balances, claim status and current ruling authority. Read fresh state when preparing acceptance, evidence, a ruling or a deadline action: another transaction may have advanced the payment since the last read.
 
-The current source client is documented separately in the [local SDK reference](/docs/testnet/sdk), with a [working signing example](/docs/testnet/signing).
+Keep the payment ID and any submitted transaction hash. If confirmation is delayed, query the original transaction before building another action. The [history service](/docs/protected/recovery) supports continuity across sessions; onchain state remains authoritative for funds and finality.
+
+## Handle archived records
+
+Automatic restoration is **not fully implemented yet**. The client reports when a call needs archived state restored. Recovery tooling will restore the required records and then prepare the original action again, without changing its agreement or duplicating its effect.
