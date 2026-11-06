@@ -10,6 +10,7 @@
 
 import type * as crons from "../crons.js";
 import type * as events from "../events.js";
+import type * as status from "../status.js";
 import type * as store from "../store.js";
 import type * as tester from "../tester.js";
 
@@ -22,6 +23,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   events: typeof events;
+  status: typeof status;
   store: typeof store;
   tester: typeof tester;
 }>;

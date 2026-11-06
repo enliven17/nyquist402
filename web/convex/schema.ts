@@ -21,6 +21,9 @@ export default defineSchema({
   }).index("by_eid", ["eid"]),
   seen: defineTable({ kind: v.string(), key: v.string() }).index("by_key", ["kind", "key"]),
   bins: defineTable({ at: v.number(), transactions: v.number() }).index("by_at", ["at"]),
+  // Health checks for the status page (status.ts): raw results for 30 days, daily counts kept.
+  checks: defineTable({ at: v.number(), results: v.array(v.object({ id: v.string(), ok: v.boolean(), ms: v.number(), error: v.optional(v.string()) })) }).index("by_at", ["at"]),
+  uptime: defineTable({ component: v.string(), day: v.string(), checks: v.number(), failures: v.number() }).index("by_day", ["component", "day"]),
   // One scheduled scenario run against the hosted API (tester.ts).
   runs: defineTable({ seq: v.number(), name: v.string(), ok: v.boolean(), txs: v.number(), ms: v.number(), buyer: v.string(), paymentId: v.optional(v.string()), error: v.optional(v.string()) })
     .index("by_seq", ["seq"]),

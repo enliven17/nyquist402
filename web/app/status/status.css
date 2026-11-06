@@ -1,0 +1,69 @@
+.sp { --ok: #12a150; --warn: #d89614; --bad: #d92d20; --none: #e2e2dc; max-width: 960px; margin: 0 auto; padding: 56px 24px 96px; }
+.sp-head h1 { font-size: clamp(2.25rem, 4.6vw, 3.75rem); font-weight: 300; letter-spacing: -0.04em; line-height: 1; margin: 0 0 14px; }
+.sp-head p, .sp-muted { color: var(--muted); margin: 0; }
+.sp-muted { font-size: 13px; }
+.sp-muted a { color: var(--accent); }
+.sp-error, .sp-err { color: var(--bad); }
+.sp-err { font-family: var(--font-mono), monospace; font-size: 12px; margin: -4px 0 12px; }
+
+.sp-banner { display: flex; align-items: center; gap: 14px; margin: 36px 0 40px; padding: 20px 24px; border: 1px solid var(--line); background: var(--surface); }
+.sp-banner b { display: block; font-size: 18px; font-weight: 500; }
+.sp-banner span { font-size: 13px; color: var(--muted); }
+.sp-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 18%, transparent); }
+.sp-banner.bad .sp-dot { background: var(--bad); box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 18%, transparent); }
+
+.sp-bar-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.sp-bar-head h2, .sp-card h2 { font-size: 15px; font-weight: 500; margin: 0; }
+.sp-range { display: flex; border: 1px solid var(--line); }
+.sp-range button { font: inherit; font-family: var(--font-mono), monospace; font-size: 12px; background: none; border: 0; border-left: 1px solid var(--line); color: var(--muted); padding: 6px 12px; cursor: pointer; }
+.sp-range button:first-child { border-left: 0; }
+.sp-range button:hover { color: var(--text); }
+.sp-range button[aria-pressed="true"], .sp-range button[aria-pressed="true"]:hover { background: var(--ink); color: #fff; }
+
+.sp-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); background: var(--surface); }
+.sp-row { padding: 20px 24px; border-top: 1px solid var(--line); }
+.sp-row:first-child { border-top: 0; }
+.sp-row-top { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.sp-row-top b { display: block; font-weight: 500; margin-bottom: 4px; }
+.sp-now { display: flex; align-items: baseline; gap: 14px; white-space: nowrap; font-size: 13px; }
+.sp-state { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+.sp-state i { width: 8px; height: 8px; border-radius: 50%; background: var(--none); }
+.sp-state.ok i { background: var(--ok); }
+.sp-state.bad i { background: var(--bad); }
+.sp-state.bad { color: var(--bad); }
+.sp-uptime { font-family: var(--font-mono), monospace; font-variant-numeric: tabular-nums; min-width: 64px; text-align: right; }
+
+.sp-bars { position: relative; display: flex; gap: 2px; height: 30px; }
+.sp-bars > span { flex: 1; border-radius: 2px; background: var(--none); outline-offset: 2px; }
+.sp-bars > span.ok { background: var(--ok); }
+.sp-bars > span.warn { background: var(--warn); }
+.sp-bars > span.bad { background: var(--bad); }
+.sp-bars > span.on { opacity: 0.7; }
+.sp-tip { position: absolute; bottom: calc(100% + 8px); transform: translateX(-50%); pointer-events: none; background: var(--ink); color: #fff; padding: 6px 10px; font-size: 12px; white-space: nowrap; z-index: 2; }
+.sp-tip.start { transform: none; }
+.sp-tip.end { transform: translateX(-100%); }
+.sp-tip span { display: block; color: #b9bcc4; font-family: var(--font-mono), monospace; font-size: 11px; }
+.sp-axis { display: flex; justify-content: space-between; margin-top: 6px; font-family: var(--font-mono), monospace; font-size: 11px; color: var(--muted); }
+
+.sp-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 18px; margin: 14px 0 6px; padding: 0; font-size: 12px; color: var(--muted); }
+.sp-legend li { display: flex; align-items: center; gap: 6px; }
+.sp-legend i { width: 10px; height: 10px; border-radius: 2px; background: var(--none); }
+.sp-legend i.ok { background: var(--ok); }
+.sp-legend i.warn { background: var(--warn); }
+.sp-legend i.bad { background: var(--bad); }
+
+.sp-card, section.sp-card:first-of-type { border: 1px solid var(--line); background: var(--surface); padding: 22px 24px; margin: 40px 0 16px; }
+.sp-card h2 { margin-bottom: 16px; }
+.sp-table { overflow-x: auto; }
+.sp-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sp-table th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 0 12px 10px 0; border-bottom: 1px solid var(--line); }
+.sp-table td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.sp-table td:first-child { white-space: nowrap; }
+.sp-table code { font-family: var(--font-mono), monospace; font-size: 12px; }
+
+@media (max-width: 760px) {
+  .sp { padding-top: 32px; }
+  .sp-row { padding: 16px; }
+  .sp-row-top { flex-direction: column; gap: 8px; }
+  .sp-bars { gap: 1px; }
+}
