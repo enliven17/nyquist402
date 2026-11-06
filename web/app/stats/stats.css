@@ -57,9 +57,26 @@
   .st-tiles > div:nth-child(2n) { border-right: 0 !important; }
   .st-grid { grid-template-columns: 1fr; gap: 0; }
 }
+.st-table .mob { display: none; }
+/* Phones: each table row becomes a small card of labelled values instead of a scrolling table. */
 @media (max-width: 760px) {
-  .st-chart { overflow-x: auto; }
-  .st-chart svg { min-width: 620px; }
+  .st-table { overflow: visible; }
+  .st-table thead { display: none; }
+  .st-table table, .st-table tbody { display: block; }
+  .st-table tr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .st-table td { padding: 0; border: 0; white-space: normal; text-align: left !important; min-width: 0; overflow-wrap: anywhere; }
+  .st-table td.st-lead { grid-column: 1 / -1; font-weight: 500; }
+  .st-table td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .st-table .desk { display: none; }
+  .st-table .mob { display: inline; }
+  /* Events: two lines, name and amount, then payment, time and transaction. */
+  .st-events tr { grid-template-columns: auto 1fr auto; gap: 4px 12px; padding: 10px 0; }
+  .st-events td[data-label]::before { display: none; }
+  .st-events td.st-lead { grid-column: 1 / 3; grid-row: 1; }
+  .st-events td[data-label="USDC"] { grid-column: 3; grid-row: 1; text-align: right !important; font-variant-numeric: tabular-nums; }
+  .st-events td[data-label="Payment"] { grid-column: 1; grid-row: 2; }
+  .st-events td[data-label="Time"] { grid-column: 2; grid-row: 2; color: var(--muted); font-size: 12px; }
+  .st-events td[data-label="Transaction"] { grid-column: 3; grid-row: 2; text-align: right !important; }
 }
 .st-sk-bars { display: flex; align-items: flex-end; gap: 4px; height: 180px; padding-left: 36px; }
 .st-sk-bars .sk { flex: 1; }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Scheduled, Stats } from "../../server/stats";
 import { Sk } from "@/components/Skeleton";
 import "./stats.css";
@@ -83,17 +83,17 @@ export default function StatsPage() {
 
         <section className="st-card">
           <h2>Latest events</h2>
-          <div className="st-table">
+          <div className="st-table st-events">
             <table>
               <thead><tr><th>Event</th><th>Payment</th><th className="num">USDC</th><th>Time</th><th>Transaction</th></tr></thead>
               <tbody>
                 {data.recent.map(e => (
                   <tr key={e.tx + e.kind}>
-                    <td>{EVENTS[e.kind] ?? e.kind}</td>
-                    <td><code>{short(e.paymentId)}</code></td>
-                    <td className="num">{e.amount === null ? "—" : usdc(e.amount)}</td>
-                    <td>{ago(e.at)}</td>
-                    <td><a href={`${EXPERT}/tx/${e.tx}`} target="_blank" rel="noreferrer"><code>{short(e.tx)}</code> ↗</a></td>
+                    <td className="st-lead">{EVENTS[e.kind] ?? e.kind}</td>
+                    <td data-label="Payment"><code>{short(e.paymentId)}</code></td>
+                    <td data-label="USDC" className="num">{e.amount === null ? "—" : usdc(e.amount)}</td>
+                    <td data-label="Time">{ago(e.at)}</td>
+                    <td data-label="Transaction"><a href={`${EXPERT}/tx/${e.tx}`} target="_blank" rel="noreferrer"><code>{short(e.tx)}</code> ↗</a></td>
                   </tr>
                 ))}
               </tbody>
@@ -140,7 +140,7 @@ function ScheduledRuns({ s }: { s: Scheduled }) {
           <thead><tr><th>Scenario</th><th className="num">Passed</th><th className="num">Runs</th><th className="num">Transactions</th></tr></thead>
           <tbody>
             {s.scenarios.map(r => (
-              <tr key={r.name}><td>{r.name}</td><td className="num">{r.passed}</td><td className="num">{r.runs}</td><td className="num">{r.txs}</td></tr>
+              <tr key={r.name}><td className="st-lead">{r.name}</td><td data-label="Passed" className="num">{r.passed}</td><td data-label="Runs" className="num">{r.runs}</td><td data-label="Transactions" className="num">{r.txs}</td></tr>
             ))}
           </tbody>
         </table>
@@ -148,14 +148,14 @@ function ScheduledRuns({ s }: { s: Scheduled }) {
       <h2 className="st-sub">Latest runs</h2>
       <div className="st-table">
         <table>
-          <thead><tr><th>Run</th><th>Scenario</th><th>Result</th><th className="num">Transactions</th><th className="num">Duration</th><th>Time</th><th>Payment</th></tr></thead>
+          <thead><tr><th>Run</th><th className="desk">Scenario</th><th>Result</th><th className="num">Transactions</th><th className="num">Duration</th><th>Time</th><th>Payment</th></tr></thead>
           <tbody>
             {s.latest.map(r => (
               <tr key={r.seq}>
-                <td>#{r.seq + 1}</td><td>{r.name}</td>
-                <td title={r.error}>{r.ok ? "Passed" : "Failed"}</td>
-                <td className="num">{r.txs}</td><td className="num">{Math.round(r.ms / 1000)}s</td><td>{ago(r.at)}</td>
-                <td>{r.paymentId ? <code>{short(r.paymentId)}</code> : "—"}</td>
+                <td className="st-lead"><span className="mob">{r.name} </span>#{r.seq + 1}</td><td data-label="Scenario" className="desk">{r.name}</td>
+                <td data-label="Result" title={r.error}>{r.ok ? "Passed" : "Failed"}</td>
+                <td data-label="Transactions" className="num">{r.txs}</td><td data-label="Duration" className="num">{Math.round(r.ms / 1000)}s</td><td data-label="Time">{ago(r.at)}</td>
+                <td data-label="Payment">{r.paymentId ? <code>{short(r.paymentId)}</code> : "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -229,9 +229,18 @@ function ActivityCard({ live, firstAt }: { live: Series; firstAt: number | null 
   );
 }
 
-const W = 960, H = 220, PAD = { l: 44, r: 8, t: 12, b: 26 };
+const PAD = { l: 44, r: 8, t: 12, b: 26 };
 function Activity({ points, bin, span }: { points: { at: number; transactions: number }[]; bin: number; span: number }) {
   const [hover, setHover] = useState<number>();
+  // Drawn at the container's real width, so it fits a phone without scrolling or shrinking text.
+  const box = useRef<HTMLDivElement>(null);
+  const [W, setW] = useState(960);
+  useEffect(() => {
+    const el = box.current; if (!el) return;
+    const ro = new ResizeObserver(([e]) => setW(Math.max(260, Math.round(e.contentRect.width))));
+    ro.observe(el); return () => ro.disconnect();
+  }, [points.length === 0]);
+  const H = W < 600 ? 180 : 220;
   if (!points.some(p => p.transactions)) return <p className="st-muted">No transactions in this range.</p>;
   const max = Math.max(1, ...points.map(p => p.transactions));
   const top = max <= 10 ? Math.max(2, Math.ceil(max / 2) * 2) : Math.ceil(max / 10) * 10; // even, so the midline is whole
@@ -239,10 +248,10 @@ function Activity({ points, bin, span }: { points: { at: number; transactions: n
   const step = iw / points.length, bw = Math.max(2, step - 2);
   const y = (v: number) => PAD.t + ih - (v / top) * ih;
   const label = (at: number) => when(at, bin >= 86400 ? { month: "short", day: "numeric" } : span > 86400 ? { month: "short", day: "numeric", hour: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
-  const every = Math.ceil(points.length / (span > 86400 && bin < 86400 ? 6 : 8));
+  const every = Math.ceil(points.length / Math.max(2, Math.min(span > 86400 && bin < 86400 ? 6 : 8, Math.floor(W / 120))));
   const h = hover === undefined ? undefined : points[hover];
   return (
-    <div className="st-chart">
+    <div className="st-chart" ref={box}>
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Onchain transactions per ${bin / 60} minutes`} onMouseLeave={() => setHover(undefined)}>
         {[0, top / 2, top].map(v => (
           <g key={v}>
