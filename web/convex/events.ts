@@ -3,8 +3,9 @@
 // stats page reads (web/server/stats.ts).
 import { rpc, scValToNative } from "@stellar/stellar-sdk";
 import { v } from "convex/values";
-import { internalAction, internalMutation, internalQuery, query } from "./_generated/server";
+import { internalAction, internalMutation, internalQuery, query, type QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { bucket } from "../lib/activity";
 import { PROTECTED_CONTRACT, PROTECTED_DEPLOY_TX } from "../lib/deployment";
 
 const BIN = 900; // activity is stored in 15-minute buckets
@@ -117,13 +118,7 @@ export const stats = query({
     const state = await ctx.db.query("chain").first();
     const t: Totals = state?.totals ?? empty();
     const now = Math.floor(Date.now() / 1000);
-    const span = t.firstAt === null ? 0 : now - t.firstAt;
-    const bin = [BIN, 3600, 6 * 3600, 86400, 7 * 86400].find(b => span / b <= 48) ?? 7 * 86400;
-    const start = t.firstAt === null ? 0 : Math.floor(t.firstAt / bin) * bin;
-    const stored = await ctx.db.query("bins").withIndex("by_at", q => q.gte("at", start)).collect();
-    const perBin = new Map<number, number>();
-    for (const b of stored) { const k = Math.floor(b.at / bin) * bin; perBin.set(k, (perBin.get(k) ?? 0) + b.transactions); }
-    const points = t.firstAt === null ? [] : Array.from({ length: Math.floor(now / bin) - start / bin + 1 }, (_, i) => ({ at: start + i * bin, transactions: perBin.get(start + i * bin) ?? 0 }));
+    const activity = t.firstAt === null ? { bin: BIN, points: [] } : await window(ctx, t.firstAt, now + 1);
     const recent = await ctx.db.query("events").order("desc").take(20);
     const amount = (e: Event) => e.kind === "claim_finalized" ? e.seller! : e.amount ?? null;
     return {
@@ -134,8 +129,19 @@ export const stats = query({
       outcomes: Object.entries(t.outcomes).map(([reason, o]) => ({ reason, ...o })).sort((a, b) => b.count - a.count),
       returns: Object.entries(t.returns).map(([reason, r]) => ({ reason, ...r })).sort((a, b) => b.count - a.count),
       arbiters: Object.entries(t.arbiters).map(([address, payments]) => ({ address, payments })).sort((a, b) => b.payments - a.payments),
-      activity: { bin, points },
+      activity,
       recent: recent.map(e => ({ kind: e.kind, at: e.at, tx: e.tx, paymentId: e.paymentId, amount: amount(e) })),
     };
   },
+});
+
+async function window(ctx: QueryCtx, from: number, to: number) {
+  const stored = await ctx.db.query("bins").withIndex("by_at", q => q.gte("at", Math.floor(from / BIN) * BIN).lt("at", to)).collect();
+  return bucket(stored.map(b => ({ at: b.at, n: b.transactions })), from, to, BIN);
+}
+
+/** Transactions per bucket for any window, for browsing older activity on the stats page. */
+export const activity = query({
+  args: { from: v.number(), to: v.number() },
+  handler: (ctx, { from, to }) => window(ctx, from, to),
 });

@@ -1,11 +1,10 @@
 import { rpc, scValToNative } from "@stellar/stellar-sdk";
 import { ConvexHttpClient } from "convex/browser";
 import { anyApi } from "convex/server";
+import { bucket } from "../lib/activity.ts";
 import { PROTECTED_CONTRACT, PROTECTED_DEPLOY_TX } from "../lib/deployment.ts";
 
 const server = new rpc.Server("https://soroban-testnet.stellar.org");
-// Bucket sizes for the activity chart; the smallest that keeps it under 48 bars.
-const BINS = [60, 300, 900, 3600, 6 * 3600, 86400];
 
 type Event = { kind: string; ledger: number; at: number; tx: string; paymentId: string; claimId: number | null; value: Record<string, unknown> };
 export type Stats = {
@@ -79,14 +78,7 @@ async function build(): Promise<Stats> {
 
   const txAt = new Map(list.map(e => [e.tx, e.at]));
   const first = list[0]?.at ?? null, last = Math.floor(Date.now() / 1000);
-  const span = first === null ? 0 : last - first;
-  const bin = BINS.find(b => span / b <= 48) ?? 86400;
-  const start = first === null ? 0 : Math.floor(first / bin) * bin;
-  const perBin = Map.groupBy([...txAt.values()], at => Math.floor(at / bin) * bin);
-  const points = first === null ? [] : Array.from({ length: Math.floor(last / bin) - start / bin + 1 }, (_, i) => {
-    const at = start + i * bin;
-    return { at, transactions: perBin.get(at)?.length ?? 0 };
-  });
+  const activity = first === null ? { bin: 60, points: [] } : bucket(txCounts(list), first, last + 1);
 
   const amountOf = (e: Event) => {
     const v = e.value;
@@ -115,8 +107,16 @@ async function build(): Promise<Stats> {
       .map(({ k, ...r }) => ({ reason: k, ...r })).sort((a, b) => b.count - a.count),
     arbiters: group(funded, e => String(e.value.arbiter), g => ({ payments: g.length }))
       .map(({ k, ...r }) => ({ address: k, ...r })).sort((a, b) => b.payments - a.payments),
-    activity: { bin, points },
+    activity,
     recent: list.slice(-20).reverse().map(e => ({ kind: e.kind, at: e.at, tx: e.tx, paymentId: e.paymentId, amount: amountOf(e) })),
     scheduled: null,
   };
+}
+
+const txCounts = (list: Event[]) => [...new Map(list.map(e => [e.tx, e.at])).values()].map(at => ({ at, n: 1 }));
+
+/** Transactions over [from, to) in unix seconds, for the chart's range controls. */
+export async function activity(from: number, to: number): Promise<Stats["activity"]> {
+  if (process.env.CONVEX_URL) return new ConvexHttpClient(process.env.CONVEX_URL).query(anyApi.events.activity, { from, to });
+  return bucket(txCounts((await events()).list), from, to);
 }
