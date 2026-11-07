@@ -12,21 +12,21 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <style>
       /* Boot skeleton: visible until React mounts into #root and replaces it. */
-      body { margin: 0; background: #f3f3ef; }
-      .boot { display: flex; min-height: 100vh; }
+      body { margin: 0; background: #f6f6f3; }
+      .boot { display: flex; flex-direction: column; min-height: 100vh; }
       .boot i { display: block; background: linear-gradient(90deg, #e7e7e1 0%, #efefea 40%, #e7e7e1 80%) 0 0 / 300% 100%; border-radius: 2px; animation: boot 1.4s ease-in-out infinite; }
-      .boot-side { width: 184px; flex: none; box-sizing: border-box; padding: 28px 14px; border-right: 1px solid #d6d6d0; }
-      .boot-side i { height: 11px; margin-bottom: 22px; }
+      .boot-side { display: flex; align-items: center; gap: 20px; height: 60px; margin: 12px clamp(12px, 2.4vw, 32px) 0; padding: 0 20px; box-sizing: border-box; border: 1px solid #e2e2dc; border-radius: 999px; background: #fff; }
+      .boot-side i { height: 11px; width: 64px; }
       .boot-main { flex: 1; max-width: 1120px; margin: 0 auto; padding: 64px 40px; box-sizing: border-box; }
       @keyframes boot { from { background-position: 100% 0; } to { background-position: 0 0; } }
-      @media (max-width: 1099px) { .boot-side { display: none; } .boot-main { padding: 88px 24px; } }
+      @media (max-width: 1099px) { .boot-main { padding: 64px 24px; } }
       @media (prefers-reduced-motion: reduce) { .boot i { animation: none; } }
     </style>
     <noscript><style>[data-split]{opacity:1!important}</style></noscript>
   </head>
   <body>
     <div id="root"><div class="boot" aria-busy="true" aria-label="Loading">
-      <div class="boot-side"><i style="width:96px;height:18px;margin-bottom:44px"></i><i style="width:60%"></i><i style="width:80%"></i><i style="width:70%"></i><i style="width:50%"></i><i style="width:64%;margin-top:40px"></i><i style="width:72%"></i></div>
+      <div class="boot-side"><i style="width:96px;height:18px;margin-right:16px"></i><i></i><i></i><i></i><i></i></div>
       <div class="boot-main"><i style="width:55%;height:56px;margin-bottom:16px"></i><i style="width:38%;height:56px;margin-bottom:28px"></i><i style="width:62%;height:16px;margin-bottom:10px"></i><i style="width:48%;height:16px;margin-bottom:40px"></i><i style="height:320px"></i></div>
     </div></div>
     <script type="module" src="/src/main.tsx"></script>

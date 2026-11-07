@@ -2,9 +2,10 @@ import { PROTECTED_CONTRACT } from "@/lib/deployment";
 import StatsSection from "@/app/stats/page";
 import "./landing.css";
 import { Logo, Mark } from "@/components/Logo";
-import HeroFigure from "@/components/landing/HeroFigure";
+import HeroWaves from "@/components/landing/HeroWaves";
 import Lifecycle from "@/components/landing/Lifecycle";
 import Motion from "@/components/landing/Motion";
+import SectionRail from "@/components/landing/SectionRail";
 
 const REPO_URL = "https://github.com/enliven17/nyquist402";
 const SPEC_PR = "https://github.com/x402-foundation/x402/pull/4124";
@@ -56,30 +57,24 @@ export default function Home() {
   return (
     <div className="landing">
       <Motion />
+      <SectionRail />
 
 
 
       <main>
-        {/* 01 Hero */}
-        <section className="hero" id="s1" data-section>
-          <div className="wrap">
-
-            <div className="hero-grid">
-              <div>
-                <h1 className="hero-title" data-split="now">Charge what<br />the work cost.</h1>
-                <p className="lead" data-reveal>
-                  Fund a budget. Review the delivery. Settle in USDC on Stellar.
-                </p>
-                <div className="cta-row" data-reveal>
-                  <a href="/demo" className="pill pill-accent pill-lg">Run the testnet demo <span aria-hidden>↗</span></a>
-                  <a href="/docs" className="pill pill-lg">Read the protocol</a>
-                </div>
-              </div>
-
-              <HeroFigure />
+        {/* 01 Hero: full screen over animated paper waves */}
+        <section className="hero hero-full" id="s1" data-section>
+          <HeroWaves />
+          <div className="wrap hero-inner">
+            <h1 className="hero-title" data-split="now">Charge what<br />the work cost.</h1>
+            <p className="lead" data-reveal>
+              Fund a budget. Review the delivery. Settle in USDC on Stellar.
+            </p>
+            <div className="cta-row" data-reveal>
+              <a href="/demo" className="pill pill-accent pill-lg">Run the testnet demo <span aria-hidden>↗</span></a>
+              <a href="/docs" className="pill pill-lg">Read the protocol</a>
             </div>
           </div>
-
         </section>
 
         {/* 02 The gap */}

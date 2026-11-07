@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { appPath } from '@/lib/site';
+import { navigate } from '@/lib/router';
 import { searchDocs } from '@/lib/docs/search';
 import type { SearchEntry } from '@/lib/docs/navigation';
 
@@ -42,7 +43,7 @@ export default function DocsShell({ entries, children }: { entries: SearchEntry[
     <dialog ref={dialog} className="docs-search-dialog" aria-label="Search documentation" onClose={() => searchTrigger.current?.focus({ preventScroll: true })} onClick={event => { if (event.target === event.currentTarget) closeSearch(); }} onKeyDown={event => {
       if (event.key === 'ArrowDown') { event.preventDefault(); setSelected(value => Math.max(0, Math.min(value + 1, results.length - 1))); }
       if (event.key === 'ArrowUp') { event.preventDefault(); setSelected(value => Math.max(value - 1, 0)); }
-      if (event.key === 'Enter' && event.target instanceof HTMLInputElement && results[selected]) { event.preventDefault(); closeSearch(); window.location.assign(results[selected].url); }
+      if (event.key === 'Enter' && event.target instanceof HTMLInputElement && results[selected]) { event.preventDefault(); closeSearch(); navigate(results[selected].url); }
     }}>
       <div className="docs-search-field"><SearchIcon /><input autoFocus type="search" placeholder="Search guides, methods, and concepts…" aria-label="Search guides, methods, and concepts" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls="docs-search-results" aria-activedescendant={results.length ? `docs-result-${selected}` : undefined} value={query} onChange={event => { setQuery(event.target.value); setSelected(0); }} /><button onClick={closeSearch} aria-label="Close search"><kbd>Esc</kbd></button></div>
       <p className="docs-search-caption" aria-live="polite">{query.trim() ? `${results.length} results` : 'DOCUMENTATION'}</p>

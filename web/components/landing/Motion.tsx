@@ -96,7 +96,12 @@ export default function Motion() {
       });
     });
 
+    // Pause the figures' looping CSS animations while they are off screen.
+    const io = new IntersectionObserver(entries => entries.forEach(e => e.target.classList.toggle("is-off", !e.isIntersecting)), { rootMargin: "100px" });
+    document.querySelectorAll(".hero-fig").forEach(el => io.observe(el));
+
     return () => {
+      io.disconnect();
       if (lenis) gsap.ticker.remove(tick);
       lenis?.destroy();
       document.documentElement.classList.remove("js");

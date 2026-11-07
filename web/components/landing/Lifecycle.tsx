@@ -87,7 +87,7 @@ export default function Lifecycle() {
 
       const tl = gsap.timeline({
         defaults: { ease: "power2.inOut" },
-        scrollTrigger: { trigger: el, start: "top top", end: "+=340%", pin: true, scrub: 0.8 },
+        scrollTrigger: { trigger: el, start: "top top", end: "+=340%", pin: true, scrub: 0.8, anticipatePin: 1, invalidateOnRefresh: true },
         onUpdate: () => render(tl.time()),
       });
       // Each step: open its valves, move the funds, close them again.

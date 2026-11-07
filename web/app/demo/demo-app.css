@@ -1,0 +1,86 @@
+/* Demo as a calm app surface: flat white cards, one radius, no gradients. Loaded after product.css. */
+.demo .d-head { border-bottom: 0; padding: 40px 0 8px; gap: 20px; }
+.demo .d-head h1 { font-size: clamp(2rem, 3.4vw, 3rem); font-weight: 400; letter-spacing: -0.03em; line-height: 1.05; }
+.demo .d-head p { font-size: 1rem; }
+
+/* Buttons: quiet secondary, solid primary. */
+.demo .pill-btn { height: 40px; padding: 0 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); transition: border-color .2s, background .2s, color .2s; }
+.demo .pill-btn:hover:not(:disabled) { background: var(--surface); color: var(--ink); border-color: color-mix(in srgb, var(--ink) 30%, transparent); }
+.demo .pill-btn.accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+.demo .pill-btn.accent:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 88%, #000); border-color: transparent; color: #fff; }
+.demo .pill-btn.sm { height: 32px; padding: 0 12px; font-size: 12.5px; }
+
+/* Role switcher: one segmented control. */
+.demo .demo-roles { display: inline-flex; gap: 2px; padding: 4px; margin: 24px 0 10px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.demo .demo-roles .pill-btn { height: 36px; padding: 0 20px; border: 0; background: none; box-shadow: none; color: var(--muted); }
+.demo .demo-roles .pill-btn:hover:not(:disabled) { background: none; color: var(--ink); }
+.demo .demo-roles .pill-btn[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+.demo-roles + .muted { margin-bottom: 20px; }
+
+/* Layout */
+.demo .d-grid { gap: 20px; align-items: start; }
+@media (min-width: 980px) {
+  .demo .d-grid { grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr); }
+  .demo .d-side { border-left: 0; top: 92px; padding: 0; }
+}
+.demo .d-grid > section { display: grid; gap: 20px; }
+.demo .d-side { display: grid; gap: 16px; padding: 0; }
+
+/* Cards: steps, claims, ledger, recover, activity. */
+.demo .step-row, .demo .protected-claims, .demo .pstate, .demo .recover, .demo .log {
+  margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-sm);
+}
+.demo .step-row { grid-template-columns: 32px 1fr; gap: 0 16px; padding: 28px; }
+.demo .step-row[data-state="locked"] { opacity: 1; }
+.demo .step-row[data-state="locked"] h2 { color: var(--muted); }
+.demo .step-num {
+  width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 50%;
+  background: var(--paper); border: 1px solid var(--line); font-size: 12px; color: var(--muted);
+}
+.demo .step-row[data-state="active"] .step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
+.demo .step-row[data-state="done"] .step-num { background: color-mix(in srgb, #1f9d55 12%, transparent); border-color: transparent; color: #1f9d55; }
+.demo .step-row h2 { font-size: 1.25rem; font-weight: 500; letter-spacing: -0.02em; margin: 4px 0 8px; }
+.demo .step-row p { font-size: 14.5px; line-height: 1.6; }
+.demo .protected-claims { padding: 24px 28px; }
+.demo .protected-claims h2 { font-size: 1.1rem; font-weight: 500; }
+.demo .protected-claim { padding: 20px 0; }
+.demo .protected-claim:last-of-type { border-bottom: 0; }
+.demo .pstate, .demo .log { padding: 20px 22px; }
+.demo .recover summary { padding: 16px 22px; font-size: 13.5px; font-weight: 500; list-style: none; display: flex; justify-content: space-between; }
+.demo .recover summary::-webkit-details-marker { display: none; }
+.demo .recover summary::after { content: "+"; color: var(--muted); transition: transform .2s; }
+.demo .recover[open] summary::after { transform: rotate(45deg); }
+.demo .recover .protected-form { margin: 0; padding: 0 22px 20px; }
+.demo .log ol { border-top: 0; }
+.demo .log li:last-child { border-bottom: 0; }
+.demo .d-foot { margin-top: 0; padding: 0 4px; }
+
+/* Inside the steps */
+.protected-demo .step-row details > summary { color: var(--muted); font-size: 13px; }
+.protected-demo .step-row details > summary:hover { color: var(--ink); }
+.demo .chips { gap: 6px; margin: 16px 0 24px; }
+.demo .chips li { border: 0; border-radius: 999px; padding: 6px 12px; background: var(--paper); }
+.demo .free { border: 0; border-radius: 999px; padding: 3px 8px; background: color-mix(in srgb, #1f9d55 12%, transparent); }
+.demo .arbiter-pick legend { font-weight: 500; }
+.demo .arbiter-cards label { border-radius: 12px; padding: 14px 16px; box-shadow: none; transition: border-color .2s, background .2s; }
+.demo .arbiter-cards label:hover { border-color: color-mix(in srgb, var(--ink) 30%, transparent); }
+.demo .arbiter-cards label.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, var(--surface)); box-shadow: 0 0 0 1px var(--accent); }
+.demo .protected-form input:not([type="range"]), .demo .protected-form textarea, .demo .protected-form select { border-radius: 10px; background: var(--surface); padding: 11px 14px; transition: border-color .2s; }
+.demo .protected-form input:not([type="range"]):hover, .demo .protected-form textarea:hover { border-color: color-mix(in srgb, var(--ink) 25%, transparent); }
+.demo .protected-offer { border: 1px solid var(--line); border-radius: 12px; padding: 20px; background: var(--paper); box-shadow: none; }
+.demo .protected-details > div:last-child { border-bottom: 0; }
+.demo .status { border: 0; border-radius: 999px; padding: 3px 9px; background: color-mix(in srgb, currentColor 10%, transparent); }
+.demo .arbiter-desk { border-left: 0; padding: 16px; border-radius: 12px; background: var(--paper); }
+.demo .busy-bar { border: 1px solid var(--line); border-radius: 999px; padding: 10px 16px; margin-bottom: 16px; background: var(--surface); box-shadow: var(--shadow-md); top: 88px; }
+.demo .demo-setup-note { border-radius: var(--r-md); margin-bottom: 16px; }
+.demo .pbar, .demo .bar { border-radius: 99px; }
+.demo .plegend li i { border-radius: 3px; }
+
+/* Phones: the step number sits above the title so the content gets the full card width. */
+@media (max-width: 639px) {
+  .demo .step-row { grid-template-columns: 1fr; padding: 20px; }
+  .demo .step-num { margin-bottom: 12px; }
+  .demo .protected-claims, .demo .pstate, .demo .log { padding: 20px; }
+  .demo .demo-roles { display: flex; width: 100%; }
+  .demo .demo-roles .pill-btn { flex: 1; justify-content: center; }
+}

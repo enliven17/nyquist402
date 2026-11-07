@@ -38,7 +38,9 @@
 .hero-iso .win-ceiling { stroke: #2440ff; stroke-width: 0.9; stroke-dasharray: 1.6 1.2; }
 .hero-iso .plate { fill: var(--anatomy-shade-3); stroke: var(--anatomy-mid); stroke-width: 0.5; }
 .hero-iso .plate-text { font-family: var(--font-mono), monospace; font-size: 4.6px; fill: var(--anatomy-hi); font-variant-numeric: tabular-nums; }
-.hero-iso .flow { fill: none; stroke: #2440ff; stroke-width: 1.6; stroke-dasharray: 3 4; stroke-linecap: round; opacity: 0; transition: opacity 0.3s; animation: flow 0.6s linear infinite; }
+.hero-iso .flow { fill: none; stroke: #2440ff; stroke-width: 1.6; stroke-dasharray: 3 4; stroke-linecap: round; opacity: 0; transition: opacity 0.3s; }
+/* Only the visible flow animates; a hidden dash animation still repaints every frame. */
+.hero-iso .flow.on { animation: flow 0.6s linear infinite; }
 .hero-iso .flow.on { opacity: 1; }
 @keyframes flow { to { stroke-dashoffset: -7; } }
 .hero-iso .wheel .iso-top, .hero-iso .wheel .iso-shade { transition: fill 0.3s; }
